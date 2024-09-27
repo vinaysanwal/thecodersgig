@@ -1,0 +1,58 @@
+{
+  "name": "AllInOneDaily",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint .",
+    "postinstall": "jetify"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.13.2",
+    "@react-native-community/masked-view": "^0.1.10",
+    "@react-native-community/netinfo": "^5.9.7",
+    "@react-native-firebase/admob": "^11.5.0",
+    "@react-native-firebase/app": "^11.5.0",
+    "@react-navigation/bottom-tabs": "^5.10.4",
+    "@react-navigation/drawer": "^5.10.4",
+    "@react-navigation/native": "^5.8.4",
+    "@react-navigation/stack": "^5.12.1",
+    "expo-ads-facebook": "^8.4.1",
+    "react": "16.13.1",
+    "react-native": "0.63.3",
+    "react-native-fast-image": "^8.3.4",
+    "react-native-fbsdk": "^2.0.0",
+    "react-native-gesture-handler": "^1.8.0",
+    "react-native-image-slider-box": "^1.0.12",
+    "react-native-linear-gradient": "^2.5.6",
+    "react-native-paper": "^4.3.0",
+    "react-native-push-notification": "^7.0.0",
+    "react-native-reanimated": "^1.13.1",
+    "react-native-safe-area-context": "^3.1.8",
+    "react-native-screens": "^2.12.0",
+    "react-native-splash-screen": "^3.2.0",
+    "react-native-star-rating": "^1.1.0",
+    "react-native-tab-view": "^2.15.2",
+    "react-native-unimodules": "^0.11.0",
+    "react-native-vector-icons": "^7.1.0",
+    "react-native-version-check": "^3.4.2",
+    "react-native-webview": "^10.10.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.12.3",
+    "@babel/runtime": "7.12.1",
+    "@react-native-community/eslint-config": "1.1.0",
+    "babel-jest": "25.5.1",
+    "eslint": "6.8.0",
+    "jest": "25.5.4",
+    "jetifier": "^1.6.6",
+    "metro-react-native-babel-preset": "0.59.0",
+    "react-test-renderer": "16.13.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
