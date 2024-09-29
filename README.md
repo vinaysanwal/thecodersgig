@@ -7,7 +7,8 @@
 
 # Introduction
 
-![Uploading image.png…]()
+
+![thecodersgig](https://github.com/user-attachments/assets/741cc758-32bf-4e18-a996-b9cd1deb1e43)
 
 
 `TheCodersGig` is a robust, open-source development platform designed to revolutionize the social network platform. 
