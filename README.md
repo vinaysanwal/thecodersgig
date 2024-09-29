@@ -7,6 +7,9 @@
 
 # Introduction
 
+![Uploading image.png…]()
+
+
 `TheCodersGig` is a robust, open-source development platform designed to revolutionize the social network platform. 
 It will be having integrated utility marketplace where devs can create utility plugins in a ease. 
 We automate your backend applications development, ensuring consistency, predictability, and adherence to the highest standards with code that’s built to scale
