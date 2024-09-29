@@ -1,2 +1,5 @@
-Software For Developers to create new plugins and utility.
-Integrated social network platform for developers to connect with each other and discuss what new in tech
+<p align="center">
+  <i align="center">open source social network platform for devs where they can connect and discuss technology  🚀</i>
+</p>
+
+⭐ Star us on GitHub — it motivates us a lot!
