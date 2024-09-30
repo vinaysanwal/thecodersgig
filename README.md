@@ -136,6 +136,10 @@ The system will be composed of several layers:
 This architecture will provide a scalable, secure, and highly interactive platform where developers can connect, share knowledge, and engage in a marketplace tailored to their professional needs.
 
 
+
+![AI-Powered Social Network Architecture Flowchart](https://github.com/user-attachments/assets/82dda038-ddc6-4017-b6d8-69afdeaaae67)
+
+
 ## 📝 How to Run Locally
 
 To build the packages, follow these steps:
