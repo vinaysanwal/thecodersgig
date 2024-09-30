@@ -18,10 +18,6 @@ We automate your backend applications development, ensuring consistency, predict
 Our user-friendly interface fosters seamless integration of APIs, data models, databases, authentication, and authorization. Built on a flexible, plugin-based architecture, codersgig allows effortless customization in creating new plugins , utility or template etc and offers a diverse range of integrations.
 
 
-# Architecure 
-
-Designing an AI-powered social network and marketplace specifically for developers requires a robust architecture that integrates various components for social interaction, collaboration, marketplace transactions, and AI-driven features. Below is a high-level architecture design to achieve this:
-
 ### 1. *Architecture Overview*
 The system will be composed of several layers:
 - *Frontend* (User Interface)
