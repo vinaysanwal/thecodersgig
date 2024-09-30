@@ -28,6 +28,10 @@ To build the packages, follow these steps:
 # Ensure Git is installed
 # Visit https://git-scm.com to download and install console Git if not already installed
 
+npm run dev
+
+## 📝 Youtube => https://www.youtube.com/@sanparadox1
+
 # Clone the repository
 git clone https://github.com/vinaysanwal/thecodersgig.git
 
