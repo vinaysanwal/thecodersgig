@@ -143,6 +143,11 @@ To build the packages, follow these steps:
 ```shell
 # Open a terminal (Command Prompt or PowerShell for Windows, Terminal for macOS or Linux)
 
+
+https://youtube.com/@vinaysanwal5700?si=kPdYrn8NSdc2-P9S
+
+https://youtube.com/@sanparadox1?si=Ut31PBlIyJ6rJXiB
+
 # Ensure Git is installed
 # Visit https://git-scm.com to download and install console Git if not already installed
 
