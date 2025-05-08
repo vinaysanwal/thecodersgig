@@ -1,50 +1,25 @@
-# Examples
+LLM's take beginning and end of prompts more into account
 
-## Example 1:
+Double down on important rules
 
-**Input:**
+Double down on output formats etc
 
-07784 300943 PAOLO PEZZANGORA paolo.pezzangora@gmail.com Stratford-upon-Avon, Warwickshire, UK Marketing Specialist C A R E E R S U M M A R Y 10+ years of experience in the creative industry and a special focus on Digital Marketing. Versatile, creative, bilingual professional with the ability to ﬁnd solutions to complex problems, I develop effective and successful marketing strategies that increase brand awareness, promote customer engagement and ultimately drive trafﬁc and conversions. Familiar with multiple marketing digital tools and with a proactive approach, I am up-to-date with changes in the industry through continuing professional development. A R E A S O F E X P E R T I S E Strong leadership & problem-solving skills Knowledge of B2B & B2C Brand positioning & logo design Excellent social media knowledge & skills Good SEO & SEM skills Highly creative with technical skills Extensive experience organising events UX design skills Quick learner & self-starter P R O F E S S I O N A L E X P E R I E N C E 07/2023 – to date EBCO ebikes, Warwick Head of Marketing Developed and executed marketing strategies, propelling EBCO to an industry- leading position. 
+Double down on best practices
 
-**Output:**
+If something goes wrong add the rule here
 
-CURRICULUM VITAE FORMAT
+Useful sentences:
 
-NAME:
+“it is vital to my career..”,
 
-Paolo Pezzangora
+“always output in JSON format”, 
 
-LOCATION:
+“Think step by step”
 
-Stratford-upon-Avon, Warwickshire, UK
+# Notes
 
-EDUCATION & QUALIFICATIONS:
+it is absolutely vital to my career that you do NOT add text, make new facts up, or edit anything from the original text.
 
-Diploma in Professional Digital Marketing
+IMPORTANT: Make sure to that all data is added into the new format
 
-Chartered Institute of Marketing (CIM)
-
-Digital Lab by AMA
-
-Arts Marketing Association (Ongoing)
-
-Fundamentals of Digital Marketing
-
-Google Digital Training
-
-Small-Scale Development Programme
-
-Arts Marketing Association (AMA)
-
-CURRENT EMPLOYER:
-
-EBCO ebikes
-
-CURRENT POSITION:
-
-Head of Marketing
-
-PROFILE:
-
-10+ years of experience in the creative industry with a special focus on Digital Marketing.
-
+Make sure to be comprehensive and that ALL data is added to the new format, if there is no clear section to add info from the original CV into the new CV, add it to the end.
