@@ -1,25 +1,15 @@
-LLM's take beginning and end of prompts more into account
+# Objective
 
-Double down on important rules
+Please identify the name from the person in the CV below.
 
-Double down on output formats etc
+ONLY output the full name, no summary, no explanation, nothing but the full name.
 
-Double down on best practices
+If you don't find a name ONLY output: "no name found", nothing else, no summary, no explanation.
 
-If something goes wrong add the rule here
+** example output: **
 
-Useful sentences:
+Ben van Sprundel
 
-“it is vital to my career..”,
+** the cv you have to identify the name from:**
 
-“always output in JSON format”, 
-
-“Think step by step”
-
-# Notes
-
-it is absolutely vital to my career that you do NOT add text, make new facts up, or edit anything from the original text.
-
-IMPORTANT: Make sure to that all data is added into the new format
-
-Make sure to be comprehensive and that ALL data is added to the new format, if there is no clear section to add info from the original CV into the new CV, add it to the end.
+{{formatted_cv}}
