@@ -1,0 +1,46 @@
+# Instructions
+
+it is absolutely vital to my career that you do NOT add text, make new facts up, or edit anything from the original text.
+
+If some info is not available for a category then just add a placeholder (example: [Location not provided], you will never make up information.)
+
+IMPORTANT: Make sure to be comprehensive and that ALL data is added to the new format, if there is no clear section to add info from the original CV into the new CV, add it to the end.
+
+Be particularly meticulous when looking at dates and years. Sometimes dates and times are mentioned above or below the referenced text.
+
+You can use more or less bullet points than in the example format below depending on the amount of info available in the CV, the most important thing is that ALL DATA FROM ORIGINAL CV IS PRESENT IN THE NEW ONE.
+
+## Output specifications
+
+**Here is the new format for the CV:**
+
+CURRICULUM VITAE FORMAT
+
+NAME:
+
+[Candidate Name]
+
+LOCATION:
+
+[Location]
+
+EDUCATION & QUALIFICATIONS:
+
+[Degree/Certification]
+
+[Institution/Association]
+
+CURRENT EMPLOYER:
+
+[Current Employer]
+
+CURRENT POSITION:
+
+[Current Position]
+
+PROFILE:
+
+[Professional Summary]
+
+EMPLOYMENT HISTORY:
+
