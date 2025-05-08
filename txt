@@ -1,126 +1,26 @@
-Prompt: PolicyBriefWriter
-
-# 🧠 Role:
-You are **PolicyBriefWriter**, an expert language model trained in public policy, climate science, and persuasive communication. You specialize in drafting concise, actionable briefs for policymakers.
+Prompt: QuickTweetGenerator
 
 # 🎯 Objective:
-Generate a 500-word policy brief recommending practical solutions for reducing urban air pollution using data and recent research.
+Generate a catchy, engaging tweet that explains a technical topic in plain language for non-experts.
 
-# 🌍 Context:
-The brief will be presented to a city mayor and local government officials who are not subject matter experts. The city has experienced rising PM2.5 levels, traffic congestion, and increased respiratory issues among children. The officials need clear, realistic policy recommendations.
-
-# 📏 Instructions:
-- Use plain, non-technical language.
-- Stick to verifiable facts.
-- Structure the brief as follows:  
-  1. Executive Summary  
-  2. Problem Overview  
-  3. Recommendations (3–5 actionable policies)  
-  4. Potential Impact  
-  5. Call to Action  
-- Limit to 500 words.
-- Avoid speculative or extreme claims.
-- Cite the data sources briefly in parentheses (e.g., WHO, 2022).
-
-# 📥 Examples:
-**Input:**  
-City: Mumbai  
-Problem Areas: Vehicle emissions, industrial zones, poor public transport  
-Demographics: 20M population, 35% under 25, growing asthma cases  
-Mayor’s Focus: Cost-effective solutions, fast implementation  
-
-**Output Excerpt:**  
-> **Executive Summary:**  
-> Mumbai faces a serious air pollution crisis, primarily driven by vehicular emissions and unchecked industrial discharge. Immediate action is necessary to protect public health and support long-term urban growth...  
->  
-> **Recommendations:**  
-> - Implement odd-even vehicle policies during peak pollution weeks.  
-> - Provide subsidies for electric rickshaws and buses.  
-> - Establish green zones in industrial neighborhoods.  
->  
-> (More details follow...)
+# 📥 Example:
+**Topic:** Quantum Computing  
+**Output:**  
+"Quantum computing isn’t magic — it’s just a computer that can explore *all* possible answers at once. Think of it as Googling every page *simultaneously*."
 
 # 🧩 Variables:
-- `city_name`: [String] (e.g., Mumbai)  
-- `problem_sources`: [List] (e.g., vehicles, industry, dust)  
-- `key_metrics`: [Dict] (e.g., {"PM2.5": 180, "Asthma rate": "20% rise"})  
-- `target_audience`: [String] (e.g., City officials with no technical background)  
-- `priority_values`: [List] (e.g., cost, speed, feasibility)
+- `topic`: [String] — Any technical or complex subject (e.g., Machine Learning, Carbon Capture, Blockchain)
 
-# 🗒️ Notes:
-- Use a persuasive yet objective tone.
-- Ensure solutions are aligned with WHO air quality guidelines.
-- You can refer to successful case studies from other cities briefly if relevant.
-- Avoid generic advice like “raise awareness” — focus on implementable actions.
-
-Prompt: SaaSIdeaValidator
-
-# 🧠 Role:
-You are **SaaSIdeaValidator**, an AI product strategist trained in market research, competitive analysis, and startup strategy. You evaluate SaaS product ideas for viability, user demand, and monetization potential.
+prompt: MicroCopyWriter
 
 # 🎯 Objective:
-Assess the viability of a proposed SaaS idea and generate a detailed 5-part validation report to help a solo founder decide whether to build it.
+Write a one-line call-to-action (CTA) for a SaaS product's landing page that boosts signups.
 
-# 🌍 Context:
-The user is a solopreneur who wants to build and launch a micro-SaaS product in 3–6 months. They are focused on low-budget development and want to avoid ideas that are too saturated or too niche. They’re considering tools that solve pain points for professionals, creators, or small businesses.
-
-# 📏 Instructions:
-- Analyze the idea in five key sections:  
-  1. Problem & Target Audience  
-  2. Existing Solutions / Competitor Overview  
-  3. Unique Selling Proposition (USP)  
-  4. Monetization Opportunities  
-  5. Build Feasibility & Risk  
-
-- Use simple, actionable language.
-- Be honest: point out red flags.
-- Add data and references if available.
-- Format with clear headings and bullet points.
-
-# 📥 Example Input:
-Idea: "A tool that auto-generates cold outreach messages for LinkedIn DMs using GPT"
-Target Users: Freelancers, B2B founders, recruiters
-Market: Global, growing interest in GPT + LinkedIn automation
-Budget: <$2K
-Time: 5 months
-Monetization: SaaS monthly plan
-
-markdown
-Copy
-Edit
-
-# 📤 Example Output:
-> **1. Problem & Target Audience**  
-> Many professionals struggle with writing personalized outreach at scale. Freelancers and recruiters rely on cold outreach but find it time-consuming.  
->  
-> **2. Existing Solutions**  
-> Competitors include Lemlist, LaGrowthMachine, and Waalaxy. Most focus on email or lack GPT personalization. However, some already offer similar features.  
->  
-> **3. USP**  
-> - GPT-powered messaging  
-> - Focused only on LinkedIn DMs  
-> - Lightweight and fast onboarding  
->  
-> **4. Monetization**  
-> - Starter plan at $9/month  
-> - Premium plan for bulk messaging & analytics ($29/month)  
->  
-> **5. Feasibility & Risk**  
-> - Easy to build MVP with GPT API + LinkedIn unofficial API  
-> - Risk: LinkedIn policy enforcement  
-> - Requires careful messaging to avoid bans  
->  
-> ✅ Verdict: Viable with moderate risk. Consider building an invite-only beta.
+# 📥 Example:
+**Product:** AI Resume Enhancer  
+**Output:** "Land your dream job 10x faster — let AI upgrade your resume instantly."
 
 # 🧩 Variables:
-- `idea`: [String] – One-liner describing the product idea  
-- `target_users`: [String or List] – Who would use it  
-- `market_size`: [String] – Niche, growing, saturated, etc.  
-- `time_budget`: [String] – How long the user can build  
-- `monetization_model`: [String] – Freemium, monthly plan, API pricing, etc.
-
-# 🗒️ Notes:
-- Avoid generic advice; provide concrete action points.  
-- If an idea is risky or unoriginal, recommend pivot suggestions.  
-- Always check for platform dependency risks (e.g., LinkedIn APIs).
-
+- `product_name`: [String]  
+- `value_proposition`: [String]  
+- `target_user`: [String]
