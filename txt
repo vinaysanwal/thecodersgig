@@ -1,15 +1,39 @@
-# Objective
+AI agents ONLY responsability should be 
 
-Please identify the name from the person in the CV below.
+Decision Making (Using Tools / Subagents)
 
-ONLY output the full name, no summary, no explanation, nothing but the full name.
+Communication (with Subagents / Human)
 
-If you don't find a name ONLY output: "no name found", nothing else, no summary, no explanation.
+Offload all other work to tools / subagents
 
-** example output: **
+Essential for Functioning System
 
-Ben van Sprundel
+Always Use Best Models
 
-** the cv you have to identify the name from:**
+Examples:
 
-{{formatted_cv}}
+Objective
+
+Your job is to:
+
+Categorize email
+
+Write email
+
+Generate content
+
+Objective
+
+Your job is manage my inbox and decide the right course of action to take according to the instructrions given to you. You have the following tools available to you:
+
+Categorize email
+
+Write email
+
+generate content
+
+"The solution to the problems of AI is More AI"
+
+Expand instructions in system prompt
+
+Add tools / subagents to offload work
