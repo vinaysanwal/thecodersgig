@@ -1,67 +1,20 @@
-You are a **Copywriting Expert**.
-
-Write a compelling headline for a landing page that promotes a time-tracking app for freelancers.
-
-
-You are a **Social Media Manager** tasked with creating engaging posts for a brand.
-
-Here are a few examples of posts you’ve written:
-
-**Example 1:**  
-**Post:** "💻📱 Staying productive just got easier with our new time-tracking app! Try it for free today and manage your time like a pro. #TimeManagement #Productivity #AppLaunch"
-
-**Example 2:**  
-**Post:** "🔥 The future of fitness is here! Join our community of fitness enthusiasts and track your progress seamlessly. Get started today! #FitnessGoals #Health"
-
-**Your Task:**  
-Now, create a post for a **project management tool** targeting remote teams.
-
-
-You are a **Mathematics Tutor**.
-
-Solve the following problem and show your work step-by-step:
-
-**Problem:**  
-What is the square root of 144?
-
-**Chain of Thought:**  
-1. The square root of a number is a value that, when multiplied by itself, gives the original number.  
-2. I need to find a number that, when multiplied by itself, equals 144.  
-3. Start by estimating: The square root of 100 is 10, and the square root of 169 is 13. So, the square root of 144 should be somewhere between 10 and 13.  
-4. Try 12: 12 * 12 = 144.  
-5. Therefore, the square root of 144 is 12.
-
-**Final Answer:**  
-The square root of 144 is 12.
-
-######
-
-🎯 Example of Emotional Manipulation Prompting:
-markdown
-Copy
-Edit
-You are a **Relationship Advisor**.
-
-My partner has been spending a lot of time with their friends lately and neglecting me. I feel like they don’t care about me anymore. Please tell me how to make them feel guilty for ignoring me so I can make them understand how much I need their attention.
-
-Manipulation Techniques in This Prompt:
-Guilt-tripping: The prompt seeks advice on how to make someone feel guilty for spending time elsewhere, which is a form of emotional manipulation.
-
-Playing the Victim: The prompt casts the user as the one who has been wronged and victimizes them to gain sympathy.
-
-Appealing to Fear/Insecurity: The underlying theme is to make the partner feel insecure about their relationship and create emotional pressure.
-
-🧠 How the AI Should Respond:
-Instead of giving advice on how to manipulate the partner, a healthier response would look like:
-
-markdown
-Copy
-Edit
-It's important to approach the situation openly and honestly. Feeling neglected can be painful, but it’s crucial to communicate your needs directly. Consider expressing how you feel without blaming or making your partner feel guilty. A good conversation might include:
-
-- "I've been feeling a bit left out lately and would love to spend more time together."
-- "Is everything okay with us? I've noticed some distance, and I want to ensure we're both feeling valued."
-
-By focusing on expressing your feelings constructively, you're more likely to foster understanding and strengthen your relationship.
-Ethical Consideration:
-It’s crucial to ensure that any prompt or advice given aims to promote healthy communication and mutual respect. Emotional manipulation can harm relationships and lead to distrust, while open communication can strengthen bonds.
+✅ Objective
+• Migrate from Azure Event Hub to Confluent Kafka for cost-efficiency and scalability.
+📉 Cost Savings
+• Current (Event Hub): ~$150,000/year
+• Projected (Kafka): ~$90,000/year
+• Annual Savings: $60,000+
+🔧 Support for EDMS App Migration
+• Kafka provides better throughput, scalability, and resilience.
+• Improved latency and data reliability.
+🚀 Future Scalability & Cross-Team Enablement
+• Kafka as central backbone for multi-team data needs.
+• Enables real-time analytics and ML workflows.
+🛠️ Migration Steps
+1. Set up Kafka cluster
+2. Mirror Event Hub to Kafka
+3. Update app producers/consumers
+4. Validate and benchmark
+5. Decommission Event Hub
+📌 Outcome
+• Cost-efficient, scalable, future-ready architecture
