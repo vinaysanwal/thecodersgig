@@ -1,66 +1,114 @@
-✅ 1. Install Tailwind CSS (with Vite or Create React App)
-If you're using Vite (recommended for speed):
+// frontend/src/components/StatusCard.jsx
+import React from 'react';
 
-bash
-Copy
-Edit
-npm create vite@latest frontend --template react
-cd frontend
-npm install
-Then install Tailwind CSS:
+const StatusCard = ({ title, status }) => (
+  <div className="bg-white rounded-xl shadow p-4 text-center">
+    <h2 className="text-sm font-medium text-gray-500">{title}</h2>
+    <p className="text-xl font-bold text-gray-800">{status}</p>
+  </div>
+);
 
-bash
-Copy
-Edit
-npm install -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-Configure Tailwind in tailwind.config.js:
+export default StatusCard;
 
-js
-Copy
-Edit
-// tailwind.config.js
-export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
-Add Tailwind to src/index.css:
 
-css
-Copy
-Edit
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-✅ 2. Install Recharts
-bash
-Copy
-Edit
-npm install recharts
-✅ 3. (Optional) Install Toast Notifications
-bash
-Copy
-Edit
-npm install react-toastify
-Use it like:
+// frontend/src/components/DriftTable.jsx
+import React from 'react';
 
-js
-Copy
-Edit
-import { toast } from 'react-toastify';
-toast("Drift detected!");
-✅ 4. Axios for API Calls
-bash
-Copy
-Edit
-npm install axios
-✅ 5. Run Your App
-bash
-Copy
-Edit
-npm run dev  # For Vite
-# OR
-npm start    # If using Create React App
+const DriftTable = ({ data }) => (
+  <table className="w-full table-auto border-collapse border rounded">
+    <thead className="bg-gray-100">
+      <tr>
+        <th className="p-2 border">Feature</th>
+        <th className="p-2 border">Drift Score</th>
+        <th className="p-2 border">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {data.map(({ feature, score, status }, i) => (
+        <tr key={i}>
+          <td className="p-2 border">{feature}</td>
+          <td className="p-2 border">{score}</td>
+          <td className="p-2 border">{status}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+);
+
+export default DriftTable;
+
+
+// frontend/src/components/PerformanceChart.jsx
+import React from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+
+const PerformanceChart = ({ data }) => (
+  <LineChart width={600} height={300} data={data}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="time" />
+    <YAxis />
+    <Tooltip />
+    <Line type="monotone" dataKey="accuracy" stroke="#82ca9d" />
+    <Line type="monotone" dataKey="latency" stroke="#8884d8" />
+  </LineChart>
+);
+
+export default PerformanceChart;
+
+
+// frontend/src/components/NotificationPanel.jsx
+import React from 'react';
+
+const NotificationPanel = ({ notifications }) => (
+  <div className="space-y-2">
+    {notifications.map((note, i) => (
+      <div key={i} className="bg-yellow-100 p-2 rounded shadow">
+        {note}
+      </div>
+    ))}
+  </div>
+);
+
+export default NotificationPanel;
+
+
+// frontend/src/components/Header.jsx
+import React from 'react';
+
+const Header = () => (
+  <header className="bg-blue-600 text-white p-4 rounded-b-xl shadow-md">
+    <h1 className="text-2xl font-bold">ML Observatory</h1>
+  </header>
+);
+
+export default Header;
+
+
+// frontend/src/pages/Dashboard.jsx
+import React from 'react';
+import Header from '../components/Header';
+import StatusCard from '../components/StatusCard';
+import PerformanceChart from '../components/PerformanceChart';
+
+const dummyPerformanceData = [
+  { time: '10:00', accuracy: 0.92, latency: 280 },
+  { time: '11:00', accuracy: 0.89, latency: 300 },
+  { time: '12:00', accuracy: 0.85, latency: 340 },
+];
+
+const Dashboard = () => (
+  <div className="min-h-screen bg-gray-50 p-4">
+    <Header />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+      <StatusCard title="Model Health" status="Healthy ✅" />
+      <StatusCard title="Drift Score" status="0.02 ✅" />
+      <StatusCard title="Latency" status="320ms ⚠️" />
+    </div>
+    <div className="mt-8">
+      <h2 className="text-lg font-semibold mb-2">Performance Overview</h2>
+      <PerformanceChart data={dummyPerformanceData} />
+    </div>
+  </div>
+);
+
+export default Dashboard;
