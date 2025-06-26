@@ -1,137 +1,24 @@
-dashboard
-
 import React from 'react';
-import Header from '../components/Header';
-import StatusCard from '../components/StatusCard';
-import PerformanceChart from '../components/PerformanceChart';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-const dummyPerformanceData = [
-  { time: '10:00', accuracy: 0.92, latency: 280 },
-  { time: '11:00', accuracy: 0.89, latency: 300 },
-  { time: '12:00', accuracy: 0.85, latency: 340 },
-];
+import Dashboard from './pages/Dashboard';
+import DriftDetection from './pages/DriftDetection';
+import Performance from './pages/Performance';
+import RemediationLog from './pages/RemediationLog';
+import Notifications from './pages/Notifications';
 
-const Dashboard = () => (
-  <div className="min-h-screen bg-gray-50 p-4">
-    <Header />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-      <StatusCard title="Model Health" status="Healthy ✅" />
-      <StatusCard title="Drift Score" status="0.02 ✅" />
-      <StatusCard title="Latency" status="320ms ⚠️" />
-    </div>
-    <div className="mt-8">
-      <h2 className="text-lg font-semibold mb-2">Performance Overview</h2>
-      <PerformanceChart data={dummyPerformanceData} />
-    </div>
-  </div>
-);
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/drift" element={<DriftDetection />} />
+        <Route path="/performance" element={<Performance />} />
+        <Route path="/remediation" element={<RemediationLog />} />
+        <Route path="/notifications" element={<Notifications />} />
+      </Routes>
+    </Router>
+  );
+};
 
-export default Dashboard;
-
-Drift
-
-import React from 'react';
-import Header from '../components/Header';
-import DriftTable from '../components/DriftTable';
-
-const dummyDriftData = [
-  { feature: 'age', score: 0.32, status: '❌' },
-  { feature: 'income', score: 0.05, status: '✅' },
-];
-
-const DriftDetection = () => (
-  <div className="min-h-screen bg-gray-50 p-4">
-    <Header />
-    <h2 className="text-xl font-semibold my-4">Drift Detection</h2>
-    <DriftTable data={dummyDriftData} />
-  </div>
-);
-
-export default DriftDetection;
-
-
-Performance 
-
-import React from 'react';
-import Header from '../components/Header';
-import PerformanceChart from '../components/PerformanceChart';
-
-const dummyData = [
-  { time: '09:00', accuracy: 0.91, latency: 270 },
-  { time: '10:00', accuracy: 0.88, latency: 320 },
-];
-
-const Performance = () => (
-  <div className="min-h-screen bg-gray-50 p-4">
-    <Header />
-    <h2 className="text-xl font-semibold my-4">Model Performance</h2>
-    <PerformanceChart data={dummyData} />
-  </div>
-);
-
-export default Performance;
-
-
-Remediation 
-
-import React from 'react';
-import Header from '../components/Header';
-
-const dummyFixes = [
-  { timestamp: '2025-06-25', issue: 'Drift in age', fix: 'Re-binned age feature', commit: 'abc123', status: '✅' },
-];
-
-const RemediationLog = () => (
-  <div className="min-h-screen bg-gray-50 p-4">
-    <Header />
-    <h2 className="text-xl font-semibold my-4">Remediation Log</h2>
-    <table className="w-full table-auto border">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="p-2 border">Timestamp</th>
-          <th className="p-2 border">Issue</th>
-          <th className="p-2 border">Fix</th>
-          <th className="p-2 border">Commit</th>
-          <th className="p-2 border">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {dummyFixes.map((item, i) => (
-          <tr key={i}>
-            <td className="p-2 border">{item.timestamp}</td>
-            <td className="p-2 border">{item.issue}</td>
-            <td className="p-2 border">{item.fix}</td>
-            <td className="p-2 border">{item.commit}</td>
-            <td className="p-2 border">{item.status}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
-export default RemediationLog;
-
-
-notification
-
-import React from 'react';
-import Header from '../components/Header';
-import NotificationPanel from '../components/NotificationPanel';
-
-const dummyNotifications = [
-  '⚠️ Drift detected in model_v3',
-  '✅ Patch applied for latency spike',
-];
-
-const Notifications = () => (
-  <div className="min-h-screen bg-gray-50 p-4">
-    <Header />
-    <h2 className="text-xl font-semibold my-4">Notifications</h2>
-    <NotificationPanel notifications={dummyNotifications} />
-  </div>
-);
-
-export default Notifications;
-
-
+export default App;
