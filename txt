@@ -1,81 +1,66 @@
-🧩 Architecture Components:
-Frontend & API Layer
-React UI: User interface for monitoring and managing the platform.
+✅ 1. Install Tailwind CSS (with Vite or Create React App)
+If you're using Vite (recommended for speed):
 
-Node.js API: Middleware that bridges frontend interactions with backend orchestrations.
+bash
+Copy
+Edit
+npm create vite@latest frontend --template react
+cd frontend
+npm install
+Then install Tailwind CSS:
 
-Core Orchestration Layer
-LangGraph Orchestrator:
+bash
+Copy
+Edit
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+Configure Tailwind in tailwind.config.js:
 
-Acts as the central brain coordinating all agent activities.
+js
+Copy
+Edit
+// tailwind.config.js
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+Add Tailwind to src/index.css:
 
-Receives input from UI/API and GitLab repo.
+css
+Copy
+Edit
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+✅ 2. Install Recharts
+bash
+Copy
+Edit
+npm install recharts
+✅ 3. (Optional) Install Toast Notifications
+bash
+Copy
+Edit
+npm install react-toastify
+Use it like:
 
-Dispatches tasks to agents based on context or alerts.
-
-ML Monitoring Agents
-DriftDetectorAg:
-
-Monitors deployed ML models for data, concept, or performance drift.
-
-Sends alerts or insights to the orchestrator.
-
-PerformanceAgent:
-
-Continuously checks model latency, accuracy, and resource usage.
-
-Sends performance anomalies to the GitFixerAgent.
-
-Remediation & Alert Agents
-GitFixerAgent:
-
-Analyzes issues raised by agents (e.g., performance drops).
-
-Proposes or pushes code/config fixes back to the GitLab Repo.
-
-Triggers retraining/deployment via Azure ML.
-
-NotifierAgent:
-
-Sends alerts or updates (e.g., Slack, email, dashboard) to stakeholders about issues or fixes.
-
-CI/CD + MLOps
-GitLab Repo:
-
-Stores ML code, configs, pipelines.
-
-Serves as a trigger point for changes detected by agents.
-
-Integrated with Azure ML for training/deployment automation.
-
-Azure ML:
-
-Handles model training, evaluation, and deployment.
-
-🔁 Workflow Summary:
-User or automation triggers start in the React UI.
-
-Input goes to LangGraph Orchestrator via Node.js API.
-
-Orchestrator dispatches tasks to:
-
-DriftDetectorAg for drift monitoring.
-
-PerformanceAgent for health/performance.
-
-On issue detection, GitFixerAgent attempts auto-remediation:
-
-Updates GitLab repo.
-
-Triggers Azure ML to retrain/redeploy.
-
-NotifierAgent informs stakeholders about the incident & resolution.
-
-✅ What It Enables:
-Proactive monitoring of ML models.
-
-Auto-remediation for model degradation or drift.
-
-CI/CD integration for seamless fix-deploy cycles.
-
-AI agents working in sync via LangGraph.
+js
+Copy
+Edit
+import { toast } from 'react-toastify';
+toast("Drift detected!");
+✅ 4. Axios for API Calls
+bash
+Copy
+Edit
+npm install axios
+✅ 5. Run Your App
+bash
+Copy
+Edit
+npm run dev  # For Vite
+# OR
+npm start    # If using Create React App
