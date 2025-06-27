@@ -1,86 +1,126 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Col, Row, Typography, Table, Button, Select } from 'antd';
-import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import Header from '../components/Header';
+import StatusCard from '../components/StatusCard';
+import PerformanceChart from '../components/PerformanceChart';
+import NotificationPanel from '../components/NotificationPanel';
+import {
+  Row,
+  Col,
+  Typography,
+  Layout,
+  Spin,
+  Table,
+  Select,
+  Button,
+  Card
+} from 'antd';
+import {
+  getPerformanceData,
+  getNotifications,
+  getDriftDetails
+} from '../services/api';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
+const { Content } = Layout;
 const { Option } = Select;
 
 const Dashboard = () => {
+  const [performance, setPerformance] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [driftData, setDriftData] = useState([]);
   const [model, setModel] = useState('model_v3');
-  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`/api/orchestrate?model=${model}`).then(res => setData(res.data));
+    Promise.all([
+      getPerformanceData(),
+      getNotifications(),
+      getDriftDetails(model)
+    ])
+      .then(([perfRes, notifRes, driftRes]) => {
+        setPerformance(perfRes.data || []);
+        setNotifications(notifRes.data || []);
+        setDriftData([
+          {
+            key: '1',
+            feature: driftRes.data.feature || 'age',
+            score: driftRes.data.score || 0.34,
+            status: driftRes.data.drift_detected ? 'Drift' : 'Stable',
+            date: 'Jun 25, 2025'
+          }
+        ]);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [model]);
 
-  const driftData = [
+  const driftColumns = [
+    { title: 'Feature', dataIndex: 'feature' },
+    { title: 'Drift Score', dataIndex: 'score' },
     {
-      key: '1',
-      feature: 'age',
-      score: data?.drift?.score || 0.34,
-      status: data?.drift?.drift_detected ? 'Drift' : 'Stable',
-      date: 'Jun 25, 2025'
+      title: 'Status',
+      dataIndex: 'status',
+      render: (status) =>
+        status === 'Drift' ? (
+          <span style={{ color: 'red' }}>🔴 {status}</span>
+        ) : (
+          status
+        )
+    },
+    { title: 'Detected On', dataIndex: 'date' },
+    {
+      title: 'Action',
+      render: () => <Button type="link">Trigger Fix</Button>
     }
   ];
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}>ML Observatory</Title>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header />
+      <Content style={{ padding: '24px' }}>
+        <Row gutter={[16, 16]}>
+          <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
+          <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
+          <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
+        </Row>
 
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}><Card><Text>Model Health</Text><br /><b>{data?.status.includes('Healthy') ? 'Healthy ✅' : 'Degraded ⚠️'}</b></Card></Col>
-        <Col span={6}><Card><Text>Drift Detected</Text><br /><b>{data?.drift?.drift_detected ? 'Yes' : 'No'}</b></Card></Col>
-        <Col span={6}><Card><Text>Last Fix</Text><br /><b>2 hours ago</b></Card></Col>
-      </Row>
+        <Row gutter={16} style={{ marginTop: 32 }}>
+          <Col span={14}>
+            <Title level={4}>Performance Overview</Title>
+            {loading ? <Spin /> : <PerformanceChart data={performance} />}
 
-      <Row gutter={16}>
-        <Col span={16}>
-          <Card title="Model Performance Over Time" style={{ marginBottom: 24 }}>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data?.performance?.trend || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="latency" stroke="#8884d8" />
-                <Line type="monotone" dataKey="accuracy" stroke="#82ca9d" />
-              </LineChart>
-            </ResponsiveContainer>
-          </Card>
+            <Card title="Drift Detection" style={{ marginTop: 24 }}>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={6}>
+                  <Select value={model} onChange={setModel} style={{ width: '100%' }}>
+                    <Option value="model_v1">model_v1</Option>
+                    <Option value="model_v2">model_v2</Option>
+                    <Option value="model_v3">model_v3</Option>
+                  </Select>
+                </Col>
+                <Col span={6}>
+                  <Select defaultValue="24h" style={{ width: '100%' }}>
+                    <Option value="24h">Last 24 Hours</Option>
+                    <Option value="7d">Last 7 Days</Option>
+                  </Select>
+                </Col>
+              </Row>
 
-          <Card title="Drift Detection">
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={6}>
-                <Select value={model} onChange={setModel} style={{ width: '100%' }}>
-                  <Option value="model_v1">model_v1</Option>
-                  <Option value="model_v2">model_v2</Option>
-                  <Option value="model_v3">model_v3</Option>
-                </Select>
-              </Col>
-              <Col span={6}><Select defaultValue="24h" style={{ width: '100%' }}><Option value="24h">Last 24 Hours</Option></Select></Col>
-            </Row>
+              {loading ? (
+                <Spin />
+              ) : (
+                <Table columns={driftColumns} dataSource={driftData} pagination={false} />
+              )}
+            </Card>
+          </Col>
 
-            <Table columns={[
-              { title: 'Feature', dataIndex: 'feature' },
-              { title: 'Drift Score', dataIndex: 'score' },
-              { title: 'Status', dataIndex: 'status', render: s => s === 'Drift' ? <span style={{ color: 'red' }}>🔴 {s}</span> : s },
-              { title: 'Detected On', dataIndex: 'date' },
-              { title: 'Action', render: () => <Button type="link">Trigger Fix</Button> }
-            ]} dataSource={driftData} pagination={false} />
-          </Card>
-        </Col>
-
-        <Col span={8}>
-          <Card title="Notifications">
-            <ul>
-              <li>⚠️ Drift detected in 'model_v3'</li>
-              <li>✅ Patch applied for latency spike</li>
-            </ul>
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          <Col span={10}>
+            <Title level={4}>Notifications</Title>
+            {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
   );
 };
 
