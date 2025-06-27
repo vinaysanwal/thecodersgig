@@ -1,58 +1,87 @@
-├── orchestrator/              # LangGraph-based orchestrator
-│   ├── langgraph_orchestrator.py   # Entry point: builds and runs the graph
-│   ├── nodes/
-│   │   ├── drift_node.py            # Drift detection logic
-│   │   ├── performance_node.py      # Performance evaluation logic
-│   │   ├── remediation_node.py      # Suggest fixes based on state
-│   │   └── decision_node.py         # LLM decides next step
-│   └── config.py                    # Azure OpenAI config + shared state
-│
-├── agents/                   # (Optional) Utility or traditional agents
-│   ├── drift_agent.py
-│   ├── performance_agent.py
-│   └── remediation_agent.py
-🧪 Requirements (requirements.txt)
-txt
-Copy
-Edit
-fastapi
-uvicorn
-langgraph
-langchain
-openai
-python-dotenv
-🔐 .env File
-Put this in your backend root:
+import React, { useEffect, useState } from 'react';
+import { Card, Col, Row, Typography, Table, Button, Select } from 'antd';
+import axios from 'axios';
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 
-env
-Copy
-Edit
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
-AZURE_OPENAI_API_VERSION=2024-05-01
-🧰 Setup Steps
-1. Install Dependencies
-bash
-Copy
-Edit
-cd backend
-pip install -r requirements.txt
-2. Load Env in config.py
-python
-Copy
-Edit
-# orchestrator/config.py
-import os
-from dotenv import load_dotenv
-from langchain.chat_models import AzureChatOpenAI
+const { Title, Text } = Typography;
+const { Option } = Select;
 
-load_dotenv()
+const Dashboard = () => {
+  const [model, setModel] = useState('model_v3');
+  const [data, setData] = useState(null);
 
-llm = AzureChatOpenAI(
-    deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
-    openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    openai_api_base=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-    openai_api_type="azure"
-)
+  useEffect(() => {
+    axios.get(`/api/orchestrate?model=${model}`).then(res => setData(res.data));
+  }, [model]);
+
+  const driftData = [
+    {
+      key: '1',
+      feature: 'age',
+      score: data?.drift?.score || 0.34,
+      status: data?.drift?.drift_detected ? 'Drift' : 'Stable',
+      date: 'Jun 25, 2025'
+    }
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      <Title level={3}>ML Observatory</Title>
+
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}><Card><Text>Model Health</Text><br /><b>{data?.status.includes('Healthy') ? 'Healthy ✅' : 'Degraded ⚠️'}</b></Card></Col>
+        <Col span={6}><Card><Text>Drift Detected</Text><br /><b>{data?.drift?.drift_detected ? 'Yes' : 'No'}</b></Card></Col>
+        <Col span={6}><Card><Text>Last Fix</Text><br /><b>2 hours ago</b></Card></Col>
+      </Row>
+
+      <Row gutter={16}>
+        <Col span={16}>
+          <Card title="Model Performance Over Time" style={{ marginBottom: 24 }}>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data?.performance?.trend || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="time" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="latency" stroke="#8884d8" />
+                <Line type="monotone" dataKey="accuracy" stroke="#82ca9d" />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card title="Drift Detection">
+            <Row gutter={16} style={{ marginBottom: 16 }}>
+              <Col span={6}>
+                <Select value={model} onChange={setModel} style={{ width: '100%' }}>
+                  <Option value="model_v1">model_v1</Option>
+                  <Option value="model_v2">model_v2</Option>
+                  <Option value="model_v3">model_v3</Option>
+                </Select>
+              </Col>
+              <Col span={6}><Select defaultValue="24h" style={{ width: '100%' }}><Option value="24h">Last 24 Hours</Option></Select></Col>
+            </Row>
+
+            <Table columns={[
+              { title: 'Feature', dataIndex: 'feature' },
+              { title: 'Drift Score', dataIndex: 'score' },
+              { title: 'Status', dataIndex: 'status', render: s => s === 'Drift' ? <span style={{ color: 'red' }}>🔴 {s}</span> : s },
+              { title: 'Detected On', dataIndex: 'date' },
+              { title: 'Action', render: () => <Button type="link">Trigger Fix</Button> }
+            ]} dataSource={driftData} pagination={false} />
+          </Card>
+        </Col>
+
+        <Col span={8}>
+          <Card title="Notifications">
+            <ul>
+              <li>⚠️ Drift detected in 'model_v3'</li>
+              <li>✅ Patch applied for latency spike</li>
+            </ul>
+          </Card>
+        </Col>
+      </Row>
+    </div>
+  );
+};
+
+export default Dashboard;
