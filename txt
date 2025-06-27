@@ -1,338 +1,44 @@
-// frontend/src/components/StatusCard.jsx
-import React from 'react';
-import { Card, Statistic } from 'antd';
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-const StatusCard = ({ title, status }) => (
-  <Card bordered style={{ textAlign: 'center' }}>
-    <Statistic title={title} value={status} valueStyle={{ fontSize: 20 }} />
-  </Card>
-);
+app = FastAPI()
 
-export default StatusCard;
+# Allow CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or ["http://localhost:5173"] for Vite
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+@app.get("/api/drift")
+def get_drift():
+    return [
+        {"feature": "age", "score": 0.12, "status": "❌ Drift"},
+        {"feature": "income", "score": 0.03, "status": "✅ Stable"},
+        {"feature": "location", "score": 0.15, "status": "❌ Drift"},
+    ]
 
-// frontend/src/components/DriftTable.jsx
-import React from 'react';
-import { Table, Tag } from 'antd';
+@app.get("/api/performance")
+def get_performance():
+    return [
+        {"time": "10:00", "accuracy": 0.92, "latency": 280},
+        {"time": "11:00", "accuracy": 0.89, "latency": 300},
+        {"time": "12:00", "accuracy": 0.85, "latency": 340},
+    ]
 
-const DriftTable = ({ data }) => {
-  const columns = [
-    {
-      title: 'Feature',
-      dataIndex: 'feature',
-      key: 'feature',
-    },
-    {
-      title: 'Drift Score',
-      dataIndex: 'score',
-      key: 'score',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status.includes('❌') ? 'red' : 'green'}>{status}</Tag>
-      )
-    }
-  ];
-  return <Table dataSource={data} columns={columns} pagination={false} rowKey="feature" />;
-};
+@app.get("/api/notifications")
+def get_notifications():
+    return [
+        "⚠️ Drift detected in model_v3",
+        "✅ Patch applied for latency spike",
+        "⚠️ Feature importance shift noticed",
+    ]
 
-export default DriftTable;
-
-
-// frontend/src/components/PerformanceChart.jsx
-import React from 'react';
-import { Line } from '@ant-design/charts';
-
-const PerformanceChart = ({ data }) => {
-  const formattedData = data.flatMap(({ time, accuracy, latency }) => [
-    { time, value: accuracy, type: 'Accuracy' },
-    { time, value: latency, type: 'Latency' }
-  ]);
-
-  const config = {
-    data: formattedData,
-    xField: 'time',
-    yField: 'value',
-    seriesField: 'type',
-    height: 250,
-    color: ['#3b82f6', '#f97316'],
-    smooth: true,
-    point: {
-      size: 4,
-      shape: 'circle',
-    },
-    tooltip: {
-      showMarkers: true,
-    },
-  };
-
-  return <Line {...config} />;
-};
-
-export default PerformanceChart;
-
-
-// frontend/src/components/NotificationPanel.jsx
-import React from 'react';
-import { Alert, Space } from 'antd';
-
-const NotificationPanel = ({ notifications }) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
-    {notifications.map((note, i) => (
-      <Alert key={i} message={note} type={note.includes('⚠️') ? 'warning' : 'success'} showIcon />
-    ))}
-  </Space>
-);
-
-export default NotificationPanel;
-
-
-// frontend/src/components/Header.jsx
-import React from 'react';
-import { Menu } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
-
-const Header = () => {
-  const { pathname } = useLocation();
-  return (
-    <Menu mode="horizontal" selectedKeys={[pathname]}> 
-      <Menu.Item key="/">
-        <Link to="/">Dashboard</Link>
-      </Menu.Item>
-      <Menu.Item key="/drift">
-        <Link to="/drift">Drift</Link>
-      </Menu.Item>
-      <Menu.Item key="/performance">
-        <Link to="/performance">Performance</Link>
-      </Menu.Item>
-      <Menu.Item key="/remediation">
-        <Link to="/remediation">Fixes</Link>
-      </Menu.Item>
-      <Menu.Item key="/notifications">
-        <Link to="/notifications">Alerts</Link>
-      </Menu.Item>
-    </Menu>
-  );
-};
-
-export default Header;
-
-
-// frontend/src/pages/Dashboard.jsx
-import React from 'react';
-import Header from '../components/Header';
-import StatusCard from '../components/StatusCard';
-import PerformanceChart from '../components/PerformanceChart';
-import NotificationPanel from '../components/NotificationPanel';
-import { Row, Col, Typography, Layout } from 'antd';
-
-const { Title } = Typography;
-const { Content } = Layout;
-
-const dummyPerformanceData = [
-  { time: '10:00', accuracy: 0.92, latency: 280 },
-  { time: '11:00', accuracy: 0.89, latency: 300 },
-  { time: '12:00', accuracy: 0.85, latency: 340 },
-];
-
-const dummyNotifications = [
-  '⚠️ Drift detected in model_v3',
-  '✅ Patch applied for latency spike',
-];
-
-const Dashboard = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header />
-    <Content style={{ padding: '24px' }}>
-      <Row gutter={[16, 16]}>
-        <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-        <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
-        <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
-      </Row>
-      <Row gutter={16} style={{ marginTop: 32 }}>
-        <Col span={14}>
-          <Title level={4}>Performance Overview</Title>
-          <PerformanceChart data={dummyPerformanceData} />
-        </Col>
-        <Col span={10}>
-          <Title level={4}>Notifications</Title>
-          <NotificationPanel notifications={dummyNotifications} />
-        </Col>
-      </Row>
-    </Content>
-  </Layout>
-);
-
-export default Dashboard;
-
-
-// frontend/src/pages/DriftDetection.jsx
-import React from 'react';
-import Header from '../components/Header';
-import DriftTable from '../components/DriftTable';
-import { Layout, Typography } from 'antd';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const dummyDriftData = [
-  { feature: 'age', score: 0.12, status: '❌ Drift' },
-  { feature: 'income', score: 0.03, status: '✅ Stable' },
-  { feature: 'location', score: 0.15, status: '❌ Drift' },
-];
-
-const DriftDetection = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header />
-    <Content style={{ padding: '24px' }}>
-      <Title level={3}>Drift Detection Report</Title>
-      <DriftTable data={dummyDriftData} />
-    </Content>
-  </Layout>
-);
-
-export default DriftDetection;
-
-
-// frontend/src/pages/Performance.jsx
-import React from 'react';
-import Header from '../components/Header';
-import PerformanceChart from '../components/PerformanceChart';
-import { Layout, Typography } from 'antd';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const dummyPerformanceData = [
-  { time: '10:00', accuracy: 0.92, latency: 280 },
-  { time: '11:00', accuracy: 0.89, latency: 300 },
-  { time: '12:00', accuracy: 0.85, latency: 340 },
-];
-
-const Performance = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header />
-    <Content style={{ padding: '24px' }}>
-      <Title level={3}>Performance Metrics</Title>
-      <PerformanceChart data={dummyPerformanceData} />
-    </Content>
-  </Layout>
-);
-
-export default Performance;
-
-
-// frontend/src/pages/RemediationLog.jsx
-import React from 'react';
-import Header from '../components/Header';
-import { Layout, Typography, Table, Tag } from 'antd';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const dummyRemediationLog = [
-  { key: 1, issue: 'Drift in age', action: 'Re-trained model', status: 'Completed' },
-  { key: 2, issue: 'Latency spike', action: 'Scaled infra', status: 'In Progress' },
-];
-
-const columns = [
-  { title: 'Issue', dataIndex: 'issue', key: 'issue' },
-  { title: 'Action Taken', dataIndex: 'action', key: 'action' },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-    render: (status) => <Tag color={status === 'Completed' ? 'green' : 'orange'}>{status}</Tag>
-  }
-];
-
-const RemediationLog = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header />
-    <Content style={{ padding: '24px' }}>
-      <Title level={3}>Remediation Log</Title>
-      <Table columns={columns} dataSource={dummyRemediationLog} />
-    </Content>
-  </Layout>
-);
-
-export default RemediationLog;
-
-
-// frontend/src/pages/Notifications.jsx
-import React from 'react';
-import Header from '../components/Header';
-import NotificationPanel from '../components/NotificationPanel';
-import { Layout, Typography } from 'antd';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const dummyNotifications = [
-  '⚠️ Drift detected in model_v3',
-  '✅ Patch applied for latency spike',
-  '⚠️ Feature importance shift noticed',
-];
-
-const Notifications = () => (
-  <Layout style={{ minHeight: '100vh' }}>
-    <Header />
-    <Content style={{ padding: '24px' }}>
-      <Title level={3}>System Notifications</Title>
-      <NotificationPanel notifications={dummyNotifications} />
-    </Content>
-  </Layout>
-);
-
-export default Notifications;
-
-
-
-main.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import 'antd/dist/reset.css'; // Clean antd styles
-import './index.css';         // Optional custom styles
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
-
-
-// frontend/src/App.jsx
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import DriftDetection from './pages/DriftDetection';
-import Performance from './pages/Performance';
-import RemediationLog from './pages/RemediationLog';
-import Notifications from './pages/Notifications';
-
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/drift" element={<DriftDetection />} />
-        <Route path="/performance" element={<Performance />} />
-        <Route path="/remediation" element={<RemediationLog />} />
-        <Route path="/notifications" element={<Notifications />} />
-      </Routes>
-    </Router>
-  );
-};
-
-export default App;
-
-
-npm install antd @ant-design/charts
+@app.get("/api/remediation")
+def get_remediation():
+    return [
+        {"issue": "Drift in age", "action": "Re-trained model", "status": "Completed"},
+        {"issue": "Latency spike", "action": "Scaled infra", "status": "In Progress"},
+    ]
