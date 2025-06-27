@@ -1,36 +1,58 @@
-# Root
-.env
-.DS_Store
+├── orchestrator/              # LangGraph-based orchestrator
+│   ├── langgraph_orchestrator.py   # Entry point: builds and runs the graph
+│   ├── nodes/
+│   │   ├── drift_node.py            # Drift detection logic
+│   │   ├── performance_node.py      # Performance evaluation logic
+│   │   ├── remediation_node.py      # Suggest fixes based on state
+│   │   └── decision_node.py         # LLM decides next step
+│   └── config.py                    # Azure OpenAI config + shared state
+│
+├── agents/                   # (Optional) Utility or traditional agents
+│   ├── drift_agent.py
+│   ├── performance_agent.py
+│   └── remediation_agent.py
+🧪 Requirements (requirements.txt)
+txt
+Copy
+Edit
+fastapi
+uvicorn
+langgraph
+langchain
+openai
+python-dotenv
+🔐 .env File
+Put this in your backend root:
 
-# Node (Frontend)
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-frontend/.vite
+env
+Copy
+Edit
+AZURE_OPENAI_API_KEY=your-api-key
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+AZURE_OPENAI_API_VERSION=2024-05-01
+🧰 Setup Steps
+1. Install Dependencies
+bash
+Copy
+Edit
+cd backend
+pip install -r requirements.txt
+2. Load Env in config.py
+python
+Copy
+Edit
+# orchestrator/config.py
+import os
+from dotenv import load_dotenv
+from langchain.chat_models import AzureChatOpenAI
 
-# Python (Backend)
-backend/__pycache__/
-backend/.venv/
-backend/venv/
-backend/env/
-backend/.env
-backend/.mypy_cache/
-backend/.pytest_cache/
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/*.db
-backend/.ruff_cache/
+load_dotenv()
 
-# VSCode / IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# OS-specific
-Thumbs.db
-ehthumbs.db
+llm = AzureChatOpenAI(
+    deployment_name=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME"),
+    openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    openai_api_base=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    openai_api_type="azure"
+)
