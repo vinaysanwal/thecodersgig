@@ -1,45 +1,64 @@
-# orchestrator/nodes/drift_node.py
+from scipy.stats import ks_2samp
 import pandas as pd
-from agents.drift_agent import run as run_drift_agent
 
-def drift_node(state: dict) -> dict:
-    reference_path = state.get("reference_data", "data/reference.csv")
-    live_path = state.get("live_data", "data/live.csv")
+def run(reference_path: str, live_path: str) -> dict:
+    ref = pd.read_csv(reference_path)
+    live = pd.read_csv(live_path)
+    drifted_features = []
+    drift_scores = {}
 
-    drift_results = run_drift_agent(reference_path, live_path)
-    state.update(drift_results)
-    state["last_step"] = "drift"
-    return state
+    for col in ref.columns:
+        if col in live.columns:
+            stat, p = ks_2samp(ref[col], live[col])
+            drift_scores[col] = float(stat)
+            if p < 0.05:
+                drifted_features.append(col)
+
+    return {
+        "drift_detected": bool(drifted_features),
+        "drift_features": drifted_features,
+        "drift_scores": drift_scores
+    }
 
 
-# orchestrator/nodes/performance_node.py
+# agents/performance_agent.py
 import pandas as pd
-from agents.performance_agent import run as run_performance_agent
 
-def performance_node(state: dict) -> dict:
-    predictions_path = state.get("predictions_data", "data/predictions.csv")
-    performance_results = run_performance_agent(predictions_path)
-    state.update(performance_results)
-    state["last_step"] = "performance"
-    return state
+def run(predictions_path: str) -> dict:
+    df = pd.read_csv(predictions_path)
+    correct = (df['true_label'] == df['predicted_label']).sum()
+    total = len(df)
+    accuracy = correct / total if total else 0
+    avg_latency = df['latency_ms'].mean()
 
-
-# orchestrator/nodes/remediation_node.py
-from agents.remediation_agent import run as run_remediation_agent
-
-def remediation_node(state: dict) -> dict:
-    remediation_plan = run_remediation_agent(state)
-    state["remediation_plan"] = remediation_plan
-    state["last_step"] = "remediation"
-    return state
+    return {
+        "accuracy": accuracy,
+        "avg_latency": avg_latency,
+        "performance_issues": accuracy < 0.85 or avg_latency > 300
+    }
 
 
-# orchestrator/nodes/decision_node.py
-def decision_node(state: dict) -> str:
-    if "remediation_plan" in state:
-        return "end"
-    if state.get("drift_detected"):
-        return "drift"
-    if state.get("performance_issues"):
-        return "performance"
-    return "remediation"
+# agents/remediation_agent.py
+from langchain.chat_models import AzureChatOpenAI
+from langchain.prompts import PromptTemplate
+
+llm = AzureChatOpenAI(deployment_name="your-azure-deployment", temperature=0)
+
+def run(state: dict) -> str:
+    drift = state.get("drift_features", [])
+    perf_issues = state.get("performance_issues", False)
+    accuracy = state.get("accuracy")
+    latency = state.get("avg_latency")
+
+    prompt = PromptTemplate.from_template("""
+    You are an ML reliability assistant.
+    Based on the following inputs, suggest a clear and concise remediation plan.
+
+    Drift Features: {drift}
+    Accuracy: {accuracy}
+    Latency: {latency}
+    Performance Issues: {perf_issues}
+    """)
+
+    message = prompt.format(drift=drift, accuracy=accuracy, latency=latency, perf_issues=perf_issues)
+    return llm.predict(message)
