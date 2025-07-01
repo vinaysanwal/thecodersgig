@@ -1,58 +1,9 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Layout, Menu } from 'antd';
-import {
-  DashboardOutlined,
-  AlertOutlined,
-  BarChartOutlined,
-  ToolOutlined,
-  BellOutlined,
-} from '@ant-design/icons';
-
-import Dashboard from './pages/Dashboard';
-import DriftDetection from './pages/DriftDetection';
-import Performance from './pages/Performance';
-import RemediationLog from './pages/RemediationLog';
-import Notifications from './pages/Notifications';
-
-const { Header, Content, Footer } = Layout;
-
-const App = () => {
-  return (
-    <Router>
-      <Layout style={{ minHeight: '100vh' }}>
-        <Header>
-          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['dashboard']}>
-            <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
-              <Link to="/">Dashboard</Link>
-            </Menu.Item>
-            <Menu.Item key="drift" icon={<AlertOutlined />}>
-              <Link to="/drift">Drift Detection</Link>
-            </Menu.Item>
-            <Menu.Item key="performance" icon={<BarChartOutlined />}>
-              <Link to="/performance">Performance</Link>
-            </Menu.Item>
-            <Menu.Item key="remediation" icon={<ToolOutlined />}>
-              <Link to="/remediation">Remediation Log</Link>
-            </Menu.Item>
-            <Menu.Item key="notifications" icon={<BellOutlined />}>
-              <Link to="/notifications">Notifications</Link>
-            </Menu.Item>
-          </Menu>
-        </Header>
-        <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/drift" element={<DriftDetection />} />
-            <Route path="/performance" element={<Performance />} />
-            <Route path="/remediation" element={<RemediationLog />} />
-            <Route path="/notifications" element={<Notifications />} />
-          </Routes>
-        </Content>
-        <Footer style={{ textAlign: 'center' }}>ML Observatory ©2025</Footer>
-      </Layout>
-    </Router>
-  );
-};
-
-export default App;
+@app.post("/api/run")
+async def api_run_orchestrator(request: Request):
+    body = await request.json()
+    result = run_orchestrator({
+        "reference_data": "data/reference.csv",
+        "live_data": "data/live.csv",
+        "predictions_data": "data/predictions.csv"
+    })
+    return result
