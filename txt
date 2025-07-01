@@ -9,6 +9,7 @@ import {
   Select,
   Button,
   message,
+  Card,
 } from 'antd';
 import Header from '../components/Header';
 import StatusCard from '../components/StatusCard';
@@ -66,86 +67,88 @@ const Dashboard = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Header />
-      <Content style={{ padding: '24px' }}>
-        <Row justify="space-between" align="middle">
-          <Title level={3}>ML Observability Dashboard</Title>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Select
-              value={selectedModel}
-              onChange={setSelectedModel}
-              style={{ width: 160 }}
-            >
-              <Option value="model_v1">Model v1</Option>
-              <Option value="model_v2">Model v2</Option>
-              <Option value="model_v3">Model v3</Option>
-            </Select>
-            <Button type="primary" onClick={handleRunEvaluation}>
-              Run Evaluation
-            </Button>
-          </div>
-        </Row>
+      <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+        <Card style={{ padding: 24 }}>
+          <Row justify="space-between" align="middle">
+            <Title level={3}>ML Observability Dashboard</Title>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Select
+                value={selectedModel}
+                onChange={setSelectedModel}
+                style={{ width: 160 }}
+              >
+                <Option value="model_v1">Model v1</Option>
+                <Option value="model_v2">Model v2</Option>
+                <Option value="model_v3">Model v3</Option>
+              </Select>
+              <Button type="primary" onClick={handleRunEvaluation}>
+                Run Evaluation
+              </Button>
+            </div>
+          </Row>
 
-        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-          <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-          <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
-          <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
-        </Row>
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
+            <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
+            <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
+          </Row>
 
-        <Row gutter={16} style={{ marginTop: 32 }}>
-          <Col span={14}>
-            <Title level={4}>Performance Overview</Title>
-            {loading ? <Spin /> : <PerformanceChart data={performance} />}
-          </Col>
-          <Col span={10}>
-            <Title level={4}>Notifications</Title>
-            {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-          </Col>
-        </Row>
+          <Row gutter={16} style={{ marginTop: 32 }}>
+            <Col span={14}>
+              <Title level={4}>Performance Overview</Title>
+              {loading ? <Spin /> : <PerformanceChart data={performance} />}
+            </Col>
+            <Col span={10}>
+              <Title level={4}>Notifications</Title>
+              {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+            </Col>
+          </Row>
 
-        <Row style={{ marginTop: 32 }}>
-          <Col span={24}>
-            <Title level={4}>Drift Detection</Title>
+          <Row style={{ marginTop: 32 }}>
+            <Col span={24}>
+              <Title level={4}>Drift Detection</Title>
 
-            <Row justify="space-between" style={{ marginBottom: 16 }}>
-              <Col>
-                <Select
-                  value={selectedModel}
-                  onChange={setSelectedModel}
-                  style={{ width: 200 }}
-                >
-                  <Option value="model_v1">Model v1</Option>
-                  <Option value="model_v2">Model v2</Option>
-                  <Option value="model_v3">Model v3</Option>
-                </Select>
-              </Col>
-            </Row>
+              <Row justify="space-between" style={{ marginBottom: 16 }}>
+                <Col>
+                  <Select
+                    value={selectedModel}
+                    onChange={setSelectedModel}
+                    style={{ width: 200 }}
+                  >
+                    <Option value="model_v1">Model v1</Option>
+                    <Option value="model_v2">Model v2</Option>
+                    <Option value="model_v3">Model v3</Option>
+                  </Select>
+                </Col>
+              </Row>
 
-            {loading ? (
-              <Spin />
-            ) : (
-              <>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <StatusCard
-                      title="Drift Detected"
-                      status={driftData.drift_detected ? 'Yes ⚠️' : 'No ✅'}
-                    />
-                  </Col>
-                  <Col span={18}>
-                    <div className="drift-table">
-                      <Title level={5}>Drifted Features</Title>
-                      <ul>
-                        {driftData?.drift_features?.map((f, idx) => (
-                          <li key={idx}>- {f} (score: {driftData?.drift_scores?.[f]})</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </Col>
-                </Row>
-              </>
-            )}
-          </Col>
-        </Row>
+              {loading ? (
+                <Spin />
+              ) : (
+                <>
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <StatusCard
+                        title="Drift Detected"
+                        status={driftData.drift_detected ? 'Yes ⚠️' : 'No ✅'}
+                      />
+                    </Col>
+                    <Col span={18}>
+                      <div className="drift-table">
+                        <Title level={5}>Drifted Features</Title>
+                        <ul>
+                          {driftData?.drift_features?.map((f, idx) => (
+                            <li key={idx}>- {f} (score: {driftData?.drift_scores?.[f]})</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </Col>
+                  </Row>
+                </>
+              )}
+            </Col>
+          </Row>
+        </Card>
       </Content>
     </Layout>
   );
