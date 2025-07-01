@@ -1,64 +1,64 @@
-from scipy.stats import ks_2samp
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
+from agents.drift_agent import run as run_drift_agent
+from agents.performance_agent import run as run_performance_agent
+from agents.remediation_agent import run as run_remediation_agent
+from orchestrator.langgraph_orchestrator import run_orchestrator
 
-def run(reference_path: str, live_path: str) -> dict:
-    ref = pd.read_csv(reference_path)
-    live = pd.read_csv(live_path)
-    drifted_features = []
-    drift_scores = {}
+app = FastAPI()
 
-    for col in ref.columns:
-        if col in live.columns:
-            stat, p = ks_2samp(ref[col], live[col])
-            drift_scores[col] = float(stat)
-            if p < 0.05:
-                drifted_features.append(col)
+# Enable CORS for frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    return {
-        "drift_detected": bool(drifted_features),
-        "drift_features": drifted_features,
-        "drift_scores": drift_scores
-    }
+@app.get("/api/performance")
+def get_performance_data():
+    result = run_performance_agent("data/predictions.csv")
+    df = pd.read_csv("data/predictions.csv")
+    grouped = df.groupby(pd.cut(df.index, 10))
+    trend_data = [
+        {
+            "time": f"t{i+1}",
+            "accuracy": round((g['true_label'] == g['predicted_label']).mean(), 2),
+            "latency": int(g["latency_ms"].mean())
+        }
+        for i, g in enumerate(grouped)
+    ]
+    result["trend"] = trend_data
+    return result
 
+@app.get("/api/notifications")
+def get_notifications():
+    return [
+        "Latency spiked above 350ms at 10:45am",
+        "Model accuracy dropped below threshold at 11:00am",
+        "Feature 'age' drift score exceeded limit"
+    ]
 
-# agents/performance_agent.py
-import pandas as pd
+@app.get("/api/drift")
+def get_drift_data():
+    result = run_drift_agent("data/reference.csv", "data/live.csv")
+    return result
 
-def run(predictions_path: str) -> dict:
-    df = pd.read_csv(predictions_path)
-    correct = (df['true_label'] == df['predicted_label']).sum()
-    total = len(df)
-    accuracy = correct / total if total else 0
-    avg_latency = df['latency_ms'].mean()
+@app.get("/api/remediation")
+def get_remediation():
+    drift_result = run_drift_agent("data/reference.csv", "data/live.csv")
+    perf_result = run_performance_agent("data/predictions.csv")
+    combined_state = {**drift_result, **perf_result}
+    plan = run_remediation_agent(combined_state)
+    return {"remediation_plan": plan}
 
-    return {
-        "accuracy": accuracy,
-        "avg_latency": avg_latency,
-        "performance_issues": accuracy < 0.85 or avg_latency > 300
-    }
-
-
-# agents/remediation_agent.py
-from langchain.chat_models import AzureChatOpenAI
-from langchain.prompts import PromptTemplate
-
-llm = AzureChatOpenAI(deployment_name="your-azure-deployment", temperature=0)
-
-def run(state: dict) -> str:
-    drift = state.get("drift_features", [])
-    perf_issues = state.get("performance_issues", False)
-    accuracy = state.get("accuracy")
-    latency = state.get("avg_latency")
-
-    prompt = PromptTemplate.from_template("""
-    You are an ML reliability assistant.
-    Based on the following inputs, suggest a clear and concise remediation plan.
-
-    Drift Features: {drift}
-    Accuracy: {accuracy}
-    Latency: {latency}
-    Performance Issues: {perf_issues}
-    """)
-
-    message = prompt.format(drift=drift, accuracy=accuracy, latency=latency, perf_issues=perf_issues)
-    return llm.predict(message)
+@app.get("/run-orchestrator")
+def run_full_orchestration():
+    result = run_orchestrator({
+        "reference_data": "data/reference.csv",
+        "live_data": "data/live.csv",
+        "predictions_data": "data/predictions.csv"
+    })
+    return result
