@@ -1,64 +1,154 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import pandas as pd
-from agents.drift_agent import run as run_drift_agent
-from agents.performance_agent import run as run_performance_agent
-from agents.remediation_agent import run as run_remediation_agent
-from orchestrator.langgraph_orchestrator import run_orchestrator
+// frontend/src/pages/Dashboard.jsx
+import React, { useEffect, useState } from 'react';
+import {
+  Row,
+  Col,
+  Typography,
+  Layout,
+  Spin,
+  Select,
+  Button,
+  message,
+} from 'antd';
+import Header from '../components/Header';
+import StatusCard from '../components/StatusCard';
+import PerformanceChart from '../components/PerformanceChart';
+import NotificationPanel from '../components/NotificationPanel';
+import {
+  getPerformanceData,
+  getNotifications,
+  getDriftData,
+  runOrchestrator,
+} from '../services/api';
 
-app = FastAPI()
+const { Title } = Typography;
+const { Content } = Layout;
+const { Option } = Select;
 
-# Enable CORS for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+const Dashboard = () => {
+  const [performance, setPerformance] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [driftData, setDriftData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('model_v1');
 
-@app.get("/api/performance")
-def get_performance_data():
-    result = run_performance_agent("data/predictions.csv")
-    df = pd.read_csv("data/predictions.csv")
-    grouped = df.groupby(pd.cut(df.index, 10))
-    trend_data = [
-        {
-            "time": f"t{i+1}",
-            "accuracy": round((g['true_label'] == g['predicted_label']).mean(), 2),
-            "latency": int(g["latency_ms"].mean())
-        }
-        for i, g in enumerate(grouped)
-    ]
-    result["trend"] = trend_data
-    return result
+  useEffect(() => {
+    fetchData();
+  }, [selectedModel]);
 
-@app.get("/api/notifications")
-def get_notifications():
-    return [
-        "Latency spiked above 350ms at 10:45am",
-        "Model accuracy dropped below threshold at 11:00am",
-        "Feature 'age' drift score exceeded limit"
-    ]
+  const fetchData = () => {
+    setLoading(true);
+    Promise.all([
+      getPerformanceData(),
+      getNotifications(),
+      getDriftData(),
+    ])
+      .then(([perfRes, notifRes, driftRes]) => {
+        setPerformance(perfRes.data.trend || []);
+        setNotifications(notifRes.data || []);
+        setDriftData(driftRes.data || {});
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
 
-@app.get("/api/drift")
-def get_drift_data():
-    result = run_drift_agent("data/reference.csv", "data/live.csv")
-    return result
+  const handleRunEvaluation = async () => {
+    try {
+      const res = await runOrchestrator();
+      message.success('Evaluation complete!');
+      console.log('Orchestrator result:', res.data);
+      fetchData();
+    } catch (err) {
+      message.error('Failed to run evaluation.');
+    }
+  };
 
-@app.get("/api/remediation")
-def get_remediation():
-    drift_result = run_drift_agent("data/reference.csv", "data/live.csv")
-    perf_result = run_performance_agent("data/predictions.csv")
-    combined_state = {**drift_result, **perf_result}
-    plan = run_remediation_agent(combined_state)
-    return {"remediation_plan": plan}
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header />
+      <Content style={{ padding: '24px' }}>
+        <Row justify="space-between" align="middle">
+          <Title level={3}>ML Observability Dashboard</Title>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Select
+              value={selectedModel}
+              onChange={setSelectedModel}
+              style={{ width: 160 }}
+            >
+              <Option value="model_v1">Model v1</Option>
+              <Option value="model_v2">Model v2</Option>
+              <Option value="model_v3">Model v3</Option>
+            </Select>
+            <Button type="primary" onClick={handleRunEvaluation}>
+              Run Evaluation
+            </Button>
+          </div>
+        </Row>
 
-@app.get("/run-orchestrator")
-def run_full_orchestration():
-    result = run_orchestrator({
-        "reference_data": "data/reference.csv",
-        "live_data": "data/live.csv",
-        "predictions_data": "data/predictions.csv"
-    })
-    return result
+        <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+          <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
+          <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
+          <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
+        </Row>
+
+        <Row gutter={16} style={{ marginTop: 32 }}>
+          <Col span={14}>
+            <Title level={4}>Performance Overview</Title>
+            {loading ? <Spin /> : <PerformanceChart data={performance} />}
+          </Col>
+          <Col span={10}>
+            <Title level={4}>Notifications</Title>
+            {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+          </Col>
+        </Row>
+
+        <Row style={{ marginTop: 32 }}>
+          <Col span={24}>
+            <Title level={4}>Drift Detection</Title>
+
+            <Row justify="space-between" style={{ marginBottom: 16 }}>
+              <Col>
+                <Select
+                  value={selectedModel}
+                  onChange={setSelectedModel}
+                  style={{ width: 200 }}
+                >
+                  <Option value="model_v1">Model v1</Option>
+                  <Option value="model_v2">Model v2</Option>
+                  <Option value="model_v3">Model v3</Option>
+                </Select>
+              </Col>
+            </Row>
+
+            {loading ? (
+              <Spin />
+            ) : (
+              <>
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <StatusCard
+                      title="Drift Detected"
+                      status={driftData.drift_detected ? 'Yes ⚠️' : 'No ✅'}
+                    />
+                  </Col>
+                  <Col span={18}>
+                    <div className="drift-table">
+                      <Title level={5}>Drifted Features</Title>
+                      <ul>
+                        {driftData?.drift_features?.map((f, idx) => (
+                          <li key={idx}>- {f} (score: {driftData?.drift_scores?.[f]})</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Col>
+                </Row>
+              </>
+            )}
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
+  );
+};
+
+export default Dashboard;
