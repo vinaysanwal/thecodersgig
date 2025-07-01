@@ -1,157 +1,58 @@
-// frontend/src/pages/Dashboard.jsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { Layout, Menu } from 'antd';
 import {
-  Row,
-  Col,
-  Typography,
-  Layout,
-  Spin,
-  Select,
-  Button,
-  message,
-  Card,
-} from 'antd';
-import Header from '../components/Header';
-import StatusCard from '../components/StatusCard';
-import PerformanceChart from '../components/PerformanceChart';
-import NotificationPanel from '../components/NotificationPanel';
-import {
-  getPerformanceData,
-  getNotifications,
-  getDriftData,
-  runOrchestrator,
-} from '../services/api';
+  DashboardOutlined,
+  AlertOutlined,
+  BarChartOutlined,
+  ToolOutlined,
+  BellOutlined,
+} from '@ant-design/icons';
 
-const { Title } = Typography;
-const { Content } = Layout;
-const { Option } = Select;
+import Dashboard from './pages/Dashboard';
+import DriftDetection from './pages/DriftDetection';
+import Performance from './pages/Performance';
+import RemediationLog from './pages/RemediationLog';
+import Notifications from './pages/Notifications';
 
-const Dashboard = () => {
-  const [performance, setPerformance] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [driftData, setDriftData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('model_v1');
+const { Header, Content, Footer } = Layout;
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedModel]);
-
-  const fetchData = () => {
-    setLoading(true);
-    Promise.all([
-      getPerformanceData(),
-      getNotifications(),
-      getDriftData(),
-    ])
-      .then(([perfRes, notifRes, driftRes]) => {
-        setPerformance(perfRes.data.trend || []);
-        setNotifications(notifRes.data || []);
-        setDriftData(driftRes.data || {});
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
-
-  const handleRunEvaluation = async () => {
-    try {
-      const res = await runOrchestrator();
-      message.success('Evaluation complete!');
-      console.log('Orchestrator result:', res.data);
-      fetchData();
-    } catch (err) {
-      message.error('Failed to run evaluation.');
-    }
-  };
-
+const App = () => {
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header />
-      <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
-        <Card style={{ padding: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Title level={3}>ML Observability Dashboard</Title>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Select
-                value={selectedModel}
-                onChange={setSelectedModel}
-                style={{ width: 160 }}
-              >
-                <Option value="model_v1">Model v1</Option>
-                <Option value="model_v2">Model v2</Option>
-                <Option value="model_v3">Model v3</Option>
-              </Select>
-              <Button type="primary" onClick={handleRunEvaluation}>
-                Run Evaluation
-              </Button>
-            </div>
-          </Row>
-
-          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-            <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-            <Col span={8}><StatusCard title="Drift Score" status="0.02 ✅" /></Col>
-            <Col span={8}><StatusCard title="Latency" status="320ms ⚠️" /></Col>
-          </Row>
-
-          <Row gutter={16} style={{ marginTop: 32 }}>
-            <Col span={14}>
-              <Title level={4}>Performance Overview</Title>
-              {loading ? <Spin /> : <PerformanceChart data={performance} />}
-            </Col>
-            <Col span={10}>
-              <Title level={4}>Notifications</Title>
-              {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-            </Col>
-          </Row>
-
-          <Row style={{ marginTop: 32 }}>
-            <Col span={24}>
-              <Title level={4}>Drift Detection</Title>
-
-              <Row justify="space-between" style={{ marginBottom: 16 }}>
-                <Col>
-                  <Select
-                    value={selectedModel}
-                    onChange={setSelectedModel}
-                    style={{ width: 200 }}
-                  >
-                    <Option value="model_v1">Model v1</Option>
-                    <Option value="model_v2">Model v2</Option>
-                    <Option value="model_v3">Model v3</Option>
-                  </Select>
-                </Col>
-              </Row>
-
-              {loading ? (
-                <Spin />
-              ) : (
-                <>
-                  <Row gutter={16}>
-                    <Col span={6}>
-                      <StatusCard
-                        title="Drift Detected"
-                        status={driftData.drift_detected ? 'Yes ⚠️' : 'No ✅'}
-                      />
-                    </Col>
-                    <Col span={18}>
-                      <div className="drift-table">
-                        <Title level={5}>Drifted Features</Title>
-                        <ul>
-                          {driftData?.drift_features?.map((f, idx) => (
-                            <li key={idx}>- {f} (score: {driftData?.drift_scores?.[f]})</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </Col>
-                  </Row>
-                </>
-              )}
-            </Col>
-          </Row>
-        </Card>
-      </Content>
-    </Layout>
+    <Router>
+      <Layout style={{ minHeight: '100vh' }}>
+        <Header>
+          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['dashboard']}>
+            <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
+              <Link to="/">Dashboard</Link>
+            </Menu.Item>
+            <Menu.Item key="drift" icon={<AlertOutlined />}>
+              <Link to="/drift">Drift Detection</Link>
+            </Menu.Item>
+            <Menu.Item key="performance" icon={<BarChartOutlined />}>
+              <Link to="/performance">Performance</Link>
+            </Menu.Item>
+            <Menu.Item key="remediation" icon={<ToolOutlined />}>
+              <Link to="/remediation">Remediation Log</Link>
+            </Menu.Item>
+            <Menu.Item key="notifications" icon={<BellOutlined />}>
+              <Link to="/notifications">Notifications</Link>
+            </Menu.Item>
+          </Menu>
+        </Header>
+        <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/drift" element={<DriftDetection />} />
+            <Route path="/performance" element={<Performance />} />
+            <Route path="/remediation" element={<RemediationLog />} />
+            <Route path="/notifications" element={<Notifications />} />
+          </Routes>
+        </Content>
+        <Footer style={{ textAlign: 'center' }}>ML Observatory ©2025</Footer>
+      </Layout>
+    </Router>
   );
 };
 
-export default Dashboard;
+export default App;
