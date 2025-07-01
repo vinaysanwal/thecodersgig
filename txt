@@ -1,9 +1,463 @@
-@app.post("/api/run")
-async def api_run_orchestrator(request: Request):
-    body = await request.json()
-    result = run_orchestrator({
-        "reference_data": "data/reference.csv",
-        "live_data": "data/live.csv",
-        "predictions_data": "data/predictions.csv"
-    })
-    return result
+import React from 'react';
+import { Layout, Menu } from 'antd';
+
+const { Header: AntHeader } = Layout;
+
+const Header = () => {
+  return (
+    <AntHeader style={{ backgroundColor: '#001529' }}>
+      <div style={{ float: 'left', color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
+        ML Observability
+      </div>
+      <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['dashboard']} style={{ marginLeft: 200 }}>
+        <Menu.Item key="dashboard">Dashboard</Menu.Item>
+        <Menu.Item key="drift">Drift Detection</Menu.Item>
+        <Menu.Item key="performance">Performance</Menu.Item>
+        <Menu.Item key="logs">Remediation Log</Menu.Item>
+        <Menu.Item key="notifications">Notifications</Menu.Item>
+      </Menu>
+    </AntHeader>
+  );
+};
+
+export default Header;
+
+
+import React from 'react';
+import { Card } from 'antd';
+
+const StatusCard = ({ title, status }) => {
+  return (
+    <Card title={title} bordered style={{ textAlign: 'center', height: '100%' }}>
+      <h2>{status}</h2>
+    </Card>
+  );
+};
+
+export default StatusCard;
+
+
+import React from 'react';
+import { Line } from '@ant-design/plots';
+
+const PerformanceChart = ({ data }) => {
+  const config = {
+    data,
+    xField: 'timestamp',
+    yField: 'value',
+    seriesField: 'metric',
+    smooth: true,
+    height: 300,
+    xAxis: {
+      label: { autoHide: true },
+    },
+  };
+
+  return <Line {...config} />;
+};
+
+export default PerformanceChart;
+
+
+
+import React from 'react';
+import { List, Tag } from 'antd';
+
+const NotificationPanel = ({ notifications }) => {
+  return (
+    <List
+      itemLayout="horizontal"
+      dataSource={notifications}
+      renderItem={(item) => (
+        <List.Item>
+          <List.Item.Meta
+            title={<span>{item.title}</span>}
+            description={<span>{item.message}</span>}
+          />
+          <Tag color="blue">{item.level}</Tag>
+        </List.Item>
+      )}
+    />
+  );
+};
+
+export default NotificationPanel;
+
+
+import React, { useEffect, useState } from 'react';
+import { Table, Typography, Layout, Spin } from 'antd';
+import Header from '../components/Header';
+import { getDriftData } from '../services/api';
+
+const { Title } = Typography;
+const { Content } = Layout;
+
+const DriftDetection = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getDriftData('model_v1')
+      .then((res) => {
+        const driftFeatures = res.data?.drift_features || [];
+        const scores = res.data?.drift_scores || {};
+        const timestamp = res.data?.timestamp;
+        const tableData = driftFeatures.map((feature, i) => ({
+          key: i,
+          feature,
+          score: scores[feature]?.toFixed(2),
+          detected_on: timestamp,
+        }));
+        setData(tableData);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const columns = [
+    { title: 'Feature', dataIndex: 'feature', key: 'feature' },
+    { title: 'Drift Score', dataIndex: 'score', key: 'score' },
+    { title: 'Detected On', dataIndex: 'detected_on', key: 'detected_on' },
+  ];
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+        <Title level={3}>Drift Detection</Title>
+        {loading ? <Spin /> : <Table columns={columns} dataSource={data} />}
+      </Content>
+    </Layout>
+  );
+};
+
+export default DriftDetection;
+
+
+
+
+
+import React, { useEffect, useState } from 'react';
+import { Typography, Layout, Spin } from 'antd';
+import Header from '../components/Header';
+import PerformanceChart from '../components/PerformanceChart';
+import { getPerformanceData } from '../services/api';
+
+const { Title } = Typography;
+const { Content } = Layout;
+
+const Performance = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPerformanceData('model_v1')
+      .then((res) => setData(res.data.trend))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+        <Title level={3}>Performance Metrics</Title>
+        {loading ? <Spin /> : <PerformanceChart data={data} />}
+      </Content>
+    </Layout>
+  );
+};
+
+export default Performance;
+
+
+
+
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Table, Spin } from 'antd';
+import Header from '../components/Header';
+import { getRemediationLog } from '../services/api';
+
+const { Content } = Layout;
+const { Title } = Typography;
+
+const RemediationLog = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRemediationLog()
+      .then((res) => setLogs(res.data || []))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const columns = [
+    { title: 'Time', dataIndex: 'timestamp', key: 'timestamp' },
+    { title: 'Issue', dataIndex: 'issue', key: 'issue' },
+    { title: 'Resolution', dataIndex: 'resolution', key: 'resolution' },
+    { title: 'Model', dataIndex: 'model', key: 'model' },
+  ];
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+        <Title level={3}>Remediation Log</Title>
+        {loading ? <Spin /> : <Table columns={columns} dataSource={logs} />}
+      </Content>
+    </Layout>
+  );
+};
+
+export default RemediationLog;
+
+
+
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Spin } from 'antd';
+import Header from '../components/Header';
+import NotificationPanel from '../components/NotificationPanel';
+import { getNotifications } from '../services/api';
+
+const { Content } = Layout;
+const { Title } = Typography;
+
+const Notifications = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getNotifications()
+      .then((res) => setNotifications(res.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+        <Title level={3}>System Notifications</Title>
+        {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+      </Content>
+    </Layout>
+  );
+};
+
+export default Notifications;
+
+
+import React, { useEffect, useState } from 'react';
+import {
+  Row,
+  Col,
+  Typography,
+  Layout,
+  Spin,
+  Select,
+  Button,
+  message,
+  Card,
+  Table,
+  Tag,
+} from 'antd';
+import Header from '../components/Header';
+import StatusCard from '../components/StatusCard';
+import PerformanceChart from '../components/PerformanceChart';
+import NotificationPanel from '../components/NotificationPanel';
+import {
+  getPerformanceData,
+  getNotifications,
+  getDriftData,
+  runOrchestrator,
+} from '../services/api';
+
+const { Title } = Typography;
+const { Content } = Layout;
+const { Option } = Select;
+
+const Dashboard = () => {
+  const [performance, setPerformance] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [driftData, setDriftData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('model_v1');
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedModel]);
+
+  const fetchData = () => {
+    setLoading(true);
+    Promise.all([
+      getPerformanceData(selectedModel),
+      getNotifications(),
+      getDriftData(selectedModel),
+    ])
+      .then(([perfRes, notifRes, driftRes]) => {
+        setPerformance(perfRes.data.trend || []);
+        setNotifications(notifRes.data || []);
+        setDriftData(driftRes.data || {});
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  const handleRunEvaluation = async () => {
+    try {
+      const res = await runOrchestrator(selectedModel);
+      message.success('Evaluation complete!');
+      console.log('Orchestrator result:', res.data);
+      fetchData();
+    } catch (err) {
+      message.error('Failed to run evaluation.');
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Feature',
+      dataIndex: 'feature',
+      key: 'feature',
+    },
+    {
+      title: 'Drift Score',
+      dataIndex: 'score',
+      key: 'score',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Tag color={status === 'Drift' ? 'red' : 'green'}>{status}</Tag>
+      ),
+    },
+    {
+      title: 'Detected On',
+      dataIndex: 'detected_on',
+      key: 'detected_on',
+    },
+  ];
+
+  const tableData = (driftData?.drift_features || []).map((feature, idx) => ({
+    key: idx,
+    feature,
+    score: driftData?.drift_scores?.[feature]?.toFixed(2) || '-',
+    status: 'Drift',
+    detected_on: driftData?.timestamp || 'N/A',
+  }));
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header />
+      <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
+        <Card style={{ padding: 24 }}>
+          <Row justify="space-between" align="middle">
+            <Title level={3}>ML Observability Dashboard</Title>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Select
+                value={selectedModel}
+                onChange={setSelectedModel}
+                style={{ width: 160 }}
+              >
+                <Option value="model_v1">Model v1</Option>
+                <Option value="model_v2">Model v2</Option>
+                <Option value="model_v3">Model v3</Option>
+              </Select>
+              <Button type="primary" onClick={handleRunEvaluation}>
+                Run Evaluation
+              </Button>
+            </div>
+          </Row>
+
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
+            <Col span={8}><StatusCard title="Drift Detected" status={driftData?.drift_detected ? 'Yes ⚠️' : 'No ✅'} /></Col>
+            <Col span={8}><StatusCard title="Last Fix" status="2 hours ago" /></Col>
+          </Row>
+
+          <Row gutter={16} style={{ marginTop: 32 }}>
+            <Col span={14}>
+              <Title level={4}>Model Performance Over Time</Title>
+              {loading ? <Spin /> : <PerformanceChart data={performance} />}
+            </Col>
+            <Col span={10}>
+              <Title level={4}>Notifications</Title>
+              {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+            </Col>
+          </Row>
+
+          <Row style={{ marginTop: 32 }}>
+            <Col span={24}>
+              <Title level={4}>Drift Detection</Title>
+              <Table
+                columns={columns}
+                dataSource={tableData}
+                pagination={false}
+                loading={loading}
+              />
+            </Col>
+          </Row>
+        </Card>
+      </Content>
+    </Layout>
+  );
+};
+
+export default Dashboard;
+
+
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import DriftDetection from './pages/DriftDetection';
+import Performance from './pages/Performance';
+import RemediationLog from './pages/RemediationLog';
+import Notifications from './pages/Notifications';
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/drift" element={<DriftDetection />} />
+        <Route path="/performance" element={<Performance />} />
+        <Route path="/logs" element={<RemediationLog />} />
+        <Route path="/notifications" element={<Notifications />} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
+
+
+
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8000'; // Update if different
+
+// Get performance metrics (trend)
+export const getPerformanceData = (modelId = 'model_v1') => {
+  return axios.get(`${API_BASE_URL}/performance?model_id=${modelId}`);
+};
+
+// Get current drift detection results
+export const getDriftData = (modelId = 'model_v1') => {
+  return axios.get(`${API_BASE_URL}/drift?model_id=${modelId}`);
+};
+
+// Get notifications or alerts
+export const getNotifications = () => {
+  return axios.get(`${API_BASE_URL}/notifications`);
+};
+
+// Get past remediation actions
+export const getRemediationLog = () => {
+  return axios.get(`${API_BASE_URL}/remediation-log`);
+};
+
+// Trigger evaluation (orchestrator)
+export const runOrchestrator = (modelId = 'model_v1') => {
+  return axios.post(`${API_BASE_URL}/run-orchestrator`, { model_id: modelId });
+};
