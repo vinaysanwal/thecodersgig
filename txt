@@ -1,48 +1,45 @@
-# orchestrator/langgraph_orchestrator.py
+# orchestrator/nodes/drift_node.py
+import pandas as pd
+from agents.drift_agent import run as run_drift_agent
 
-from langgraph.graph import StateGraph, END
-from orchestrator.nodes.drift_node import drift_node
-from orchestrator.nodes.performance_node import performance_node
-from orchestrator.nodes.remediation_node import remediation_node
-from orchestrator.nodes.decision_node import decision_node
+def drift_node(state: dict) -> dict:
+    reference_path = state.get("reference_data", "data/reference.csv")
+    live_path = state.get("live_data", "data/live.csv")
 
-# Shared state structure
-class AgentState(dict):
-    # Acts as a mutable key-value store for agent communication
-    pass
+    drift_results = run_drift_agent(reference_path, live_path)
+    state.update(drift_results)
+    state["last_step"] = "drift"
+    return state
 
-def build_graph():
-    graph = StateGraph(AgentState)
 
-    # Define agent nodes
-    graph.add_node("drift", drift_node)
-    graph.add_node("performance", performance_node)
-    graph.add_node("remediation", remediation_node)
-    graph.add_node("decision", decision_node)
+# orchestrator/nodes/performance_node.py
+import pandas as pd
+from agents.performance_agent import run as run_performance_agent
 
-    # Set entry point
-    graph.set_entry_point("decision")
+def performance_node(state: dict) -> dict:
+    predictions_path = state.get("predictions_data", "data/predictions.csv")
+    performance_results = run_performance_agent(predictions_path)
+    state.update(performance_results)
+    state["last_step"] = "performance"
+    return state
 
-    # Conditional routing from decision
-    graph.add_conditional_edges(
-        "decision",
-        decision_node,
-        {
-            "drift": "drift",
-            "performance": "performance",
-            "remediation": "remediation",
-            "end": END,
-        }
-    )
 
-    # Loop back to decision after each agent step
-    graph.add_edge("drift", "decision")
-    graph.add_edge("performance", "decision")
-    graph.add_edge("remediation", "decision")
+# orchestrator/nodes/remediation_node.py
+from agents.remediation_agent import run as run_remediation_agent
 
-    return graph.compile()
+def remediation_node(state: dict) -> dict:
+    remediation_plan = run_remediation_agent(state)
+    state["remediation_plan"] = remediation_plan
+    state["last_step"] = "remediation"
+    return state
 
-def run_orchestrator(initial_state):
-    graph = build_graph()
-    result = graph.invoke(initial_state)
-    return result
+
+# orchestrator/nodes/decision_node.py
+def decision_node(state: dict) -> str:
+    if "remediation_plan" in state:
+        return "end"
+    if state.get("drift_detected"):
+        return "drift"
+    if state.get("performance_issues"):
+        return "performance"
+    return "remediation"
