@@ -1,67 +1,46 @@
-// backend/orchestrator/nodes/decision_node.py
+import numpy as np
+from scipy.stats import ks_2samp
 
-from orchestrator.config import llm
-from langchain_core.prompts import ChatPromptTemplate
+def get_drift_data(model_id: str):
+    # Simulated reference and live data
+    np.random.seed(42)
+    reference_data = np.random.normal(0, 1, 500)
+    live_data = np.random.normal(0.1, 1.2, 500)
 
-PROMPT_TEMPLATE = ChatPromptTemplate.from_messages([
-    ("system", "You are an ML Ops assistant. Given the drift and performance results, decide if remediation is required."),
-    ("human", "Drift detected: {drift_flag}. Performance degraded: {performance_flag}. What should we do? Answer only 'remediate' or 'noop'.")
-])
+    p_value = ks_2samp(reference_data, live_data).pvalue
+    drift_detected = p_value < 0.05
 
-def decide_next_action(state: dict) -> str:
-    drift_flag = state.get("drift_result", {}).get("drift_detected", False)
-    performance_flag = state.get("performance_result", {}).get("degraded", False)
+    drift_scores = {
+        "feature_1": 1 - p_value  # Example for one feature
+    }
 
-    prompt = PROMPT_TEMPLATE.format_messages(
-        drift_flag=str(drift_flag),
-        performance_flag=str(performance_flag)
-    )
-
-    response = llm(prompt)
-    action = response.content.strip().lower()
-    return "remediate" if "remediate" in action else "noop"
-
-
-// backend/orchestrator/nodes/drift_node.py
-
-import datetime
-from agents.drift_agent import get_drift_data
-
-def detect_drift(model_id: str) -> dict:
-    data = get_drift_data(model_id)
     return {
-        "drift_detected": bool(data.get("drift_features")),
-        "drift_features": data.get("drift_features", []),
-        "drift_scores": data.get("drift_scores", {}),
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "model_id": model_id,
+        "drift_features": ["feature_1"] if drift_detected else [],
+        "drift_scores": drift_scores
     }
 
 
-// backend/orchestrator/nodes/performance_node.py
+// backend/agents/performance_agent.py
 
-from agents.performance_agent import get_performance_data
-
-def evaluate_performance(model_id: str) -> dict:
-    perf_data = get_performance_data(model_id)
-    latest = perf_data.get("trend", [])[-1] if perf_data.get("trend") else {}
-    latency = latest.get("latency", 0)
-    accuracy = latest.get("accuracy", 1)
-
+def get_performance_data(model_id: str):
+    # Simulated latency and accuracy trend
     return {
-        "degraded": (latency > 500 or accuracy < 0.8),
-        "latency": latency,
-        "accuracy": accuracy
+        "model_id": model_id,
+        "trend": [
+            {"timestamp": "2025-07-01T10:00:00Z", "latency": 320, "accuracy": 0.95},
+            {"timestamp": "2025-07-02T10:00:00Z", "latency": 370, "accuracy": 0.93},
+            {"timestamp": "2025-07-03T10:00:00Z", "latency": 520, "accuracy": 0.75},
+        ]
     }
 
 
-// backend/orchestrator/nodes/remediation_node.py
+// backend/agents/remediation_agent.py
 
-from agents.remediation_agent import get_remediation_logs
-
-def suggest_remediation(state: dict) -> dict:
-    logs = get_remediation_logs()
-    return {
-        "action": "Triggered auto-retraining",
-        "timestamp": logs[0]["timestamp"] if logs else "N/A",
-        "details": logs[0]["message"] if logs else "Simulated remediation log"
-    }
+def get_remediation_logs():
+    return [
+        {
+            "timestamp": "2025-07-03T12:00:00Z",
+            "message": "Retrained model on fresh data due to drift in feature_1."
+        }
+    ]
