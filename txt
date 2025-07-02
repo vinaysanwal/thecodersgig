@@ -1,86 +1,41 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+import os
+import json
+from typing import Dict, Any, List
 
-from agents.drift_agent import get_drift_data
-from agents.performance_agent import get_performance_data
-from agents.remediation_agent import get_remediation_logs
-from orchestrator.langgraph_orchestrator import run_graph
+# Base data folder (adjust if needed)
+BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
-app = FastAPI(
-    title="ML Observability API",
-    version="1.0.0",
-    description="Handles drift detection, performance monitoring, and remediation coordination"
-)
+def get_model_list() -> List[Dict[str, Any]]:
+    """Load all models from models.json"""
+    models_path = os.path.join(BASE_DIR, "models.json")
+    if not os.path.exists(models_path):
+        raise FileNotFoundError("models.json not found in /data/")
+    
+    with open(models_path, "r") as f:
+        return json.load(f)
 
-# ✅ CORS Middleware (customize in production)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Replace with frontend URL in prod
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def load_reference_data(model_id: str) -> Dict[str, Any]:
+    """Load reference data for a specific model"""
+    path = os.path.join(BASE_DIR, "reference", f"{model_id}.json")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Reference data not found for model: {model_id}")
+    
+    with open(path, "r") as f:
+        return json.load(f)
 
-# ✅ Health Check
-@app.get("/health")
-async def health_check():
-    return {"status": "ok", "message": "Service is running"}
+def load_live_data(model_id: str) -> Dict[str, Any]:
+    """Load live data for a specific model"""
+    path = os.path.join(BASE_DIR, "live", f"{model_id}.json")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Live data not found for model: {model_id}")
+    
+    with open(path, "r") as f:
+        return json.load(f)
 
-# ✅ Drift Detection
-@app.get("/drift")
-async def drift(model_id: str = "model_v1"):
-    try:
-        result = get_drift_data(model_id)
-        return JSONResponse(content=result)
-    except FileNotFoundError:
-        return JSONResponse(status_code=404, content={"error": f"Data not found for model: {model_id}"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Performance Monitoring
-@app.get("/performance")
-async def performance(model_id: str = "model_v1"):
-    try:
-        result = get_performance_data(model_id)
-        return JSONResponse(content=result)
-    except FileNotFoundError:
-        return JSONResponse(status_code=404, content={"error": f"Data not found for model: {model_id}"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Notification Log (Hardcoded for now)
-@app.get("/notifications")
-async def notifications():
-    return JSONResponse(content=[
-        {
-            "message": "Drift detected in feature 'feature1'",
-            "timestamp": "2025-07-01T10:00:00Z",
-            "level": "critical"
-        },
-        {
-            "message": "Latency is increasing for model_v1",
-            "timestamp": "2025-07-01T11:30:00Z",
-            "level": "warning"
-        }
-    ])
-
-# ✅ Remediation Log
-@app.get("/remediation-log")
-async def remediation():
-    try:
-        result = get_remediation_logs()
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Run Full Evaluation Pipeline
-@app.post("/run-orchestrator")
-async def run_orchestrator(request: Request):
-    try:
-        body = await request.json()
-        model_id = body.get("model_id", "model_v1")
-        result = await run_graph(model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+def get_model_metadata(model_id: str) -> Dict[str, Any]:
+    """Return metadata for a specific model from models.json"""
+    models = get_model_list()
+    for model in models:
+        if model["model_id"] == model_id:
+            return model
+    raise ValueError(f"Model {model_id} not found in models.json")
