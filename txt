@@ -1,92 +1,86 @@
-[
-  {
-    "model_id": "gitlab_helper_v1",
-    "team": "DevOps",
-    "use_case": "GitLab Assistant",
-    "description": "Helps developers with GitLab issues, MR reviews, and CI/CD configs.",
-    "version": "v1",
-    "drift_threshold": 0.3,
-    "active": true
-  },
-  {
-    "model_id": "infra_cost_v1",
-    "team": "FinanceOps",
-    "use_case": "Infra Cost Optimizer",
-    "description": "Provides cost optimization suggestions for cloud infra usage.",
-    "version": "v1",
-    "drift_threshold": 0.25,
-    "active": true
-  },
-  {
-    "model_id": "hr_insight_bot_v1",
-    "team": "HR",
-    "use_case": "HR Feedback Analyzer",
-    "description": "Analyzes employee feedback and surfaces actionable insights.",
-    "version": "v1",
-    "drift_threshold": 0.2,
-    "active": true
-  },
-  {
-    "model_id": "developer_assist_v2",
-    "team": "Engineering",
-    "use_case": "Code Assistant",
-    "description": "Helps engineers answer questions and generate internal code snippets.",
-    "version": "v2",
-    "drift_threshold": 0.35,
-    "active": true
-  },
-  {
-    "model_id": "internal_doc_bot_v1",
-    "team": "KnowledgeOps",
-    "use_case": "Document Search Bot",
-    "description": "Searches internal documents and summaries based on queries.",
-    "version": "v1",
-    "drift_threshold": 0.3,
-    "active": true
-  },
-  {
-    "model_id": "incident_triage_v1",
-    "team": "SRE",
-    "use_case": "Incident Analysis Assistant",
-    "description": "Auto-summarizes incident reports and suggests triage steps.",
-    "version": "v1",
-    "drift_threshold": 0.28,
-    "active": true
-  },
-  {
-    "model_id": "access_mgmt_v1",
-    "team": "Security",
-    "use_case": "Access Request Classifier",
-    "description": "Classifies and routes access requests based on sensitivity.",
-    "version": "v1",
-    "drift_threshold": 0.22,
-    "active": true
-  },
-  {
-    "model_id": "project_summary_v2",
-    "team": "PMO",
-    "use_case": "Project Update Generator",
-    "description": "Summarizes project status updates and risks automatically.",
-    "version": "v2",
-    "drift_threshold": 0.27,
-    "active": true
-  },
-  {
-    "model_id": "ticket_router_v1",
-    "team": "Support",
-    "use_case": "Ticket Routing",
-    "description": "Routes internal IT/helpdesk tickets to correct team using LLM.",
-    "version": "v1",
-    "drift_threshold": 0.3,
-    "active": true
-  },
-  {
-    "model_id": "infra_monitor_v1",
-    "team": "CloudOps",
-    "use_case": "Infra Log Analyzer",
-    "description": "Summarizes log patterns and detects anomalies in infra logs.",
-    "version": "v1",
-    "drift_threshold": 0.33,
-    "active": true
-  }
-]
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from agents.drift_agent import get_drift_data
+from agents.performance_agent import get_performance_data
+from agents.remediation_agent import get_remediation_logs
+from orchestrator.langgraph_orchestrator import run_graph
+
+app = FastAPI(
+    title="ML Observability API",
+    version="1.0.0",
+    description="Handles drift detection, performance monitoring, and remediation coordination"
+)
+
+# ✅ CORS Middleware (customize in production)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace with frontend URL in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ Health Check
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "message": "Service is running"}
+
+# ✅ Drift Detection
+@app.get("/drift")
+async def drift(model_id: str = "model_v1"):
+    try:
+        result = get_drift_data(model_id)
+        return JSONResponse(content=result)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": f"Data not found for model: {model_id}"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Performance Monitoring
+@app.get("/performance")
+async def performance(model_id: str = "model_v1"):
+    try:
+        result = get_performance_data(model_id)
+        return JSONResponse(content=result)
+    except FileNotFoundError:
+        return JSONResponse(status_code=404, content={"error": f"Data not found for model: {model_id}"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Notification Log (Hardcoded for now)
+@app.get("/notifications")
+async def notifications():
+    return JSONResponse(content=[
+        {
+            "message": "Drift detected in feature 'feature1'",
+            "timestamp": "2025-07-01T10:00:00Z",
+            "level": "critical"
+        },
+        {
+            "message": "Latency is increasing for model_v1",
+            "timestamp": "2025-07-01T11:30:00Z",
+            "level": "warning"
+        }
+    ])
+
+# ✅ Remediation Log
+@app.get("/remediation-log")
+async def remediation():
+    try:
+        result = get_remediation_logs()
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Run Full Evaluation Pipeline
+@app.post("/run-orchestrator")
+async def run_orchestrator(request: Request):
+    try:
+        body = await request.json()
+        model_id = body.get("model_id", "model_v1")
+        result = await run_graph(model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
