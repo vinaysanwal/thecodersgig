@@ -1,29 +1,45 @@
-# backend/orchestrator/config.py
+from orchestrator.nodes.drift_node import detect_drift
+from orchestrator.nodes.performance_node import evaluate_performance
+from orchestrator.nodes.remediation_node import suggest_remediation
+from orchestrator.nodes.decision_node import decide_next_action
+from orchestrator.config import SHARED_STATE
 
-import os
-from langchain.chat_models import ChatOpenAI
+import asyncio
 
-# ✅ Load Azure OpenAI credentials from environment variables
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")  # e.g. "gpt-35-deployment"
-AZURE_API_VERSION = os.getenv("AZURE_API_VERSION", "2023-07-01-preview")
+def log_state(stage: str, state: dict):
+    print(f"===== {stage.upper()} =====")
+    for k, v in state.items():
+        print(f"{k}: {v}")
+    print("========================\n")
 
-# ✅ Azure OpenAI Chat Model (gpt-35-turbo)
-llm = ChatOpenAI(
-    openai_api_type="azure",
-    openai_api_key=AZURE_OPENAI_API_KEY,
-    openai_api_base=AZURE_OPENAI_ENDPOINT,
-    openai_api_version=AZURE_API_VERSION,
-    deployment_name=AZURE_DEPLOYMENT_NAME,
-    temperature=0.2,
-    model="gpt-35-turbo"
-)
+async def run_graph(model_id: str) -> dict:
+    """
+    Main LangGraph-style flow executor.
+    Handles state mutation and LLM-powered decision making.
+    """
+    # ✅ Initialize state
+    SHARED_STATE.clear()
+    SHARED_STATE.update({"model_id": model_id})
 
-# ✅ Shared in-memory state used across LangGraph nodes
-SHARED_STATE = {
-    "model_id": None,
-    "drift_result": None,
-    "performance_result": None,
-    "remediation_result": None,
-}
+    # ✅ Step 1: Detect Drift
+    drift_result = detect_drift(model_id)
+    SHARED_STATE["drift_result"] = drift_result
+    log_state("Drift Detection", SHARED_STATE)
+
+    # ✅ Step 2: Evaluate Performance
+    performance_result = evaluate_performance(model_id)
+    SHARED_STATE["performance_result"] = performance_result
+    log_state("Performance Evaluation", SHARED_STATE)
+
+    # ✅ Step 3: LLM Decision Node
+    decision = decide_next_action(SHARED_STATE)
+    SHARED_STATE["decision"] = decision
+    log_state("Decision", SHARED_STATE)
+
+    # ✅ Step 4: Optional Remediation
+    if decision == "remediate":
+        remediation_result = suggest_remediation(SHARED_STATE)
+        SHARED_STATE["remediation_result"] = remediation_result
+        log_state("Remediation", SHARED_STATE)
+
+    return SHARED_STATE
