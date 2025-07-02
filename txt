@@ -1,47 +1,135 @@
-import datetime
-from orchestrator.utils import load_reference_data, load_live_data
+from orchestrator.utils import load_live_data
 
-def simple_drift_score(ref_value, live_value):
-    """Naive drift calculation (absolute difference)"""
+def evaluate_performance(model_id: str) -> dict:
+    """
+    Evaluate model performance based on latest live data.
+    Returns latency and accuracy, and flags if degraded.
+    """
     try:
-        return abs(ref_value - live_value)
-    except Exception:
-        return 0.0
-
-def detect_drift(model_id: str) -> dict:
-    try:
-        reference_data = load_reference_data(model_id)
         live_data = load_live_data(model_id)
+        trend = live_data.get("trend", [])
 
-        drift_features = []
-        drift_scores = {}
+        if not trend:
+            return {
+                "degraded": False,
+                "latency": None,
+                "accuracy": None,
+                "message": "No performance trend data found."
+            }
 
-        ref_features = reference_data.get("features", {})
-        live_features = live_data.get("features", {})
-
-        for feature, ref_value in ref_features.items():
-            live_value = live_features.get(feature)
-
-            if live_value is None:
-                continue
-
-            score = simple_drift_score(ref_value, live_value)
-            drift_scores[feature] = score
-
-            # Mark drift if score exceeds simple threshold (e.g. 0.2)
-            if score > 0.2:
-                drift_features.append(feature)
+        latest = trend[-1]  # Most recent entry
+        latency = latest.get("latency", 0)
+        accuracy = latest.get("accuracy", 1)
 
         return {
-            "drift_detected": bool(drift_features),
-            "drift_features": drift_features,
-            "drift_scores": drift_scores,
-            "timestamp": datetime.datetime.utcnow().isoformat()
+            "degraded": (latency > 500 or accuracy < 0.8),
+            "latency": latency,
+            "accuracy": accuracy
         }
 
     except Exception as e:
         return {
-            "drift_detected": False,
+            "degraded": False,
+            "latency": None,
+            "accuracy": None,
+            "error": str(e)
+        }
+
+
+
+
+drift_agent
+
+import os
+import json
+import numpy as np
+from scipy.stats import ks_2samp
+
+REFERENCE_PATH = "data/reference"
+LIVE_PATH = "data/live"
+
+def load_json(path):
+    with open(path, "r") as f:
+        return json.load(f)
+
+def get_drift_data(model_id: str) -> dict:
+    try:
+        ref_file = os.path.join(REFERENCE_PATH, f"{model_id}.json")
+        live_file = os.path.join(LIVE_PATH, f"{model_id}.json")
+
+        reference = load_json(ref_file)
+        live = load_json(live_file)
+
+        ref_features = reference.get("features", {})
+        live_features = live.get("features", {})
+
+        drift_features = []
+        drift_scores = {}
+
+        for feature in ref_features:
+            if feature not in live_features:
+                continue
+
+            ref_values = np.array(ref_features[feature])
+            live_values = np.array(live_features[feature])
+
+            if len(ref_values) < 2 or len(live_values) < 2:
+                continue  # Not enough data to run KS test
+
+            p_value = ks_2samp(ref_values, live_values).pvalue
+            score = 1 - p_value
+            drift_scores[feature] = round(score, 4)
+
+            if p_value < 0.05:
+                drift_features.append(feature)
+
+        return {
+            "model_id": model_id,
+            "drift_detected": bool(drift_features),
+            "drift_features": drift_features,
+            "drift_scores": drift_scores
+        }
+
+    except Exception as e:
+        return {
+            "model_id": model_id,
             "error": str(e),
-            "timestamp": datetime.datetime.utcnow().isoformat()
+            "drift_detected": False,
+            "drift_features": [],
+            "drift_scores": {}
+        }
+
+
+
+performance agent
+
+
+import os
+import json
+
+PERFORMANCE_PATH = "data/performance"
+
+def load_json(path):
+    with open(path, "r") as f:
+        return json.load(f)
+
+def get_performance_data(model_id: str) -> dict:
+    try:
+        file_path = os.path.join(PERFORMANCE_PATH, f"{model_id}.json")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Performance data not found for {model_id}")
+
+        data = load_json(file_path)
+        trend = data.get("trend", [])
+
+        return {
+            "model_id": model_id,
+            "trend": trend
+        }
+
+    except Exception as e:
+        return {
+            "model_id": model_id,
+            "error": str(e),
+            "trend": []
         }
