@@ -1,178 +1,77 @@
-# backend/main.py
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from orchestrator.langgraph_orchestrator import run_graph
+from fastapi.responses import JSONResponse
+
 from agents.drift_agent import get_drift_data
 from agents.performance_agent import get_performance_data
 from agents.remediation_agent import get_remediation_logs
-import asyncio
+from orchestrator.langgraph_orchestrator import run_graph
 
-app = FastAPI()
+app = FastAPI(
+    title="ML Observability API",
+    version="1.0.0",
+    description="Handles drift detection, performance monitoring, and remediation coordination"
+)
 
+# ✅ CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # TODO: restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ Health check route
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+# ✅ Drift Detection Endpoint
 @app.get("/drift")
 async def drift(model_id: str = "model_v1"):
-    return get_drift_data(model_id)
+    try:
+        result = get_drift_data(model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ✅ Performance Monitoring Endpoint
 @app.get("/performance")
 async def performance(model_id: str = "model_v1"):
-    return get_performance_data(model_id)
+    try:
+        result = get_performance_data(model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ✅ Notification Stub
 @app.get("/notifications")
 async def notifications():
-    return [
+    return JSONResponse(content=[
         {
             "message": "Drift detected in feature 'age'",
-            "timestamp": "2025-06-30",
-            "level": "critical",
+            "timestamp": "2025-07-01T10:00:00Z",
+            "level": "critical"
         }
-    ]
+    ])
 
+# ✅ Remediation Log Endpoint
 @app.get("/remediation-log")
 async def remediation():
-    return get_remediation_logs()
+    try:
+        result = get_remediation_logs()
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
+# ✅ Run Full Orchestration (LLM + Logic)
 @app.post("/run-orchestrator")
 async def run_orchestrator(request: Request):
-    body = await request.json()
-    model_id = body.get("model_id", "model_v1")
-    result = await run_graph(model_id)
-    return result
-
-# orchestrator/config.py
-import os
-from langchain.chat_models import AzureChatOpenAI
-
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
-
-llm = AzureChatOpenAI(
-    openai_api_key=AZURE_OPENAI_API_KEY,
-    azure_endpoint=AZURE_OPENAI_ENDPOINT,
-    deployment_name=AZURE_DEPLOYMENT_NAME,
-    model="gpt-4",
-    api_version="2023-07-01-preview"
-)
-
-SHARED_STATE = {
-    "model_id": None,
-    "drift_result": None,
-    "performance_result": None,
-    "remediation_result": None,
-}
-
-# orchestrator/nodes/drift_node.py
-import json
-from scipy.stats import ks_2samp
-from pathlib import Path
-from datetime import datetime
-
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
-
-def load_json(path):
-    with open(path, "r") as f:
-        return json.load(f)
-
-def detect_drift(model_id):
-    ref_data = load_json(DATA_DIR / "reference_data.json")
-    prod_data = load_json(DATA_DIR / "production_data.json")
-
-    drift_scores = {}
-    drift_features = []
-
-    for feature in ref_data:
-        ref_values = ref_data[feature]
-        prod_values = prod_data.get(feature, [])
-
-        if not prod_values or len(prod_values) < 10:
-            continue
-
-        stat, p_value = ks_2samp(ref_values, prod_values)
-        drift_scores[feature] = round(stat, 3)
-        if p_value < 0.05:
-            drift_features.append(feature)
-
-    return {
-        "drift_detected": len(drift_features) > 0,
-        "drift_features": drift_features,
-        "drift_scores": drift_scores,
-        "timestamp": datetime.utcnow().isoformat(),
-    }
-
-# orchestrator/nodes/performance_node.py
-def evaluate_performance(model_id):
-    return {
-        "accuracy": 0.93,
-        "latency_ms": 210,
-        "trend": [
-            {"timestamp": "2025-06-28", "value": 0.91, "metric": "accuracy"},
-            {"timestamp": "2025-06-29", "value": 0.92, "metric": "accuracy"},
-            {"timestamp": "2025-06-30", "value": 0.93, "metric": "accuracy"},
-        ],
-    }
-
-# orchestrator/nodes/remediation_node.py
-def suggest_remediation(state):
-    return {
-        "action": "Retrain model on latest data",
-        "model": state.get("model_id"),
-        "timestamp": "2025-06-30 18:05",
-    }
-
-# orchestrator/nodes/decision_node.py
-from orchestrator.config import llm
-
-def decide_next_action(state):
-    prompt = f"""
-    A model was evaluated with the following:
-    - Drift detected: {state['drift_result']['drift_detected']}
-    - Features with drift: {state['drift_result']['drift_features']}
-    - Performance accuracy: {state['performance_result']['accuracy']}
-
-    Should we trigger remediation? Reply with 'remediate' or 'end'.
-    """
-    response = llm.invoke(prompt)
-    return "remediate" if "remediate" in response.content.lower() else "end"
-
-# orchestrator/langgraph_orchestrator.py
-from orchestrator.nodes import drift_node, performance_node, remediation_node, decision_node
-from orchestrator.config import SHARED_STATE
-
-async def run_graph(model_id):
-    SHARED_STATE["model_id"] = model_id
-    SHARED_STATE["drift_result"] = drift_node.detect_drift(model_id)
-    SHARED_STATE["performance_result"] = performance_node.evaluate_performance(model_id)
-
-    next_action = decision_node.decide_next_action(SHARED_STATE)
-
-    if next_action == "remediate":
-        SHARED_STATE["remediation_result"] = remediation_node.suggest_remediation(SHARED_STATE)
-
-    return SHARED_STATE
-
-# agents/drift_agent.py
-from orchestrator.nodes.drift_node import detect_drift
-
-def get_drift_data(model_id):
-    return detect_drift(model_id)
-
-# agents/performance_agent.py
-from orchestrator.nodes.performance_node import evaluate_performance
-
-def get_performance_data(model_id):
-    return evaluate_performance(model_id)
-
-# agents/remediation_agent.py
-from orchestrator.nodes.remediation_node import suggest_remediation
-from orchestrator.config import SHARED_STATE
-
-def get_remediation_logs():
-    return [SHARED_STATE.get("remediation_result") or {"status": "No action taken"}]
+    try:
+        body = await request.json()
+        model_id = body.get("model_id", "model_v1")
+        result = await run_graph(model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
