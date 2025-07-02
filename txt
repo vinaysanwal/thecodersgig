@@ -1,15 +1,16 @@
-from agents.remediation_agent import suggest_fix
-
-@app.post("/remediation")
-async def remediation_action(request: Request):
+async def trigger_remediation(request: Request):
     try:
         body = await request.json()
         model_id = body.get("model_id", "model_v1")
-        drift_result = body.get("drift_result") or SHARED_STATE.get("drift_result", {})
-        performance_result = body.get("performance_result") or SHARED_STATE.get("performance_result", {})
 
-        result = suggest_fix(drift_result, performance_result, model_id)
-        return JSONResponse(content=result)
+        drift = SHARED_STATE.get("drift_result", {})
+        perf = SHARED_STATE.get("performance_result", {})
+
+        if not isinstance(drift, dict) or not isinstance(perf, dict):
+            return JSONResponse(status_code=400, content={"error": "Drift or performance state is not valid dict."})
+
+        suggestion = suggest_fix(drift, perf, model_id)
+        return JSONResponse(content=suggestion)
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
