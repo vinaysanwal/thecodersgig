@@ -1,46 +1,15 @@
-from orchestrator.config import llm
-
-def get_remediation_logs():
-    # You can expand this to log past remediations from a database or file
-    return [
-        {
-            "model_id": "gitlab_helper_v1",
-            "issue": "Feature drift detected in 'feature_1'",
-            "suggestion": "Retrain the model with recent data",
-            "timestamp": "2025-07-01T15:30:00Z"
-        }
-    ]
-
-def suggest_fix(drift_result, performance_result, model_id):
-    drift_features = drift_result.get("drift_features", [])
-    degraded = performance_result.get("degraded", False)
-
-    prompt = f"""
-    You're an AI observability assistant. The model '{model_id}' is being monitored.
-
-    Drift detected in features: {', '.join(drift_features) if drift_features else 'None'}
-    Performance degraded: {"Yes" if degraded else "No"}
-    Latency: {performance_result.get('latency')}
-    Accuracy: {performance_result.get('accuracy')}
-
-    Suggest a fix or remediation step.
-    """
-
-    response = llm.invoke(prompt)
-    return {
-        "model_id": model_id,
-        "suggestion": response.content.strip()
-    }
-
-
-# backend/orchestrator/nodes/remediation_node.py
-
 from agents.remediation_agent import suggest_fix
-from orchestrator.config import SHARED_STATE
 
-def suggest_remediation(state: dict):
-    model_id = state["model_id"]
-    drift_result = state["drift_result"]
-    performance_result = state["performance_result"]
+@app.post("/remediation")
+async def remediation_action(request: Request):
+    try:
+        body = await request.json()
+        model_id = body.get("model_id", "model_v1")
+        drift_result = body.get("drift_result") or SHARED_STATE.get("drift_result", {})
+        performance_result = body.get("performance_result") or SHARED_STATE.get("performance_result", {})
 
-    return suggest_fix(drift_result, performance_result, model_id)
+        result = suggest_fix(drift_result, performance_result, model_id)
+        return JSONResponse(content=result)
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
