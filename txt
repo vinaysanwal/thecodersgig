@@ -1,44 +1,94 @@
+App.jsx
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import DriftDetection from './pages/DriftDetection';
+import Performance from './pages/Performance';
+import RemediationLog from './pages/RemediationLog';
+import Notifications from './pages/Notifications';
+
+const App = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/drift" element={<DriftDetection />} />
+      <Route path="/performance" element={<Performance />} />
+      <Route path="/logs" element={<RemediationLog />} />
+      <Route path="/notifications" element={<Notifications />} />
+    </Routes>
+  </Router>
+);
+
+export default App;
+
+
+api.js
+
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8000';
+
+export const getPerformanceData = (modelId = 'model_v1') =>
+  axios.get(`${API_BASE_URL}/performance?model_id=${modelId}`);
+
+export const getDriftData = (modelId = 'model_v1') =>
+  axios.get(`${API_BASE_URL}/drift?model_id=${modelId}`);
+
+export const getNotifications = () => axios.get(`${API_BASE_URL}/notifications`);
+
+export const getRemediationLog = () => axios.get(`${API_BASE_URL}/remediation-log`);
+
+export const runOrchestrator = (modelId = 'model_v1') =>
+  axios.post(`${API_BASE_URL}/run-orchestrator`, { model_id: modelId });
+
+
+header.jsx
+
 import React from 'react';
 import { Layout, Menu } from 'antd';
+import { Link } from 'react-router-dom';
 
 const { Header: AntHeader } = Layout;
 
-const Header = () => {
-  return (
-    <AntHeader style={{ backgroundColor: '#001529' }}>
-      <div style={{ float: 'left', color: '#fff', fontSize: 20, fontWeight: 'bold' }}>
-        ML Observability
-      </div>
-      <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['dashboard']} style={{ marginLeft: 200 }}>
-        <Menu.Item key="dashboard">Dashboard</Menu.Item>
-        <Menu.Item key="drift">Drift Detection</Menu.Item>
-        <Menu.Item key="performance">Performance</Menu.Item>
-        <Menu.Item key="logs">Remediation Log</Menu.Item>
-        <Menu.Item key="notifications">Notifications</Menu.Item>
-      </Menu>
-    </AntHeader>
-  );
-};
+const Header = () => (
+  <AntHeader style={{ background: '#fff' }}>
+    <Menu mode="horizontal" defaultSelectedKeys={['/dashboard']}>
+      <Menu.Item key="/dashboard"><Link to="/dashboard">Dashboard</Link></Menu.Item>
+      <Menu.Item key="/drift"><Link to="/drift">Drift Detection</Link></Menu.Item>
+      <Menu.Item key="/performance"><Link to="/performance">Performance</Link></Menu.Item>
+      <Menu.Item key="/logs"><Link to="/logs">Remediation Logs</Link></Menu.Item>
+      <Menu.Item key="/notifications"><Link to="/notifications">Notifications</Link></Menu.Item>
+    </Menu>
+  </AntHeader>
+);
 
 export default Header;
 
 
-import React from 'react';
-import { Card } from 'antd';
+statuscard
 
-const StatusCard = ({ title, status }) => {
-  return (
-    <Card title={title} bordered style={{ textAlign: 'center', height: '100%' }}>
-      <h2>{status}</h2>
-    </Card>
-  );
-};
+import React from 'react';
+import { Card, Typography } from 'antd';
+
+const { Title } = Typography;
+
+const StatusCard = ({ title, status }) => (
+  <Card bordered style={{ height: 100 }}>
+    <Title level={5}>{title}</Title>
+    <p>{status}</p>
+  </Card>
+);
 
 export default StatusCard;
 
 
+
+performance
+
 import React from 'react';
-import { Line } from '@ant-design/plots';
+import { Line } from '@ant-design/charts';
 
 const PerformanceChart = ({ data }) => {
   const config = {
@@ -48,11 +98,7 @@ const PerformanceChart = ({ data }) => {
     seriesField: 'metric',
     smooth: true,
     height: 300,
-    xAxis: {
-      label: { autoHide: true },
-    },
   };
-
   return <Line {...config} />;
 };
 
@@ -60,203 +106,38 @@ export default PerformanceChart;
 
 
 
+notification
+
 import React from 'react';
 import { List, Tag } from 'antd';
 
-const NotificationPanel = ({ notifications }) => {
-  return (
-    <List
-      itemLayout="horizontal"
-      dataSource={notifications}
-      renderItem={(item) => (
-        <List.Item>
-          <List.Item.Meta
-            title={<span>{item.title}</span>}
-            description={<span>{item.message}</span>}
-          />
-          <Tag color="blue">{item.level}</Tag>
-        </List.Item>
-      )}
-    />
-  );
-};
+const NotificationPanel = ({ notifications }) => (
+  <List
+    itemLayout="horizontal"
+    dataSource={notifications}
+    renderItem={(item) => (
+      <List.Item>
+        <List.Item.Meta
+          title={<span>{item.message}</span>}
+          description={<span>{item.timestamp}</span>}
+        />
+        <Tag color={item.level === 'critical' ? 'red' : 'blue'}>{item.level}</Tag>
+      </List.Item>
+    )}
+  />
+);
 
 export default NotificationPanel;
 
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Layout, Spin } from 'antd';
-import Header from '../components/Header';
-import { getDriftData } from '../services/api';
 
-const { Title } = Typography;
-const { Content } = Layout;
+pages 
 
-const DriftDetection = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getDriftData('model_v1')
-      .then((res) => {
-        const driftFeatures = res.data?.drift_features || [];
-        const scores = res.data?.drift_scores || {};
-        const timestamp = res.data?.timestamp;
-        const tableData = driftFeatures.map((feature, i) => ({
-          key: i,
-          feature,
-          score: scores[feature]?.toFixed(2),
-          detected_on: timestamp,
-        }));
-        setData(tableData);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const columns = [
-    { title: 'Feature', dataIndex: 'feature', key: 'feature' },
-    { title: 'Drift Score', dataIndex: 'score', key: 'score' },
-    { title: 'Detected On', dataIndex: 'detected_on', key: 'detected_on' },
-  ];
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-        <Title level={3}>Drift Detection</Title>
-        {loading ? <Spin /> : <Table columns={columns} dataSource={data} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default DriftDetection;
-
-
-
-
-
-import React, { useEffect, useState } from 'react';
-import { Typography, Layout, Spin } from 'antd';
-import Header from '../components/Header';
-import PerformanceChart from '../components/PerformanceChart';
-import { getPerformanceData } from '../services/api';
-
-const { Title } = Typography;
-const { Content } = Layout;
-
-const Performance = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getPerformanceData('model_v1')
-      .then((res) => setData(res.data.trend))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-        <Title level={3}>Performance Metrics</Title>
-        {loading ? <Spin /> : <PerformanceChart data={data} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default Performance;
-
-
-
-
-import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Table, Spin } from 'antd';
-import Header from '../components/Header';
-import { getRemediationLog } from '../services/api';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const RemediationLog = () => {
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getRemediationLog()
-      .then((res) => setLogs(res.data || []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const columns = [
-    { title: 'Time', dataIndex: 'timestamp', key: 'timestamp' },
-    { title: 'Issue', dataIndex: 'issue', key: 'issue' },
-    { title: 'Resolution', dataIndex: 'resolution', key: 'resolution' },
-    { title: 'Model', dataIndex: 'model', key: 'model' },
-  ];
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-        <Title level={3}>Remediation Log</Title>
-        {loading ? <Spin /> : <Table columns={columns} dataSource={logs} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default RemediationLog;
-
-
-
-import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Spin } from 'antd';
-import Header from '../components/Header';
-import NotificationPanel from '../components/NotificationPanel';
-import { getNotifications } from '../services/api';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const Notifications = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getNotifications()
-      .then((res) => setNotifications(res.data))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-        <Title level={3}>System Notifications</Title>
-        {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default Notifications;
-
+dhasboard
 
 import React, { useEffect, useState } from 'react';
 import {
-  Row,
-  Col,
-  Typography,
-  Layout,
-  Spin,
-  Select,
-  Button,
-  message,
-  Card,
-  Table,
-  Tag,
+  Row, Col, Typography, Layout, Spin, Select, Button, message, Card, Table, Tag
 } from 'antd';
 import Header from '../components/Header';
 import StatusCard from '../components/StatusCard';
@@ -312,29 +193,15 @@ const Dashboard = () => {
   };
 
   const columns = [
-    {
-      title: 'Feature',
-      dataIndex: 'feature',
-      key: 'feature',
-    },
-    {
-      title: 'Drift Score',
-      dataIndex: 'score',
-      key: 'score',
-    },
+    { title: 'Feature', dataIndex: 'feature', key: 'feature' },
+    { title: 'Drift Score', dataIndex: 'score', key: 'score' },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={status === 'Drift' ? 'red' : 'green'}>{status}</Tag>
-      ),
+      render: (status) => <Tag color={status === 'Drift' ? 'red' : 'green'}>{status}</Tag>
     },
-    {
-      title: 'Detected On',
-      dataIndex: 'detected_on',
-      key: 'detected_on',
-    },
+    { title: 'Detected On', dataIndex: 'detected_on', key: 'detected_on' }
   ];
 
   const tableData = (driftData?.drift_features || []).map((feature, idx) => ({
@@ -353,11 +220,7 @@ const Dashboard = () => {
           <Row justify="space-between" align="middle">
             <Title level={3}>ML Observability Dashboard</Title>
             <div style={{ display: 'flex', gap: 12 }}>
-              <Select
-                value={selectedModel}
-                onChange={setSelectedModel}
-                style={{ width: 160 }}
-              >
+              <Select value={selectedModel} onChange={setSelectedModel} style={{ width: 160 }}>
                 <Option value="model_v1">Model v1</Option>
                 <Option value="model_v2">Model v2</Option>
                 <Option value="model_v3">Model v3</Option>
@@ -405,59 +268,175 @@ const Dashboard = () => {
 export default Dashboard;
 
 
+drift detection
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import DriftDetection from './pages/DriftDetection';
-import Performance from './pages/Performance';
-import RemediationLog from './pages/RemediationLog';
-import Notifications from './pages/Notifications';
+import React, { useEffect, useState } from 'react';
+import { Table, Typography, Layout, Spin } from 'antd';
+import Header from '../components/Header';
+import { getDriftData } from '../services/api';
 
-const App = () => {
+const { Title } = Typography;
+const { Content } = Layout;
+
+const DriftDetection = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getDriftData().then((res) => {
+      setData(res.data);
+      setLoading(false);
+    });
+  }, []);
+
+  const columns = [
+    { title: 'Feature', dataIndex: 'feature' },
+    { title: 'Drift Score', dataIndex: 'score' },
+    { title: 'Status', dataIndex: 'status' }
+  ];
+
+  const tableData = data?.drift_features?.map((feature, index) => ({
+    key: index,
+    feature,
+    score: data?.drift_scores?.[feature]?.toFixed(2),
+    status: 'Drift'
+  })) || [];
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/drift" element={<DriftDetection />} />
-        <Route path="/performance" element={<Performance />} />
-        <Route path="/logs" element={<RemediationLog />} />
-        <Route path="/notifications" element={<Notifications />} />
-      </Routes>
-    </Router>
+    <Layout>
+      <Header />
+      <Content style={{ padding: '24px' }}>
+        <Title level={3}>Drift Detection</Title>
+        {loading ? <Spin /> : <Table columns={columns} dataSource={tableData} />}
+      </Content>
+    </Layout>
   );
 };
 
-export default App;
+export default DriftDetection;
 
 
 
-import axios from 'axios';
+performance.jsx
 
-const API_BASE_URL = 'http://localhost:8000'; // Update if different
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Spin } from 'antd';
+import Header from '../components/Header';
+import PerformanceChart from '../components/PerformanceChart';
+import { getPerformanceData } from '../services/api';
 
-// Get performance metrics (trend)
-export const getPerformanceData = (modelId = 'model_v1') => {
-  return axios.get(`${API_BASE_URL}/performance?model_id=${modelId}`);
+const { Content } = Layout;
+const { Title } = Typography;
+
+const Performance = () => {
+  const [trend, setTrend] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPerformanceData().then((res) => {
+      setTrend(res.data.trend || []);
+      setLoading(false);
+    });
+  }, []);
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24 }}>
+        <Title level={3}>Performance Metrics</Title>
+        {loading ? <Spin /> : <PerformanceChart data={trend} />}
+      </Content>
+    </Layout>
+  );
 };
 
-// Get current drift detection results
-export const getDriftData = (modelId = 'model_v1') => {
-  return axios.get(`${API_BASE_URL}/drift?model_id=${modelId}`);
+export default Performance;
+
+
+Remediation 
+
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, List, Spin } from 'antd';
+import Header from '../components/Header';
+import { getRemediationLog } from '../services/api';
+
+const { Content } = Layout;
+const { Title } = Typography;
+
+const RemediationLog = () => {
+  const [log, setLog] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getRemediationLog().then((res) => {
+      setLog(res.data || []);
+      setLoading(false);
+    });
+  }, []);
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24 }}>
+        <Title level={3}>Remediation Logs</Title>
+        {loading ? <Spin /> : (
+          <List
+            itemLayout="vertical"
+            dataSource={log}
+            renderItem={(item, i) => (
+              <List.Item key={i}>
+                <List.Item.Meta title={item.model} description={item.timestamp} />
+                <p>{item.action}</p>
+              </List.Item>
+            )}
+          />
+        )}
+      </Content>
+    </Layout>
+  );
 };
 
-// Get notifications or alerts
-export const getNotifications = () => {
-  return axios.get(`${API_BASE_URL}/notifications`);
+export default RemediationLog;
+
+
+
+
+
+Notification
+
+import React, { useEffect, useState } from 'react';
+import { Layout, Typography, Spin } from 'antd';
+import Header from '../components/Header';
+import NotificationPanel from '../components/NotificationPanel';
+import { getNotifications } from '../services/api';
+
+const { Content } = Layout;
+const { Title } = Typography;
+
+const Notifications = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getNotifications().then((res) => {
+      setNotifications(res.data || []);
+      setLoading(false);
+    });
+  }, []);
+
+  return (
+    <Layout>
+      <Header />
+      <Content style={{ padding: 24 }}>
+        <Title level={3}>System Notifications</Title>
+        {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
+      </Content>
+    </Layout>
+  );
 };
 
-// Get past remediation actions
-export const getRemediationLog = () => {
-  return axios.get(`${API_BASE_URL}/remediation-log`);
-};
+export default Notifications;
 
-// Trigger evaluation (orchestrator)
-export const runOrchestrator = (modelId = 'model_v1') => {
-  return axios.post(`${API_BASE_URL}/run-orchestrator`, { model_id: modelId });
-};
+
+
+
