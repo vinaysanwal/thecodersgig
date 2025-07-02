@@ -1,77 +1,29 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+# backend/orchestrator/config.py
 
-from agents.drift_agent import get_drift_data
-from agents.performance_agent import get_performance_data
-from agents.remediation_agent import get_remediation_logs
-from orchestrator.langgraph_orchestrator import run_graph
+import os
+from langchain.chat_models import ChatOpenAI
 
-app = FastAPI(
-    title="ML Observability API",
-    version="1.0.0",
-    description="Handles drift detection, performance monitoring, and remediation coordination"
+# ✅ Load Azure OpenAI credentials from environment variables
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")  # e.g. "gpt-35-deployment"
+AZURE_API_VERSION = os.getenv("AZURE_API_VERSION", "2023-07-01-preview")
+
+# ✅ Azure OpenAI Chat Model (gpt-35-turbo)
+llm = ChatOpenAI(
+    openai_api_type="azure",
+    openai_api_key=AZURE_OPENAI_API_KEY,
+    openai_api_base=AZURE_OPENAI_ENDPOINT,
+    openai_api_version=AZURE_API_VERSION,
+    deployment_name=AZURE_DEPLOYMENT_NAME,
+    temperature=0.2,
+    model="gpt-35-turbo"
 )
 
-# ✅ CORS for frontend access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # TODO: restrict in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# ✅ Health check route
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
-# ✅ Drift Detection Endpoint
-@app.get("/drift")
-async def drift(model_id: str = "model_v1"):
-    try:
-        result = get_drift_data(model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Performance Monitoring Endpoint
-@app.get("/performance")
-async def performance(model_id: str = "model_v1"):
-    try:
-        result = get_performance_data(model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Notification Stub
-@app.get("/notifications")
-async def notifications():
-    return JSONResponse(content=[
-        {
-            "message": "Drift detected in feature 'age'",
-            "timestamp": "2025-07-01T10:00:00Z",
-            "level": "critical"
-        }
-    ])
-
-# ✅ Remediation Log Endpoint
-@app.get("/remediation-log")
-async def remediation():
-    try:
-        result = get_remediation_logs()
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# ✅ Run Full Orchestration (LLM + Logic)
-@app.post("/run-orchestrator")
-async def run_orchestrator(request: Request):
-    try:
-        body = await request.json()
-        model_id = body.get("model_id", "model_v1")
-        result = await run_graph(model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+# ✅ Shared in-memory state used across LangGraph nodes
+SHARED_STATE = {
+    "model_id": None,
+    "drift_result": None,
+    "performance_result": None,
+    "remediation_result": None,
+}
