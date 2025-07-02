@@ -1,41 +1,36 @@
-import os
-import json
-from typing import Dict, Any, List
+from orchestrator.utils import load_live_data
 
-# Base data folder (adjust if needed)
-BASE_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+def evaluate_performance(model_id: str) -> dict:
+    """
+    Evaluate model performance based on latest live data.
+    Returns latency and accuracy, and flags if degraded.
+    """
+    try:
+        live_data = load_live_data(model_id)
+        trend = live_data.get("trend", [])
 
-def get_model_list() -> List[Dict[str, Any]]:
-    """Load all models from models.json"""
-    models_path = os.path.join(BASE_DIR, "models.json")
-    if not os.path.exists(models_path):
-        raise FileNotFoundError("models.json not found in /data/")
-    
-    with open(models_path, "r") as f:
-        return json.load(f)
+        if not trend:
+            return {
+                "degraded": False,
+                "latency": None,
+                "accuracy": None,
+                "message": "No performance trend data found."
+            }
 
-def load_reference_data(model_id: str) -> Dict[str, Any]:
-    """Load reference data for a specific model"""
-    path = os.path.join(BASE_DIR, "reference", f"{model_id}.json")
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Reference data not found for model: {model_id}")
-    
-    with open(path, "r") as f:
-        return json.load(f)
+        latest = trend[-1]  # Most recent entry
+        latency = latest.get("latency", 0)
+        accuracy = latest.get("accuracy", 1)
 
-def load_live_data(model_id: str) -> Dict[str, Any]:
-    """Load live data for a specific model"""
-    path = os.path.join(BASE_DIR, "live", f"{model_id}.json")
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Live data not found for model: {model_id}")
-    
-    with open(path, "r") as f:
-        return json.load(f)
+        return {
+            "degraded": (latency > 500 or accuracy < 0.8),
+            "latency": latency,
+            "accuracy": accuracy
+        }
 
-def get_model_metadata(model_id: str) -> Dict[str, Any]:
-    """Return metadata for a specific model from models.json"""
-    models = get_model_list()
-    for model in models:
-        if model["model_id"] == model_id:
-            return model
-    raise ValueError(f"Model {model_id} not found in models.json")
+    except Exception as e:
+        return {
+            "degraded": False,
+            "latency": None,
+            "accuracy": None,
+            "error": str(e)
+        }
