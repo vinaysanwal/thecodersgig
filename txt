@@ -1,159 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Row,
-  Col,
-  Typography,
-  Layout,
-  Spin,
-  Select,
-  Button,
-  message,
-  Card,
-  Table,
-  Tag,
-  Space,
-} from 'antd';
-import Header from '../components/Header';
-import StatusCard from '../components/StatusCard';
-import PerformanceChart from '../components/PerformanceChart';
-import NotificationPanel from '../components/NotificationPanel';
-import {
-  getPerformanceData,
-  getNotifications,
-  getDriftData,
-  runOrchestrator,
-} from '../services/api';
-
-const { Title } = Typography;
-const { Content } = Layout;
-const { Option } = Select;
-
-const Dashboard = () => {
-  const [performance, setPerformance] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [driftData, setDriftData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('model_v1');
-
-  useEffect(() => {
-    fetchData();
-  }, [selectedModel]);
-
-  const fetchData = () => {
-    setLoading(true);
-    Promise.all([
-      getPerformanceData(selectedModel),
-      getNotifications(),
-      getDriftData(selectedModel),
-    ])
-      .then(([perfRes, notifRes, driftRes]) => {
-        setPerformance(perfRes.data.trend || []);
-        setNotifications(notifRes.data || []);
-        setDriftData(driftRes.data || {});
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
-
-  const handleRunEvaluation = async () => {
-    try {
-      const res = await runOrchestrator(selectedModel);
-      message.success('Evaluation complete!');
-      fetchData();
-    } catch (err) {
-      message.error('Failed to run evaluation.');
-    }
-  };
-
-  const columns = [
-    {
-      title: 'Feature',
-      dataIndex: 'feature',
-      key: 'feature',
-    },
-    {
-      title: 'Drift Score',
-      dataIndex: 'score',
-      key: 'score',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === 'Drift' ? 'red' : 'green'}>{status}</Tag>
-      ),
-    },
-    {
-      title: 'Detected On',
-      dataIndex: 'detected_on',
-      key: 'detected_on',
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: () => <Button type="link">Trigger Fix</Button>,
-    },
-  ];
-
-  const tableData = (driftData?.drift_features || []).map((feature, idx) => ({
-    key: idx,
-    feature,
-    score: driftData?.drift_scores?.[feature]?.toFixed(2) || '-',
-    status: 'Drift',
-    detected_on: driftData?.timestamp || 'N/A',
-  }));
-
-  return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-      <Header />
-      <Content style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto' }}>
-        <Card style={{ marginBottom: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Title level={3} style={{ marginBottom: 0 }}>ML Observatory</Title>
-            <Space>
-              <Select value={selectedModel} onChange={setSelectedModel} style={{ width: 150 }}>
-                <Option value="model_v1">Model v1</Option>
-                <Option value="model_v2">Model v2</Option>
-                <Option value="model_v3">Model v3</Option>
-              </Select>
-              <Button type="primary" onClick={handleRunEvaluation}>
-                Run Evaluation
-              </Button>
-            </Space>
-          </Row>
-        </Card>
-
-        <Row gutter={16}>
-          <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-          <Col span={8}><StatusCard title="Drift Detected" status={driftData?.drift_detected ? 'Yes ⚠️' : 'No ✅'} /></Col>
-          <Col span={8}><StatusCard title="Last Fix" status="2 hours ago" /></Col>
-        </Row>
-
-        <Row gutter={16} style={{ marginTop: 24 }}>
-          <Col span={14}>
-            <Card title="Model Performance Over Time">
-              {loading ? <Spin /> : <PerformanceChart data={performance} />}
-            </Card>
-          </Col>
-          <Col span={10}>
-            <Card title="Notifications">
-              {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-            </Card>
-          </Col>
-        </Row>
-
-        <Card title="Drift Detection" style={{ marginTop: 24 }}>
-          <Table
-            columns={columns}
-            dataSource={tableData}
-            pagination={false}
-            loading={loading}
-          />
-        </Card>
-      </Content>
-    </Layout>
-  );
-};
-
-export default Dashboard;
+[
+  {
+    "model_id": "gitlab_helper_v1",
+    "team": "DevOps",
+    "use_case": "GitLab Assistant",
+    "description": "Helps developers with GitLab issues, MR reviews, and CI/CD configs.",
+    "version": "v1",
+    "drift_threshold": 0.3,
+    "active": true
+  },
+  {
+    "model_id": "infra_cost_v1",
+    "team": "FinanceOps",
+    "use_case": "Infra Cost Optimizer",
+    "description": "Provides cost optimization suggestions for cloud infra usage.",
+    "version": "v1",
+    "drift_threshold": 0.25,
+    "active": true
+  },
+  {
+    "model_id": "hr_insight_bot_v1",
+    "team": "HR",
+    "use_case": "HR Feedback Analyzer",
+    "description": "Analyzes employee feedback and surfaces actionable insights.",
+    "version": "v1",
+    "drift_threshold": 0.2,
+    "active": true
+  },
+  {
+    "model_id": "developer_assist_v2",
+    "team": "Engineering",
+    "use_case": "Code Assistant",
+    "description": "Helps engineers answer questions and generate internal code snippets.",
+    "version": "v2",
+    "drift_threshold": 0.35,
+    "active": true
+  },
+  {
+    "model_id": "internal_doc_bot_v1",
+    "team": "KnowledgeOps",
+    "use_case": "Document Search Bot",
+    "description": "Searches internal documents and summaries based on queries.",
+    "version": "v1",
+    "drift_threshold": 0.3,
+    "active": true
+  },
+  {
+    "model_id": "incident_triage_v1",
+    "team": "SRE",
+    "use_case": "Incident Analysis Assistant",
+    "description": "Auto-summarizes incident reports and suggests triage steps.",
+    "version": "v1",
+    "drift_threshold": 0.28,
+    "active": true
+  },
+  {
+    "model_id": "access_mgmt_v1",
+    "team": "Security",
+    "use_case": "Access Request Classifier",
+    "description": "Classifies and routes access requests based on sensitivity.",
+    "version": "v1",
+    "drift_threshold": 0.22,
+    "active": true
+  },
+  {
+    "model_id": "project_summary_v2",
+    "team": "PMO",
+    "use_case": "Project Update Generator",
+    "description": "Summarizes project status updates and risks automatically.",
+    "version": "v2",
+    "drift_threshold": 0.27,
+    "active": true
+  },
+  {
+    "model_id": "ticket_router_v1",
+    "team": "Support",
+    "use_case": "Ticket Routing",
+    "description": "Routes internal IT/helpdesk tickets to correct team using LLM.",
+    "version": "v1",
+    "drift_threshold": 0.3,
+    "active": true
+  },
+  {
+    "model_id": "infra_monitor_v1",
+    "team": "CloudOps",
+    "use_case": "Infra Log Analyzer",
+    "description": "Summarizes log patterns and detects anomalies in infra logs.",
+    "version": "v1",
+    "drift_threshold": 0.33,
+    "active": true
+  }
+]
