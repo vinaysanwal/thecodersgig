@@ -1,58 +1,29 @@
 import os
 import json
-import numpy as np
-from scipy.stats import ks_2samp
 
-REFERENCE_PATH = "data/reference"
-LIVE_PATH = "data/live"
+PERFORMANCE_PATH = "data/performance"
 
 def load_json(path):
     with open(path, "r") as f:
         return json.load(f)
 
-def get_drift_data(model_id: str) -> dict:
+def get_performance_data(model_id: str) -> dict:
     try:
-        ref_file = os.path.join(REFERENCE_PATH, f"{model_id}.json")
-        live_file = os.path.join(LIVE_PATH, f"{model_id}.json")
+        file_path = os.path.join(PERFORMANCE_PATH, f"{model_id}.json")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Performance data not found for {model_id}")
 
-        reference = load_json(ref_file)
-        live = load_json(live_file)
-
-        ref_features = reference.get("features", {})
-        live_features = live.get("features", {})
-
-        drift_features = []
-        drift_scores = {}
-
-        for feature in ref_features:
-            if feature not in live_features:
-                continue
-
-            ref_values = np.array(ref_features[feature])
-            live_values = np.array(live_features[feature])
-
-            if len(ref_values) < 2 or len(live_values) < 2:
-                continue  # Not enough data to run KS test
-
-            p_value = ks_2samp(ref_values, live_values).pvalue
-            score = 1 - p_value
-            drift_scores[feature] = round(score, 4)
-
-            if p_value < 0.05:
-                drift_features.append(feature)
+        data = load_json(file_path)
+        trend = data.get("trend", [])
 
         return {
             "model_id": model_id,
-            "drift_detected": bool(drift_features),
-            "drift_features": drift_features,
-            "drift_scores": drift_scores
+            "trend": trend
         }
 
     except Exception as e:
         return {
             "model_id": model_id,
             "error": str(e),
-            "drift_detected": False,
-            "drift_features": [],
-            "drift_scores": {}
+            "trend": []
         }
