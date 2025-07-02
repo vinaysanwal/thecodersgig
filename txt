@@ -1,7 +1,47 @@
-<Select value={selectedModel} onChange={setSelectedModel} style={{ width: 200 }}>
-  <Option value="model_gitlab_helper">GitLab Helper</Option>
-  <Option value="model_infra_cost">Infra Cost Optimizer</Option>
-  <Option value="model_dev_assist">Developer Assistant</Option>
-  <Option value="model_hr_insights">HR Insights</Option>
-  <Option value="model_internal_support">Internal IT Support</Option>
-</Select>
+import datetime
+from orchestrator.utils import load_reference_data, load_live_data
+
+def simple_drift_score(ref_value, live_value):
+    """Naive drift calculation (absolute difference)"""
+    try:
+        return abs(ref_value - live_value)
+    except Exception:
+        return 0.0
+
+def detect_drift(model_id: str) -> dict:
+    try:
+        reference_data = load_reference_data(model_id)
+        live_data = load_live_data(model_id)
+
+        drift_features = []
+        drift_scores = {}
+
+        ref_features = reference_data.get("features", {})
+        live_features = live_data.get("features", {})
+
+        for feature, ref_value in ref_features.items():
+            live_value = live_features.get(feature)
+
+            if live_value is None:
+                continue
+
+            score = simple_drift_score(ref_value, live_value)
+            drift_scores[feature] = score
+
+            # Mark drift if score exceeds simple threshold (e.g. 0.2)
+            if score > 0.2:
+                drift_features.append(feature)
+
+        return {
+            "drift_detected": bool(drift_features),
+            "drift_features": drift_features,
+            "drift_scores": drift_scores,
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        return {
+            "drift_detected": False,
+            "error": str(e),
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
