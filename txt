@@ -1,29 +1,7 @@
-import os
-import json
-
-PERFORMANCE_PATH = "data/performance"
-
-def load_json(path):
-    with open(path, "r") as f:
-        return json.load(f)
-
-def get_performance_data(model_id: str) -> dict:
-    try:
-        file_path = os.path.join(PERFORMANCE_PATH, f"{model_id}.json")
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Performance data not found for {model_id}")
-
-        data = load_json(file_path)
-        trend = data.get("trend", [])
-
-        return {
-            "model_id": model_id,
-            "trend": trend
-        }
-
-    except Exception as e:
-        return {
-            "model_id": model_id,
-            "error": str(e),
-            "trend": []
-        }
+<Select value={selectedModel} onChange={setSelectedModel} style={{ width: 200 }}>
+  <Option value="model_gitlab_helper">GitLab Helper</Option>
+  <Option value="model_infra_cost">Infra Cost Optimizer</Option>
+  <Option value="model_dev_assist">Developer Assistant</Option>
+  <Option value="model_hr_insights">HR Insights</Option>
+  <Option value="model_internal_support">Internal IT Support</Option>
+</Select>
