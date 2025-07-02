@@ -1,4 +1,3 @@
-// frontend/src/pages/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
 import {
   Row,
@@ -12,6 +11,7 @@ import {
   Card,
   Table,
   Tag,
+  Space,
 } from 'antd';
 import Header from '../components/Header';
 import StatusCard from '../components/StatusCard';
@@ -34,7 +34,6 @@ const Dashboard = () => {
   const [driftData, setDriftData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState('model_v1');
-  const [selectedRange, setSelectedRange] = useState('7d');
 
   useEffect(() => {
     fetchData();
@@ -93,11 +92,7 @@ const Dashboard = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (_, record) => (
-        <Button type="link" onClick={() => message.info('Triggering fix...')}>
-          Trigger Fix
-        </Button>
-      ),
+      render: () => <Button type="link">Trigger Fix</Button>,
     },
   ];
 
@@ -110,64 +105,51 @@ const Dashboard = () => {
   }));
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <Header />
-      <Content style={{ padding: '24px 40px' }}>
-        <Card style={{ padding: 24 }}>
+      <Content style={{ padding: '24px 32px', maxWidth: '1400px', margin: '0 auto' }}>
+        <Card style={{ marginBottom: 24 }}>
           <Row justify="space-between" align="middle">
-            <Title level={3}>ML Observatory</Title>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Select
-                value={selectedModel}
-                onChange={setSelectedModel}
-                style={{ width: 160 }}
-              >
+            <Title level={3} style={{ marginBottom: 0 }}>ML Observatory</Title>
+            <Space>
+              <Select value={selectedModel} onChange={setSelectedModel} style={{ width: 150 }}>
                 <Option value="model_v1">Model v1</Option>
                 <Option value="model_v2">Model v2</Option>
                 <Option value="model_v3">Model v3</Option>
               </Select>
-              <Select
-                value={selectedRange}
-                onChange={setSelectedRange}
-                style={{ width: 140 }}
-              >
-                <Option value="7d">Last 7 Days</Option>
-                <Option value="30d">Last 30 Days</Option>
-              </Select>
               <Button type="primary" onClick={handleRunEvaluation}>
                 Run Evaluation
               </Button>
-            </div>
+            </Space>
           </Row>
+        </Card>
 
-          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-            <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-            <Col span={8}><StatusCard title="Drift Detected" status={driftData?.drift_detected ? 'Yes ⚠️' : 'No ✅'} /></Col>
-            <Col span={8}><StatusCard title="Last Fix" status="2 hours ago" /></Col>
-          </Row>
+        <Row gutter={16}>
+          <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
+          <Col span={8}><StatusCard title="Drift Detected" status={driftData?.drift_detected ? 'Yes ⚠️' : 'No ✅'} /></Col>
+          <Col span={8}><StatusCard title="Last Fix" status="2 hours ago" /></Col>
+        </Row>
 
-          <Row gutter={16} style={{ marginTop: 32 }}>
-            <Col span={14}>
-              <Title level={4}>Model Performance Over Time</Title>
+        <Row gutter={16} style={{ marginTop: 24 }}>
+          <Col span={14}>
+            <Card title="Model Performance Over Time">
               {loading ? <Spin /> : <PerformanceChart data={performance} />}
-            </Col>
-            <Col span={10}>
-              <Title level={4}>Notifications</Title>
+            </Card>
+          </Col>
+          <Col span={10}>
+            <Card title="Notifications">
               {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-            </Col>
-          </Row>
+            </Card>
+          </Col>
+        </Row>
 
-          <Row style={{ marginTop: 32 }}>
-            <Col span={24}>
-              <Title level={4}>Drift Detection</Title>
-              <Table
-                columns={columns}
-                dataSource={tableData}
-                pagination={false}
-                loading={loading}
-              />
-            </Col>
-          </Row>
+        <Card title="Drift Detection" style={{ marginTop: 24 }}>
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            pagination={false}
+            loading={loading}
+          />
         </Card>
       </Content>
     </Layout>
