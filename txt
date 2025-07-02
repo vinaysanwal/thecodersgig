@@ -1,442 +1,178 @@
-App.jsx
+# backend/main.py
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from orchestrator.langgraph_orchestrator import run_graph
+from agents.drift_agent import get_drift_data
+from agents.performance_agent import get_performance_data
+from agents.remediation_agent import get_remediation_logs
+import asyncio
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import DriftDetection from './pages/DriftDetection';
-import Performance from './pages/Performance';
-import RemediationLog from './pages/RemediationLog';
-import Notifications from './pages/Notifications';
+app = FastAPI()
 
-const App = () => (
-  <Router>
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/drift" element={<DriftDetection />} />
-      <Route path="/performance" element={<Performance />} />
-      <Route path="/logs" element={<RemediationLog />} />
-      <Route path="/notifications" element={<Notifications />} />
-    </Routes>
-  </Router>
-);
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-export default App;
+@app.get("/drift")
+async def drift(model_id: str = "model_v1"):
+    return get_drift_data(model_id)
 
+@app.get("/performance")
+async def performance(model_id: str = "model_v1"):
+    return get_performance_data(model_id)
 
-api.js
+@app.get("/notifications")
+async def notifications():
+    return [
+        {
+            "message": "Drift detected in feature 'age'",
+            "timestamp": "2025-06-30",
+            "level": "critical",
+        }
+    ]
 
-import axios from 'axios';
+@app.get("/remediation-log")
+async def remediation():
+    return get_remediation_logs()
 
-const API_BASE_URL = 'http://localhost:8000';
+@app.post("/run-orchestrator")
+async def run_orchestrator(request: Request):
+    body = await request.json()
+    model_id = body.get("model_id", "model_v1")
+    result = await run_graph(model_id)
+    return result
 
-export const getPerformanceData = (modelId = 'model_v1') =>
-  axios.get(`${API_BASE_URL}/performance?model_id=${modelId}`);
+# orchestrator/config.py
+import os
+from langchain.chat_models import AzureChatOpenAI
 
-export const getDriftData = (modelId = 'model_v1') =>
-  axios.get(`${API_BASE_URL}/drift?model_id=${modelId}`);
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_DEPLOYMENT_NAME")
 
-export const getNotifications = () => axios.get(`${API_BASE_URL}/notifications`);
+llm = AzureChatOpenAI(
+    openai_api_key=AZURE_OPENAI_API_KEY,
+    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    deployment_name=AZURE_DEPLOYMENT_NAME,
+    model="gpt-4",
+    api_version="2023-07-01-preview"
+)
 
-export const getRemediationLog = () => axios.get(`${API_BASE_URL}/remediation-log`);
+SHARED_STATE = {
+    "model_id": None,
+    "drift_result": None,
+    "performance_result": None,
+    "remediation_result": None,
+}
 
-export const runOrchestrator = (modelId = 'model_v1') =>
-  axios.post(`${API_BASE_URL}/run-orchestrator`, { model_id: modelId });
+# orchestrator/nodes/drift_node.py
+import json
+from scipy.stats import ks_2samp
+from pathlib import Path
+from datetime import datetime
 
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
-header.jsx
+def load_json(path):
+    with open(path, "r") as f:
+        return json.load(f)
 
-import React from 'react';
-import { Layout, Menu } from 'antd';
-import { Link } from 'react-router-dom';
+def detect_drift(model_id):
+    ref_data = load_json(DATA_DIR / "reference_data.json")
+    prod_data = load_json(DATA_DIR / "production_data.json")
 
-const { Header: AntHeader } = Layout;
+    drift_scores = {}
+    drift_features = []
 
-const Header = () => (
-  <AntHeader style={{ background: '#fff' }}>
-    <Menu mode="horizontal" defaultSelectedKeys={['/dashboard']}>
-      <Menu.Item key="/dashboard"><Link to="/dashboard">Dashboard</Link></Menu.Item>
-      <Menu.Item key="/drift"><Link to="/drift">Drift Detection</Link></Menu.Item>
-      <Menu.Item key="/performance"><Link to="/performance">Performance</Link></Menu.Item>
-      <Menu.Item key="/logs"><Link to="/logs">Remediation Logs</Link></Menu.Item>
-      <Menu.Item key="/notifications"><Link to="/notifications">Notifications</Link></Menu.Item>
-    </Menu>
-  </AntHeader>
-);
+    for feature in ref_data:
+        ref_values = ref_data[feature]
+        prod_values = prod_data.get(feature, [])
 
-export default Header;
+        if not prod_values or len(prod_values) < 10:
+            continue
 
+        stat, p_value = ks_2samp(ref_values, prod_values)
+        drift_scores[feature] = round(stat, 3)
+        if p_value < 0.05:
+            drift_features.append(feature)
 
-statuscard
-
-import React from 'react';
-import { Card, Typography } from 'antd';
-
-const { Title } = Typography;
-
-const StatusCard = ({ title, status }) => (
-  <Card bordered style={{ height: 100 }}>
-    <Title level={5}>{title}</Title>
-    <p>{status}</p>
-  </Card>
-);
-
-export default StatusCard;
-
-
-
-performance
-
-import React from 'react';
-import { Line } from '@ant-design/charts';
-
-const PerformanceChart = ({ data }) => {
-  const config = {
-    data,
-    xField: 'timestamp',
-    yField: 'value',
-    seriesField: 'metric',
-    smooth: true,
-    height: 300,
-  };
-  return <Line {...config} />;
-};
-
-export default PerformanceChart;
-
-
-
-notification
-
-import React from 'react';
-import { List, Tag } from 'antd';
-
-const NotificationPanel = ({ notifications }) => (
-  <List
-    itemLayout="horizontal"
-    dataSource={notifications}
-    renderItem={(item) => (
-      <List.Item>
-        <List.Item.Meta
-          title={<span>{item.message}</span>}
-          description={<span>{item.timestamp}</span>}
-        />
-        <Tag color={item.level === 'critical' ? 'red' : 'blue'}>{item.level}</Tag>
-      </List.Item>
-    )}
-  />
-);
-
-export default NotificationPanel;
-
-
-
-pages 
-
-dhasboard
-
-import React, { useEffect, useState } from 'react';
-import {
-  Row, Col, Typography, Layout, Spin, Select, Button, message, Card, Table, Tag
-} from 'antd';
-import Header from '../components/Header';
-import StatusCard from '../components/StatusCard';
-import PerformanceChart from '../components/PerformanceChart';
-import NotificationPanel from '../components/NotificationPanel';
-import {
-  getPerformanceData,
-  getNotifications,
-  getDriftData,
-  runOrchestrator,
-} from '../services/api';
-
-const { Title } = Typography;
-const { Content } = Layout;
-const { Option } = Select;
-
-const Dashboard = () => {
-  const [performance, setPerformance] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [driftData, setDriftData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('model_v1');
-
-  useEffect(() => {
-    fetchData();
-  }, [selectedModel]);
-
-  const fetchData = () => {
-    setLoading(true);
-    Promise.all([
-      getPerformanceData(selectedModel),
-      getNotifications(),
-      getDriftData(selectedModel),
-    ])
-      .then(([perfRes, notifRes, driftRes]) => {
-        setPerformance(perfRes.data.trend || []);
-        setNotifications(notifRes.data || []);
-        setDriftData(driftRes.data || {});
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
-
-  const handleRunEvaluation = async () => {
-    try {
-      const res = await runOrchestrator(selectedModel);
-      message.success('Evaluation complete!');
-      console.log('Orchestrator result:', res.data);
-      fetchData();
-    } catch (err) {
-      message.error('Failed to run evaluation.');
+    return {
+        "drift_detected": len(drift_features) > 0,
+        "drift_features": drift_features,
+        "drift_scores": drift_scores,
+        "timestamp": datetime.utcnow().isoformat(),
     }
-  };
 
-  const columns = [
-    { title: 'Feature', dataIndex: 'feature', key: 'feature' },
-    { title: 'Drift Score', dataIndex: 'score', key: 'score' },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => <Tag color={status === 'Drift' ? 'red' : 'green'}>{status}</Tag>
-    },
-    { title: 'Detected On', dataIndex: 'detected_on', key: 'detected_on' }
-  ];
+# orchestrator/nodes/performance_node.py
+def evaluate_performance(model_id):
+    return {
+        "accuracy": 0.93,
+        "latency_ms": 210,
+        "trend": [
+            {"timestamp": "2025-06-28", "value": 0.91, "metric": "accuracy"},
+            {"timestamp": "2025-06-29", "value": 0.92, "metric": "accuracy"},
+            {"timestamp": "2025-06-30", "value": 0.93, "metric": "accuracy"},
+        ],
+    }
 
-  const tableData = (driftData?.drift_features || []).map((feature, idx) => ({
-    key: idx,
-    feature,
-    score: driftData?.drift_scores?.[feature]?.toFixed(2) || '-',
-    status: 'Drift',
-    detected_on: driftData?.timestamp || 'N/A',
-  }));
+# orchestrator/nodes/remediation_node.py
+def suggest_remediation(state):
+    return {
+        "action": "Retrain model on latest data",
+        "model": state.get("model_id"),
+        "timestamp": "2025-06-30 18:05",
+    }
 
-  return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header />
-      <Content style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
-        <Card style={{ padding: 24 }}>
-          <Row justify="space-between" align="middle">
-            <Title level={3}>ML Observability Dashboard</Title>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Select value={selectedModel} onChange={setSelectedModel} style={{ width: 160 }}>
-                <Option value="model_v1">Model v1</Option>
-                <Option value="model_v2">Model v2</Option>
-                <Option value="model_v3">Model v3</Option>
-              </Select>
-              <Button type="primary" onClick={handleRunEvaluation}>
-                Run Evaluation
-              </Button>
-            </div>
-          </Row>
+# orchestrator/nodes/decision_node.py
+from orchestrator.config import llm
 
-          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
-            <Col span={8}><StatusCard title="Model Health" status="Healthy ✅" /></Col>
-            <Col span={8}><StatusCard title="Drift Detected" status={driftData?.drift_detected ? 'Yes ⚠️' : 'No ✅'} /></Col>
-            <Col span={8}><StatusCard title="Last Fix" status="2 hours ago" /></Col>
-          </Row>
+def decide_next_action(state):
+    prompt = f"""
+    A model was evaluated with the following:
+    - Drift detected: {state['drift_result']['drift_detected']}
+    - Features with drift: {state['drift_result']['drift_features']}
+    - Performance accuracy: {state['performance_result']['accuracy']}
 
-          <Row gutter={16} style={{ marginTop: 32 }}>
-            <Col span={14}>
-              <Title level={4}>Model Performance Over Time</Title>
-              {loading ? <Spin /> : <PerformanceChart data={performance} />}
-            </Col>
-            <Col span={10}>
-              <Title level={4}>Notifications</Title>
-              {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-            </Col>
-          </Row>
+    Should we trigger remediation? Reply with 'remediate' or 'end'.
+    """
+    response = llm.invoke(prompt)
+    return "remediate" if "remediate" in response.content.lower() else "end"
 
-          <Row style={{ marginTop: 32 }}>
-            <Col span={24}>
-              <Title level={4}>Drift Detection</Title>
-              <Table
-                columns={columns}
-                dataSource={tableData}
-                pagination={false}
-                loading={loading}
-              />
-            </Col>
-          </Row>
-        </Card>
-      </Content>
-    </Layout>
-  );
-};
+# orchestrator/langgraph_orchestrator.py
+from orchestrator.nodes import drift_node, performance_node, remediation_node, decision_node
+from orchestrator.config import SHARED_STATE
 
-export default Dashboard;
+async def run_graph(model_id):
+    SHARED_STATE["model_id"] = model_id
+    SHARED_STATE["drift_result"] = drift_node.detect_drift(model_id)
+    SHARED_STATE["performance_result"] = performance_node.evaluate_performance(model_id)
 
+    next_action = decision_node.decide_next_action(SHARED_STATE)
 
-drift detection
+    if next_action == "remediate":
+        SHARED_STATE["remediation_result"] = remediation_node.suggest_remediation(SHARED_STATE)
 
-import React, { useEffect, useState } from 'react';
-import { Table, Typography, Layout, Spin } from 'antd';
-import Header from '../components/Header';
-import { getDriftData } from '../services/api';
+    return SHARED_STATE
 
-const { Title } = Typography;
-const { Content } = Layout;
+# agents/drift_agent.py
+from orchestrator.nodes.drift_node import detect_drift
 
-const DriftDetection = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+def get_drift_data(model_id):
+    return detect_drift(model_id)
 
-  useEffect(() => {
-    getDriftData().then((res) => {
-      setData(res.data);
-      setLoading(false);
-    });
-  }, []);
+# agents/performance_agent.py
+from orchestrator.nodes.performance_node import evaluate_performance
 
-  const columns = [
-    { title: 'Feature', dataIndex: 'feature' },
-    { title: 'Drift Score', dataIndex: 'score' },
-    { title: 'Status', dataIndex: 'status' }
-  ];
+def get_performance_data(model_id):
+    return evaluate_performance(model_id)
 
-  const tableData = data?.drift_features?.map((feature, index) => ({
-    key: index,
-    feature,
-    score: data?.drift_scores?.[feature]?.toFixed(2),
-    status: 'Drift'
-  })) || [];
+# agents/remediation_agent.py
+from orchestrator.nodes.remediation_node import suggest_remediation
+from orchestrator.config import SHARED_STATE
 
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: '24px' }}>
-        <Title level={3}>Drift Detection</Title>
-        {loading ? <Spin /> : <Table columns={columns} dataSource={tableData} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default DriftDetection;
-
-
-
-performance.jsx
-
-import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Spin } from 'antd';
-import Header from '../components/Header';
-import PerformanceChart from '../components/PerformanceChart';
-import { getPerformanceData } from '../services/api';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const Performance = () => {
-  const [trend, setTrend] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getPerformanceData().then((res) => {
-      setTrend(res.data.trend || []);
-      setLoading(false);
-    });
-  }, []);
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24 }}>
-        <Title level={3}>Performance Metrics</Title>
-        {loading ? <Spin /> : <PerformanceChart data={trend} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default Performance;
-
-
-Remediation 
-
-import React, { useEffect, useState } from 'react';
-import { Layout, Typography, List, Spin } from 'antd';
-import Header from '../components/Header';
-import { getRemediationLog } from '../services/api';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const RemediationLog = () => {
-  const [log, setLog] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getRemediationLog().then((res) => {
-      setLog(res.data || []);
-      setLoading(false);
-    });
-  }, []);
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24 }}>
-        <Title level={3}>Remediation Logs</Title>
-        {loading ? <Spin /> : (
-          <List
-            itemLayout="vertical"
-            dataSource={log}
-            renderItem={(item, i) => (
-              <List.Item key={i}>
-                <List.Item.Meta title={item.model} description={item.timestamp} />
-                <p>{item.action}</p>
-              </List.Item>
-            )}
-          />
-        )}
-      </Content>
-    </Layout>
-  );
-};
-
-export default RemediationLog;
-
-
-
-
-
-Notification
-
-import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Spin } from 'antd';
-import Header from '../components/Header';
-import NotificationPanel from '../components/NotificationPanel';
-import { getNotifications } from '../services/api';
-
-const { Content } = Layout;
-const { Title } = Typography;
-
-const Notifications = () => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getNotifications().then((res) => {
-      setNotifications(res.data || []);
-      setLoading(false);
-    });
-  }, []);
-
-  return (
-    <Layout>
-      <Header />
-      <Content style={{ padding: 24 }}>
-        <Title level={3}>System Notifications</Title>
-        {loading ? <Spin /> : <NotificationPanel notifications={notifications} />}
-      </Content>
-    </Layout>
-  );
-};
-
-export default Notifications;
-
-
-
-
+def get_remediation_logs():
+    return [SHARED_STATE.get("remediation_result") or {"status": "No action taken"}]
