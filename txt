@@ -1,36 +1,47 @@
-from orchestrator.utils import load_live_data
+import datetime
+from orchestrator.utils import load_reference_data, load_live_data
 
-def evaluate_performance(model_id: str) -> dict:
-    """
-    Evaluate model performance based on latest live data.
-    Returns latency and accuracy, and flags if degraded.
-    """
+def simple_drift_score(ref_value, live_value):
+    """Naive drift calculation (absolute difference)"""
     try:
+        return abs(ref_value - live_value)
+    except Exception:
+        return 0.0
+
+def detect_drift(model_id: str) -> dict:
+    try:
+        reference_data = load_reference_data(model_id)
         live_data = load_live_data(model_id)
-        trend = live_data.get("trend", [])
 
-        if not trend:
-            return {
-                "degraded": False,
-                "latency": None,
-                "accuracy": None,
-                "message": "No performance trend data found."
-            }
+        drift_features = []
+        drift_scores = {}
 
-        latest = trend[-1]  # Most recent entry
-        latency = latest.get("latency", 0)
-        accuracy = latest.get("accuracy", 1)
+        ref_features = reference_data.get("features", {})
+        live_features = live_data.get("features", {})
+
+        for feature, ref_value in ref_features.items():
+            live_value = live_features.get(feature)
+
+            if live_value is None:
+                continue
+
+            score = simple_drift_score(ref_value, live_value)
+            drift_scores[feature] = score
+
+            # Mark drift if score exceeds simple threshold (e.g. 0.2)
+            if score > 0.2:
+                drift_features.append(feature)
 
         return {
-            "degraded": (latency > 500 or accuracy < 0.8),
-            "latency": latency,
-            "accuracy": accuracy
+            "drift_detected": bool(drift_features),
+            "drift_features": drift_features,
+            "drift_scores": drift_scores,
+            "timestamp": datetime.datetime.utcnow().isoformat()
         }
 
     except Exception as e:
         return {
-            "degraded": False,
-            "latency": None,
-            "accuracy": None,
-            "error": str(e)
+            "drift_detected": False,
+            "error": str(e),
+            "timestamp": datetime.datetime.utcnow().isoformat()
         }
