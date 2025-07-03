@@ -1,16 +1,102 @@
-async def trigger_remediation(request: Request):
+import json
+import os
+import numpy as np
+from scipy.stats import ks_2samp
+
+def load_json(path):
+    with open(path, "r") as f:
+        return json.load(f)
+
+def extract_feature_series(data_list):
+    feature_series = {}
+    for record in data_list:
+        for key, val in record.items():
+            feature_series.setdefault(key, []).append(val)
+    return feature_series
+
+def ks_test(ref, live):
     try:
-        body = await request.json()
-        model_id = body.get("model_id", "model_v1")
+        return ks_2samp(ref, live).pvalue
+    except Exception:
+        return 1.0
 
-        drift = SHARED_STATE.get("drift_result", {})
-        perf = SHARED_STATE.get("performance_result", {})
+def mad(ref, live):
+    try:
+        return np.mean(np.abs(np.mean(ref) - np.mean(live)))
+    except Exception:
+        return 0.0
 
-        if not isinstance(drift, dict) or not isinstance(perf, dict):
-            return JSONResponse(status_code=400, content={"error": "Drift or performance state is not valid dict."})
-
-        suggestion = suggest_fix(drift, perf, model_id)
-        return JSONResponse(content=suggestion)
-
+def ewma(ref, live, alpha=0.3):
+    try:
+        if len(ref) == 0 or len(live) == 0:
+            return 0.0
+        ewma_val = ref[-1]  # Start with last reference value
+        for val in live:
+            ewma_val = alpha * val + (1 - alpha) * ewma_val
+        return abs(np.mean(ref) - ewma_val)
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        print(f"EWMA error: {str(e)}")
+        return 0.0
+
+def get_drift_data(model_id: str):
+    base_path = "data"
+    ref_path = os.path.join(base_path, "reference", f"{model_id}.json")
+    live_path = os.path.join(base_path, "live", f"{model_id}.json")
+
+    ref_data = load_json(ref_path).get("data", [])
+    live_data = load_json(live_path).get("data", [])
+
+    ref_features = extract_feature_series(ref_data)
+    live_features = extract_feature_series(live_data)
+
+    drift_features = []
+    ks_scores = {}
+    mad_scores = {}
+    ewma_scores = {}
+
+    for feature in ref_features:
+        if feature in live_features:
+            ref_vals = ref_features[feature]
+            live_vals = live_features[feature]
+
+            ks = 1 - ks_test(ref_vals, live_vals)
+            mad_val = mad(ref_vals, live_vals)
+            ewma_val = ewma(ref_vals, live_vals)
+
+            ks_scores[feature] = round(ks, 4)
+            mad_scores[feature] = round(mad_val, 4)
+            ewma_scores[feature] = round(ewma_val, 4)
+
+            # If any score crosses threshold, mark as drift
+            if ks > 0.6 or mad_val > 0.5 or ewma_val > 0.5:
+                drift_features.append(feature)
+
+    return {
+        "model_id": model_id,
+        "drift_features": drift_features,
+        "ks_scores": ks_scores,
+        "mad_scores": mad_scores,
+        "ewma_scores": ewma_scores,
+        "timestamp": live_data[0].get("timestamp", "unknown") if isinstance(live_data, list) else "unknown"
+    }
+
+
+
+import datetime
+from agents.drift_agent import get_drift_data
+
+def detect_drift(model_id: str) -> dict:
+    """
+    Drift detection node — wraps agent output and extracts required structure
+    """
+    drift_data = get_drift_data(model_id)
+
+    return {
+        "model_id": model_id,
+        "drift_detected": len(drift_data.get("drift_features", [])) > 0,
+        "drift_features": drift_data.get("drift_features", []),
+        "ks_scores": drift_data.get("ks_scores", {}),
+        "mad_scores": drift_data.get("mad_scores", {}),
+        "ewma_scores": drift_data.get("ewma_scores", {}),
+        "timestamp": drift_data.get("timestamp", datetime.datetime.utcnow().isoformat())
+    }
