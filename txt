@@ -1,102 +1,65 @@
-import json
-import os
-import numpy as np
-from scipy.stats import ks_2samp
+def validate_drift_result(result: dict) -> bool:
+    return isinstance(result.get("drift_scores"), dict) and isinstance(result.get("drift_features"), list)
 
-def load_json(path):
-    with open(path, "r") as f:
-        return json.load(f)
+def validate_performance_result(result: dict) -> bool:
+    return isinstance(result.get("latency"), (int, float)) and isinstance(result.get("accuracy"), (int, float))
 
-def extract_feature_series(data_list):
-    feature_series = {}
-    for record in data_list:
-        for key, val in record.items():
-            feature_series.setdefault(key, []).append(val)
-    return feature_series
+def validate_decision(decision: str) -> bool:
+    return decision in ["remediate", "noop"]
 
-def ks_test(ref, live):
-    try:
-        return ks_2samp(ref, live).pvalue
-    except Exception:
-        return 1.0
-
-def mad(ref, live):
-    try:
-        return np.mean(np.abs(np.mean(ref) - np.mean(live)))
-    except Exception:
-        return 0.0
-
-def ewma(ref, live, alpha=0.3):
-    try:
-        if len(ref) == 0 or len(live) == 0:
-            return 0.0
-        ewma_val = ref[-1]  # Start with last reference value
-        for val in live:
-            ewma_val = alpha * val + (1 - alpha) * ewma_val
-        return abs(np.mean(ref) - ewma_val)
-    except Exception as e:
-        print(f"EWMA error: {str(e)}")
-        return 0.0
-
-def get_drift_data(model_id: str):
-    base_path = "data"
-    ref_path = os.path.join(base_path, "reference", f"{model_id}.json")
-    live_path = os.path.join(base_path, "live", f"{model_id}.json")
-
-    ref_data = load_json(ref_path).get("data", [])
-    live_data = load_json(live_path).get("data", [])
-
-    ref_features = extract_feature_series(ref_data)
-    live_features = extract_feature_series(live_data)
-
-    drift_features = []
-    ks_scores = {}
-    mad_scores = {}
-    ewma_scores = {}
-
-    for feature in ref_features:
-        if feature in live_features:
-            ref_vals = ref_features[feature]
-            live_vals = live_features[feature]
-
-            ks = 1 - ks_test(ref_vals, live_vals)
-            mad_val = mad(ref_vals, live_vals)
-            ewma_val = ewma(ref_vals, live_vals)
-
-            ks_scores[feature] = round(ks, 4)
-            mad_scores[feature] = round(mad_val, 4)
-            ewma_scores[feature] = round(ewma_val, 4)
-
-            # If any score crosses threshold, mark as drift
-            if ks > 0.6 or mad_val > 0.5 or ewma_val > 0.5:
-                drift_features.append(feature)
-
-    return {
-        "model_id": model_id,
-        "drift_features": drift_features,
-        "ks_scores": ks_scores,
-        "mad_scores": mad_scores,
-        "ewma_scores": ewma_scores,
-        "timestamp": live_data[0].get("timestamp", "unknown") if isinstance(live_data, list) else "unknown"
-    }
+def validate_remediation_output(result: dict) -> bool:
+    return isinstance(result.get("recommendation"), str) and len(result["recommendation"]) > 0
 
 
+from orchestrator.config import SHARED_STATE
+from orchestrator.nodes.drift_node import detect_drift
+from orchestrator.nodes.performance_node import evaluate_performance
+from orchestrator.nodes.decision_node import decide_next_action
+from orchestrator.nodes.remediation_node import suggest_remediation
+from orchestrator.utils import (
+    validate_drift_result,
+    validate_performance_result,
+    validate_decision,
+    validate_remediation_output
+)
 
-import datetime
-from agents.drift_agent import get_drift_data
+def log_state(stage: str, state: dict):
+    print(f"===== {stage.upper()} =====")
+    for k, v in state.items():
+        print(f"{k}: {v}")
+    print("========================\n")
 
-def detect_drift(model_id: str) -> dict:
-    """
-    Drift detection node — wraps agent output and extracts required structure
-    """
-    drift_data = get_drift_data(model_id)
+async def run_graph(model_id: str) -> dict:
+    SHARED_STATE.clear()
+    SHARED_STATE.update({"model_id": model_id})
 
-    return {
-        "model_id": model_id,
-        "drift_detected": len(drift_data.get("drift_features", [])) > 0,
-        "drift_features": drift_data.get("drift_features", []),
-        "ks_scores": drift_data.get("ks_scores", {}),
-        "mad_scores": drift_data.get("mad_scores", {}),
-        "ewma_scores": drift_data.get("ewma_scores", {}),
-        "timestamp": drift_data.get("timestamp", datetime.datetime.utcnow().isoformat())
-    }
+    # ✅ Step 1: Drift Detection
+    drift_result = detect_drift(model_id)
+    if not validate_drift_result(drift_result):
+        raise ValueError("🚫 Invalid drift detection result structure.")
+    SHARED_STATE["drift_result"] = drift_result
+    log_state("Drift Detection", SHARED_STATE)
+
+    # ✅ Step 2: Performance Evaluation
+    performance_result = evaluate_performance(model_id)
+    if not validate_performance_result(performance_result):
+        raise ValueError("🚫 Invalid performance result.")
+    SHARED_STATE["performance_result"] = performance_result
+    log_state("Performance Evaluation", SHARED_STATE)
+
+    # ✅ Step 3: Decision (LLM)
+    decision = decide_next_action(SHARED_STATE)
+    if not validate_decision(decision):
+        raise ValueError(f"🚫 Invalid decision value: {decision}")
+    SHARED_STATE["decision"] = decision
+    log_state("Decision", SHARED_STATE)
+
+    # ✅ Step 4: Optional Remediation
+    if decision == "remediate":
+        remediation_result = suggest_remediation(SHARED_STATE)
+        if not validate_remediation_output(remediation_result):
+            raise ValueError("🚫 Invalid remediation recommendation.")
+        SHARED_STATE["remediation_result"] = remediation_result
+        log_state("Remediation", SHARED_STATE)
+
+    return SHARED_STATE
