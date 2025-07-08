@@ -1,28 +1,79 @@
-const [guardrailError, setGuardrailError] = useState(null);
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from agents.drift_agent import get_drift_data
+from agents.performance_agent import get_performance_data
+from agents.remediation_agent import get_remediation_logs
+from orchestrator.langgraph_orchestrator import run_graph
 
-const handleRunEvaluation = async () => {
-  setGuardrailError(null);
-  try {
-    const res = await runOrchestrator(selectedModel);
-    message.success('✅ Evaluation complete!');
-    fetchData();
-  } catch (err) {
-    const errorMsg =
-      err?.response?.data?.error || 'Unknown error occurred during orchestration.';
-    setGuardrailError(errorMsg);
-    message.error(`❌ Guardrail triggered: ${errorMsg}`);
-  }
-};
+import asyncio
 
+app = FastAPI(
+    title="ML Observability API",
+    version="1.0.0",
+    description="Handles drift detection, performance monitoring, and remediation coordination"
+)
 
-{guardrailError && (
-  <Alert
-    message="Guardrail Violation"
-    description={guardrailError}
-    type="error"
-    showIcon
-    closable
-    style={{ marginBottom: 20 }}
-  />
-)}
+# ✅ CORS middleware for frontend communication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict to your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ Health check
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
+# ✅ Drift detection endpoint
+@app.get("/drift")
+async def drift(model_id: str = "model_v1"):
+    try:
+        result = await asyncio.to_thread(get_drift_data, model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Performance monitoring endpoint
+@app.get("/performance")
+async def performance(model_id: str = "model_v1"):
+    try:
+        result = await asyncio.to_thread(get_performance_data, model_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Notification stub
+@app.get("/notifications")
+async def notifications():
+    return JSONResponse(content=[
+        {
+            "message": "Drift detected in feature 'accuracy'",
+            "timestamp": "2025-07-01T12:00:00Z",
+            "level": "critical"
+        }
+    ])
+
+# ✅ Remediation log endpoint
+@app.get("/remediation-log")
+async def remediation():
+    try:
+        result = await asyncio.to_thread(get_remediation_logs)
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ Full orchestrator run endpoint (LLM + drift + perf + fix)
+@app.post("/run-orchestrator")
+async def run_orchestrator(request: Request):
+    try:
+        body = await request.json()
+        model_id = body.get("model_id", "model_v1")
+        result = await run_graph(model_id)  # make sure this is an async def
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
