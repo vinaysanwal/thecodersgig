@@ -1,65 +1,28 @@
-def validate_drift_result(result: dict) -> bool:
-    return isinstance(result.get("drift_scores"), dict) and isinstance(result.get("drift_features"), list)
-
-def validate_performance_result(result: dict) -> bool:
-    return isinstance(result.get("latency"), (int, float)) and isinstance(result.get("accuracy"), (int, float))
-
-def validate_decision(decision: str) -> bool:
-    return decision in ["remediate", "noop"]
-
-def validate_remediation_output(result: dict) -> bool:
-    return isinstance(result.get("recommendation"), str) and len(result["recommendation"]) > 0
+const [guardrailError, setGuardrailError] = useState(null);
 
 
-from orchestrator.config import SHARED_STATE
-from orchestrator.nodes.drift_node import detect_drift
-from orchestrator.nodes.performance_node import evaluate_performance
-from orchestrator.nodes.decision_node import decide_next_action
-from orchestrator.nodes.remediation_node import suggest_remediation
-from orchestrator.utils import (
-    validate_drift_result,
-    validate_performance_result,
-    validate_decision,
-    validate_remediation_output
-)
+const handleRunEvaluation = async () => {
+  setGuardrailError(null);
+  try {
+    const res = await runOrchestrator(selectedModel);
+    message.success('✅ Evaluation complete!');
+    fetchData();
+  } catch (err) {
+    const errorMsg =
+      err?.response?.data?.error || 'Unknown error occurred during orchestration.';
+    setGuardrailError(errorMsg);
+    message.error(`❌ Guardrail triggered: ${errorMsg}`);
+  }
+};
 
-def log_state(stage: str, state: dict):
-    print(f"===== {stage.upper()} =====")
-    for k, v in state.items():
-        print(f"{k}: {v}")
-    print("========================\n")
 
-async def run_graph(model_id: str) -> dict:
-    SHARED_STATE.clear()
-    SHARED_STATE.update({"model_id": model_id})
-
-    # ✅ Step 1: Drift Detection
-    drift_result = detect_drift(model_id)
-    if not validate_drift_result(drift_result):
-        raise ValueError("🚫 Invalid drift detection result structure.")
-    SHARED_STATE["drift_result"] = drift_result
-    log_state("Drift Detection", SHARED_STATE)
-
-    # ✅ Step 2: Performance Evaluation
-    performance_result = evaluate_performance(model_id)
-    if not validate_performance_result(performance_result):
-        raise ValueError("🚫 Invalid performance result.")
-    SHARED_STATE["performance_result"] = performance_result
-    log_state("Performance Evaluation", SHARED_STATE)
-
-    # ✅ Step 3: Decision (LLM)
-    decision = decide_next_action(SHARED_STATE)
-    if not validate_decision(decision):
-        raise ValueError(f"🚫 Invalid decision value: {decision}")
-    SHARED_STATE["decision"] = decision
-    log_state("Decision", SHARED_STATE)
-
-    # ✅ Step 4: Optional Remediation
-    if decision == "remediate":
-        remediation_result = suggest_remediation(SHARED_STATE)
-        if not validate_remediation_output(remediation_result):
-            raise ValueError("🚫 Invalid remediation recommendation.")
-        SHARED_STATE["remediation_result"] = remediation_result
-        log_state("Remediation", SHARED_STATE)
-
-    return SHARED_STATE
+{guardrailError && (
+  <Alert
+    message="Guardrail Violation"
+    description={guardrailError}
+    type="error"
+    showIcon
+    closable
+    style={{ marginBottom: 20 }}
+  />
+)}
