@@ -1,132 +1,49 @@
+import React from "react";
+import { Card } from "antd";
+import { Handle, Position } from "reactflow";
+
+const boxStyle = {
+  border: "2px solid #ccc",
+  borderRadius: "8px",
+  padding: "10px 16px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#fff",
+  fontWeight: "bold",
+};
+
+const circleStyle = {
+  ...boxStyle,
+  borderRadius: "50%",
+  width: 120,
+  height: 120,
+};
+
 const OrchestratorStatusCard = () => {
   return (
-    <Card title="Orchestrator Flow" className="orchestrator-card">
-      <div className="diagram-container">
-        {/* Left side */}
-        <div className="column">
-          <div className="box">Start</div>
-          <div className="arrow down">↓</div>
-          <div className="box">Topic Request A</div>
-          <div className="arrow right">→</div>
-        </div>
+    <Card title="OrchestratorStatusCard" style={{ overflowX: "auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gridTemplateRows: "repeat(5, 80px)", gap: 10 }}>
 
-        {/* Center Orchestrator */}
-        <div className="center">
-          <div className="ellipse">Orchestrator</div>
-          <div className="center-links">
-            <div className="arrow right small">→</div>
-            <div className="arrow left small">←</div>
-          </div>
-        </div>
+        {/* Row 2: Start → Topic Request A → Orchestrator → Topic Request Agent → Main Agent */}
+        <div style={{ gridRow: 2, gridColumn: 1, ...boxStyle }}>Start</div>
+        <div style={{ gridRow: 2, gridColumn: 2, ...boxStyle }}>Topic Request A</div>
+        <div style={{ gridRow: 2, gridColumn: 3, ...circleStyle }}>Orchestrator</div>
+        <div style={{ gridRow: 2, gridColumn: 4, ...boxStyle }}>Topic Request Agent</div>
+        <div style={{ gridRow: 2, gridColumn: 5, ...boxStyle }}>Main Agent</div>
 
-        {/* Right side */}
-        <div className="column">
-          <div className="box round">Topic Request Agent</div>
-          <div className="arrow down">↓</div>
-          <div className="box">Main Agent</div>
-          <div className="arrow down">↓</div>
-          <div className="box round">Topic Response Agent</div>
-        </div>
+        {/* Row 3: Main Agent → Topic Response Agent */}
+        <div style={{ gridRow: 3, gridColumn: 5, ...boxStyle }}>Topic Response Agent</div>
 
-        {/* Lower center to Orchestrator again */}
-        <div className="center lower">
-          <div className="arrow left">←</div>
-          <div className="ellipse">Orchestrator</div>
-        </div>
+        {/* Row 4: Topic Response Agent → Orchestrator */}
+        <div style={{ gridRow: 4, gridColumn: 4, ...circleStyle }}>Orchestrator</div>
 
-        {/* Left side return path */}
-        <div className="column">
-          <div className="arrow left">←</div>
-          <div className="box">Topic Response A</div>
-          <div className="arrow up">↑</div>
-          <div className="box">Start</div>
-        </div>
+        {/* Row 5: Orchestrator → Topic Response A → Start */}
+        <div style={{ gridRow: 5, gridColumn: 3, ...boxStyle }}>Topic Response A</div>
+        <div style={{ gridRow: 5, gridColumn: 2, ...boxStyle }}>Start</div>
       </div>
     </Card>
   );
 };
 
 export default OrchestratorStatusCard;
-🎨 components/OrchestratorStatusCard.css
-css
-Copy
-Edit
-.orchestrator-card {
-  margin: 16px;
-  background-color: #f8f9fa;
-}
-
-.diagram-container {
-  display: grid;
-  grid-template-columns: repeat(5, auto);
-  grid-gap: 16px;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.center.lower {
-  grid-column: span 5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.box {
-  border: 2px solid #ccc;
-  padding: 8px 16px;
-  border-radius: 6px;
-  background-color: #fff;
-  min-width: 140px;
-}
-
-.round {
-  border-radius: 30px;
-  background-color: #e6f7ff;
-}
-
-.ellipse {
-  border: 2px solid #91d5ff;
-  background-color: #d6f5ff;
-  padding: 8px 20px;
-  border-radius: 999px;
-  min-width: 140px;
-  text-align: center;
-}
-
-.arrow {
-  font-size: 20px;
-  margin: 4px 0;
-}
-
-.arrow.right {
-  transform: rotate(0deg);
-}
-.arrow.left {
-  transform: rotate(180deg);
-}
-.arrow.down {
-  transform: rotate(90deg);
-}
-.arrow.up {
-  transform: rotate(-90deg);
-}
-.arrow.small {
-  font-size: 14px;
-  margin: 2px 0;
-}
