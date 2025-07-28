@@ -1,18 +1,16 @@
-✅ OrchestratorStatusCard.jsx
+ Updated OrchestratorStatusCard.jsx
 jsx
 Copy
 Edit
 import React from 'react';
-import { Card, Typography } from 'antd';
+import { Card } from 'antd';
 import './OrchestratorStatusCard.css';
-
-const { Title } = Typography;
 
 const OrchestratorStatusCard = () => {
   return (
     <Card title="OrchestratorStatusCard" bordered={true} className="orchestrator-card">
       <div className="flow-container">
-        {/* Top Flow */}
+        {/* Top Row */}
         <div className="top-row">
           <div className="box">Start</div>
           <div className="arrow">→</div>
@@ -25,19 +23,16 @@ const OrchestratorStatusCard = () => {
           <div className="circle-box">Main Agent</div>
         </div>
 
-        {/* Curved Flow (down to response agent) */}
-        <div className="curved-connector">
-          ⟳
-        </div>
-
-        {/* Bottom Flow */}
+        {/* Bottom Row */}
         <div className="bottom-row">
-          <div className="circle-box">Topic Response Agent</div>
-          <div className="arrow">←</div>
+          <div className="circle-box">Main Agent</div>
+          <div className="arrow">→</div>
+          <div className="ellipse-box">Topic Response Agent</div>
+          <div className="arrow">→</div>
           <div className="box">Orchestrator</div>
-          <div className="arrow">←</div>
+          <div className="arrow">→</div>
           <div className="box">Topic Response A</div>
-          <div className="arrow">←</div>
+          <div className="arrow">→</div>
           <div className="box">Start</div>
         </div>
       </div>
@@ -46,20 +41,20 @@ const OrchestratorStatusCard = () => {
 };
 
 export default OrchestratorStatusCard;
-🎨 OrchestratorStatusCard.css
+🎨 Updated OrchestratorStatusCard.css
 css
 Copy
 Edit
 .orchestrator-card {
   width: 100%;
-  min-height: 260px;
+  min-height: 300px;
 }
 
 .flow-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
 }
 
 .top-row, .bottom-row {
@@ -74,12 +69,12 @@ Edit
   padding: 6px 12px;
   background-color: #fafafa;
   font-size: 13px;
-  min-width: 100px;
+  min-width: 120px;
   text-align: center;
 }
 
 .circle-box {
-  border: 1px solid #d9d9d9;
+  border: 1px solid #91d5ff;
   border-radius: 50%;
   padding: 20px;
   background-color: #e6f7ff;
@@ -92,11 +87,21 @@ Edit
   justify-content: center;
 }
 
-.arrow {
-  font-size: 20px;
+.ellipse-box {
+  border: 1px solid #adc6ff;
+  border-radius: 50% / 30%;
+  padding: 20px 30px;
+  background-color: #f0f5ff;
+  text-align: center;
+  font-size: 13px;
+  min-width: 140px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.curved-connector {
-  font-size: 24px;
-  color: #999;
+.arrow {
+  font-size: 20px;
+  color: #333;
 }
