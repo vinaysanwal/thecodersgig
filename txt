@@ -1,141 +1,145 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
-  MiniMap,
-  Controls,
   Background,
+  Controls,
   useNodesState,
   useEdgesState,
   addEdge,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import { Button } from "antd";
-
-const nodeStyle = {
-  padding: 10,
-  border: "2px solid #ccc",
-  borderRadius: 8,
-  textAlign: "center",
-  background: "#fff",
-  width: 180,
-};
-
-const highlightStyle = {
-  border: "3px solid #1890ff",
-  background: "#e6f7ff",
-};
-
-const nodeList = [
-  "Start",
-  "Topic Request A",
-  "Orchestrator",
-  "Topic Request Agent",
-  "Main Agent",
-  "Topic Response Agent",
-  "Topic Response A",
-];
-
-const flowPath = [
-  "Start",
-  "Topic Request A",
-  "Orchestrator",
-  "Topic Request Agent",
-  "Main Agent",
-  "Topic Response Agent",
-  "Orchestrator",
-  "Topic Response A",
-  "Start",
-];
+  MarkerType,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { Card } from 'antd';
 
 const initialNodes = [
-  { id: "Start", data: { label: "Start" }, position: { x: 0, y: 200 }, style: nodeStyle },
-  { id: "Topic Request A", data: { label: "Topic Request A" }, position: { x: 200, y: 100 }, style: nodeStyle },
-  { id: "Orchestrator", data: { label: "Orchestrator" }, position: { x: 400, y: 200 }, style: nodeStyle },
-  { id: "Topic Request Agent", data: { label: "Topic Request Agent" }, position: { x: 600, y: 100 }, style: nodeStyle },
-  { id: "Main Agent", data: { label: "Main Agent" }, position: { x: 800, y: 200 }, style: nodeStyle },
-  { id: "Topic Response Agent", data: { label: "Topic Response Agent" }, position: { x: 600, y: 300 }, style: nodeStyle },
-  { id: "Topic Response A", data: { label: "Topic Response A" }, position: { x: 200, y: 300 }, style: nodeStyle },
+  { id: 'start', data: { label: 'Start' }, position: { x: 0, y: 0 }, style: { width: 120, height: 50 } },
+  { id: 'topic-request-a', data: { label: 'Topic Request A' }, position: { x: 200, y: 0 }, style: { width: 150, height: 50 } },
+  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 450, y: 0 }, style: { width: 140, height: 50 } },
+  { id: 'topic-request-agent', data: { label: 'Topic Request Agent' }, position: { x: 700, y: 0 }, style: { width: 170, height: 50 } },
+  { id: 'main-agent', data: { label: 'Main Agent' }, position: { x: 950, y: 0 }, style: { width: 130, height: 50 } },
+  { id: 'topic-response-agent', data: { label: 'Topic Response Agent' }, position: { x: 700, y: 120 }, style: { width: 170, height: 50 } },
+  { id: 'topic-response-a', data: { label: 'Topic Response A' }, position: { x: 200, y: 120 }, style: { width: 150, height: 50 } },
 ];
 
 const initialEdges = [
-  { id: "e1", source: "Start", target: "Topic Request A", animated: false },
-  { id: "e2", source: "Topic Request A", target: "Orchestrator", animated: false },
-  { id: "e3", source: "Orchestrator", target: "Topic Request Agent", animated: false },
-  { id: "e4", source: "Topic Request Agent", target: "Main Agent", animated: false },
-  { id: "e5", source: "Main Agent", target: "Topic Response Agent", animated: false },
-  { id: "e6", source: "Topic Response Agent", target: "Orchestrator", animated: false },
-  { id: "e7", source: "Orchestrator", target: "Topic Response A", animated: false },
-  { id: "e8", source: "Topic Response A", target: "Start", animated: false },
+  { id: 'e1', source: 'start', target: 'topic-request-a' },
+  { id: 'e2', source: 'topic-request-a', target: 'orchestrator' },
+  { id: 'e3', source: 'orchestrator', target: 'topic-request-agent' },
+  { id: 'e4', source: 'topic-request-agent', target: 'main-agent' },
+  { id: 'e5', source: 'main-agent', target: 'topic-response-agent' },
+  { id: 'e6', source: 'topic-response-agent', target: 'orchestrator' },
+  { id: 'e7', source: 'orchestrator', target: 'topic-response-a' },
+  { id: 'e8', source: 'topic-response-a', target: 'start' },
 ];
 
 const OrchestratorStatusCard = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [step, setStep] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map((node) => ({
+    ...node,
+    style: { ...node.style, backgroundColor: '#f0f0f0' },
+  })));
 
-  useEffect(() => {
-    if (!animating) return;
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map((edge) => ({
+    ...edge,
+    animated: false,
+    style: { stroke: '#888' },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+  })));
 
-    if (step >= flowPath.length - 1) {
-      setAnimating(false);
-      return;
-    }
+  const flowOrder = ['start', 'topic-request-a', 'orchestrator', 'topic-request-agent', 'main-agent', 'topic-response-agent', 'orchestrator', 'topic-response-a', 'start'];
+  const [activeStep, setActiveStep] = useState(-1);
+  const intervalRef = useRef(null);
 
-    const timer = setTimeout(() => {
-      const fromNode = flowPath[step];
-      const toNode = flowPath[step + 1];
-
-      // Highlight nodes
-      setNodes((nds) =>
-        nds.map((node) => ({
-          ...node,
-          style: {
-            ...nodeStyle,
-            ...(node.id === toNode ? highlightStyle : {}),
-          },
-        }))
-      );
-
-      // Highlight edges
-      setEdges((eds) =>
-        eds.map((edge) => ({
-          ...edge,
-          animated: edge.source === fromNode && edge.target === toNode,
-          style:
-            edge.source === fromNode && edge.target === toNode
-              ? { stroke: "#1890ff", strokeWidth: 2 }
-              : { stroke: "#888" },
-        }))
-      );
-
-      setStep((s) => s + 1);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [step, animating]);
-
-  const startAnimation = () => {
-    setStep(0);
-    setAnimating(true);
+  const resetFlow = () => {
+    setActiveStep(-1);
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        style: { ...node.style, backgroundColor: '#f0f0f0' },
+      }))
+    );
+    setEdges((eds) =>
+      eds.map((edge) => ({
+        ...edge,
+        animated: false,
+        style: { ...edge.style, stroke: '#888' },
+      }))
+    );
   };
 
+  const triggerFlow = () => {
+    resetFlow();
+
+    let step = 0;
+    intervalRef.current = setInterval(() => {
+      if (step < flowOrder.length - 1) {
+        const current = flowOrder[step];
+        const next = flowOrder[step + 1];
+
+        // Highlight node
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === next
+              ? { ...node, style: { ...node.style, backgroundColor: '#bae7ff' } }
+              : node
+          )
+        );
+
+        // Animate corresponding edge
+        setEdges((eds) =>
+          eds.map((edge) =>
+            edge.source === current && edge.target === next
+              ? {
+                  ...edge,
+                  animated: true,
+                  style: { ...edge.style, stroke: '#1890ff' },
+                }
+              : edge
+          )
+        );
+
+        setActiveStep(step);
+        step++;
+      } else {
+        clearInterval(intervalRef.current);
+        // Color all nodes and edges red to mark completion
+        setNodes((nds) =>
+          nds.map((node) => ({
+            ...node,
+            style: { ...node.style, backgroundColor: '#ffccc7' },
+          }))
+        );
+        setEdges((eds) =>
+          eds.map((edge) => ({
+            ...edge,
+            animated: false,
+            style: { ...edge.style, stroke: '#f5222d' },
+          }))
+        );
+      }
+    }, 3000);
+  };
+
+  const handleNodeClick = useCallback((event, node) => {
+    if (node.id === 'start') {
+      triggerFlow();
+    }
+  }, []);
+
   return (
-    <div style={{ height: 500, border: "1px solid #ccc", borderRadius: 6 }}>
-      <Button onClick={startAnimation} type="primary" style={{ margin: 10 }}>
-        Start
-      </Button>
+    <Card title="Orchestrator Flow" style={{ width: '100%', height: '600px' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
         fitView
       >
-        <MiniMap />
+        <Background />
         <Controls />
-        <Background color="#f1f1f1" gap={16} />
       </ReactFlow>
-    </div>
+    </Card>
   );
 };
 
