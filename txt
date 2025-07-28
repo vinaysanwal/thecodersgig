@@ -1,146 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, {
-  Background,
-  Controls,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  MarkerType,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { Card } from 'antd';
-
-const initialNodes = [
-  { id: 'start', data: { label: 'Start' }, position: { x: 0, y: 0 }, style: { width: 120, height: 50 } },
-  { id: 'topic-request-a', data: { label: 'Topic Request A' }, position: { x: 200, y: 0 }, style: { width: 150, height: 50 } },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 450, y: 0 }, style: { width: 140, height: 50 } },
-  { id: 'topic-request-agent', data: { label: 'Topic Request Agent' }, position: { x: 700, y: 0 }, style: { width: 170, height: 50 } },
-  { id: 'main-agent', data: { label: 'Main Agent' }, position: { x: 950, y: 0 }, style: { width: 130, height: 50 } },
-  { id: 'topic-response-agent', data: { label: 'Topic Response Agent' }, position: { x: 700, y: 120 }, style: { width: 170, height: 50 } },
-  { id: 'topic-response-a', data: { label: 'Topic Response A' }, position: { x: 200, y: 120 }, style: { width: 150, height: 50 } },
-];
-
-const initialEdges = [
-  { id: 'e1', source: 'start', target: 'topic-request-a' },
-  { id: 'e2', source: 'topic-request-a', target: 'orchestrator' },
-  { id: 'e3', source: 'orchestrator', target: 'topic-request-agent' },
-  { id: 'e4', source: 'topic-request-agent', target: 'main-agent' },
-  { id: 'e5', source: 'main-agent', target: 'topic-response-agent' },
-  { id: 'e6', source: 'topic-response-agent', target: 'orchestrator' },
-  { id: 'e7', source: 'orchestrator', target: 'topic-response-a' },
-  { id: 'e8', source: 'topic-response-a', target: 'start' },
-];
-
-const OrchestratorStatusCard = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map((node) => ({
-    ...node,
-    style: { ...node.style, backgroundColor: '#f0f0f0' },
-  })));
-
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges.map((edge) => ({
-    ...edge,
-    animated: false,
-    style: { stroke: '#888' },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
-  })));
-
-  const flowOrder = ['start', 'topic-request-a', 'orchestrator', 'topic-request-agent', 'main-agent', 'topic-response-agent', 'orchestrator', 'topic-response-a', 'start'];
-  const [activeStep, setActiveStep] = useState(-1);
-  const intervalRef = useRef(null);
-
-  const resetFlow = () => {
-    setActiveStep(-1);
-    setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        style: { ...node.style, backgroundColor: '#f0f0f0' },
-      }))
-    );
-    setEdges((eds) =>
-      eds.map((edge) => ({
-        ...edge,
-        animated: false,
-        style: { ...edge.style, stroke: '#888' },
-      }))
-    );
-  };
-
-  const triggerFlow = () => {
-    resetFlow();
-
-    let step = 0;
-    intervalRef.current = setInterval(() => {
-      if (step < flowOrder.length - 1) {
-        const current = flowOrder[step];
-        const next = flowOrder[step + 1];
-
-        // Highlight node
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === next
-              ? { ...node, style: { ...node.style, backgroundColor: '#bae7ff' } }
-              : node
-          )
-        );
-
-        // Animate corresponding edge
-        setEdges((eds) =>
-          eds.map((edge) =>
-            edge.source === current && edge.target === next
-              ? {
-                  ...edge,
-                  animated: true,
-                  style: { ...edge.style, stroke: '#1890ff' },
-                }
-              : edge
-          )
-        );
-
-        setActiveStep(step);
-        step++;
-      } else {
-        clearInterval(intervalRef.current);
-        // Color all nodes and edges red to mark completion
-        setNodes((nds) =>
-          nds.map((node) => ({
-            ...node,
-            style: { ...node.style, backgroundColor: '#ffccc7' },
-          }))
-        );
-        setEdges((eds) =>
-          eds.map((edge) => ({
-            ...edge,
-            animated: false,
-            style: { ...edge.style, stroke: '#f5222d' },
-          }))
-        );
-      }
-    }, 3000);
-  };
-
-  const handleNodeClick = useCallback((event, node) => {
-    if (node.id === 'start') {
-      triggerFlow();
-    }
-  }, []);
-
-  return (
-    <Card title="Orchestrator Flow" style={{ width: '100%', height: '600px' }}>
+  <div style={{ height: 500, border: "1px solid #ccc", borderRadius: 6 }}>
+      <Button onClick={startAnimation} type="primary" style={{ margin: 10 }}>
+        Start
+      </Button>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
         fitView
       >
-        <Background />
+        <MiniMap />
         <Controls />
+        <Background color="#f1f1f1" gap={16} />
       </ReactFlow>
-    </Card>
-  );
-};
-
-export default OrchestratorStatusCard;
+    </div>
