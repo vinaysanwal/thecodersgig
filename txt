@@ -1,174 +1,181 @@
-/* File: src/App.jsx */
+src/
+├── components/
+│   ├── AgentGroupCard.jsx
+│   ├── LogsPanel.jsx
+│   ├── OrchestratorStatusCard.jsx
+│   ├── UserCard.jsx
+│   └── UserRequestBox.jsx
+├── App.jsx
+└── index.js
+📄 index.js
+js
+Copy
+Edit
 import React from 'react';
-import OrchestratorFlow from './components/OrchestratorFlow';
-import './App.css';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import 'antd/dist/reset.css'; // Ant Design base style reset
 
-function App() {
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+📄 App.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import { Layout, Typography, Row, Col } from 'antd';
+import UserCard from './components/UserCard';
+import UserRequestBox from './components/UserRequestBox';
+import OrchestratorStatusCard from './components/OrchestratorStatusCard';
+import AgentGroupCard from './components/AgentGroupCard';
+import LogsPanel from './components/LogsPanel';
+
+const { Header, Content } = Layout;
+const { Title } = Typography;
+
+const App = () => {
   return (
-    <div className="App">
-      <h1>Orchestrator Status Flow</h1>
-      <OrchestratorFlow />
-    </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ backgroundColor: '#001529', padding: '0 20px' }}>
+        <Title level={3} style={{ color: 'white', margin: 0 }}>
+          Dashboard
+        </Title>
+      </Header>
+
+      <Content style={{ padding: 20 }}>
+        <Row gutter={[16, 16]}>
+          {/* Left Side */}
+          <Col span={6}>
+            <UserCard />
+            <UserRequestBox />
+            <LogsPanel title="Observability" />
+          </Col>
+
+          {/* Center Area */}
+          <Col span={12}>
+            <OrchestratorStatusCard />
+            <LogsPanel title="Observability" />
+          </Col>
+
+          {/* Right Side */}
+          <Col span={6}>
+            <AgentGroupCard />
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
   );
-}
+};
 
 export default App;
-
-/* File: src/components/OrchestratorFlow.jsx */
-import React, { useState, useEffect } from 'react';
-import FlowBox from './FlowBox';
-import Arrow from './Arrow';
-import './Flow.css';
-
-const topRow = [
-  'Start',
-  'Topic Request A',
-  'Orchestrator',
-  'Topic Request Agent',
-  'Main Agent',
-];
-
-const bottomRow = [
-  'Topic Response Agent',
-  'Orchestrator',
-  'Topic Response A',
-  'Start',
-];
-
-const OrchestratorFlow = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const totalSteps = topRow.length + bottomRow.length;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % totalSteps);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="flow-2rows">
-      <div className="flow-row">
-        {topRow.map((step, index) => (
-          <React.Fragment key={index}>
-            <FlowBox title={step} />
-            {index < topRow.length - 1 && (
-              <Arrow active={activeIndex === index} direction="right" />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-
-      <div className="flow-row reverse">
-        {bottomRow.map((step, index) => (
-          <React.Fragment key={index}>
-            <FlowBox title={step} />
-            {index < bottomRow.length - 1 && (
-              <Arrow
-                active={activeIndex === topRow.length + index}
-                direction="left"
-              />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default OrchestratorFlow;
-
-/* File: src/components/FlowBox.jsx */
+📄 components/UserCard.jsx
+jsx
+Copy
+Edit
 import React from 'react';
-import './Flow.css';
+import { Card, Avatar, Button } from 'antd';
+import { UserOutlined, SafetyOutlined } from '@ant-design/icons';
 
-const FlowBox = ({ title }) => {
-  return (
-    <div className="flow-box">
-      <span>{title}</span>
-    </div>
-  );
-};
+const UserCard = () => (
+  <Card title="UserCard" style={{ marginBottom: 16 }}>
+    <Avatar size={64} icon={<UserOutlined />} />
+    <p style={{ marginTop: 8 }}>Username</p>
+    <Button icon={<SafetyOutlined />} type="primary" block>
+      I/O guardrails
+    </Button>
+  </Card>
+);
 
-export default FlowBox;
-
-/* File: src/components/Arrow.jsx */
+export default UserCard;
+📄 components/UserRequestBox.jsx
+jsx
+Copy
+Edit
 import React from 'react';
-import './Flow.css';
+import { Card, Input } from 'antd';
 
-const Arrow = ({ active, direction = 'right' }) => {
-  const isRight = direction === 'right';
-  return (
-    <svg width="60" height="40" className={`arrow ${active ? 'active' : ''}`}>
-      <line
-        x1={isRight ? 0 : 60}
-        y1="20"
-        x2={isRight ? 50 : 10}
-        y2="20"
-        stroke="black"
-        strokeWidth="2"
-      />
-      <polygon
-        points={
-          isRight
-            ? '50,15 60,20 50,25'
-            : '10,15 0,20 10,25'
-        }
-        fill="black"
-      />
-    </svg>
-  );
+const UserRequestBox = () => (
+  <Card title="UserRequestBox" style={{ marginBottom: 16 }}>
+    <Input placeholder="user_request" style={{ marginBottom: 8 }} />
+    <Input placeholder="user_response" />
+  </Card>
+);
+
+export default UserRequestBox;
+📄 components/LogsPanel.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import { Card, List, Skeleton } from 'antd';
+
+const LogsPanel = ({ title }) => (
+  <Card title={title} style={{ marginTop: 16 }}>
+    <List
+      dataSource={['log_1', 'log_2', 'log_3']}
+      renderItem={(item) => (
+        <List.Item>
+          <Skeleton active title={false} paragraph={{ rows: 1 }} loading={false}>
+            {item}
+          </Skeleton>
+        </List.Item>
+      )}
+    />
+  </Card>
+);
+
+export default LogsPanel;
+📄 components/AgentGroupCard.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import { Card } from 'antd';
+
+const AgentGroupCard = () => (
+  <Card title="AgentGroupCard">
+    <Card type="inner" title="Agent A" style={{ marginBottom: 16 }}>
+      Agent A ≡
+    </Card>
+    <Card type="inner" title="Agent B" style={{ marginBottom: 16 }}>
+      Agent B ≡
+    </Card>
+    <Card type="inner" title="MCP Server">
+      -- --
+    </Card>
+  </Card>
+);
+
+export default AgentGroupCard;
+📄 components/OrchestratorStatusCard.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import { Card } from 'antd';
+
+const boxStyle = {
+  border: '1px solid red',
+  borderRadius: 4,
+  padding: 8,
+  margin: 8,
+  textAlign: 'center',
+  minWidth: 120,
+  display: 'inline-block',
 };
 
-export default Arrow;
+const OrchestratorStatusCard = () => (
+  <Card title="OrchestratorStatusCard">
+    <div style={{ textAlign: 'center' }}>
+      <div style={boxStyle}>start</div>
+      <div style={boxStyle}>request queue A</div>
+      <div style={boxStyle}>response queue A</div>
+    </div>
+    <div style={{ marginTop: 16, textAlign: 'center' }}>
+      <div style={{ ...boxStyle, borderColor: '#1890ff' }}>→ Agent A</div>
+      <div style={{ ...boxStyle, borderColor: '#1890ff' }}>→ Agent B</div>
+    </div>
+  </Card>
+);
 
-/* File: src/components/Flow.css */
-.flow-2rows {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-  margin-top: 40px;
-  align-items: center;
-}
-
-.flow-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.flow-row.reverse {
-  flex-direction: row-reverse;
-}
-
-.flow-box {
-  border: 2px solid #007bff;
-  padding: 10px 20px;
-  border-radius: 8px;
-  background-color: #e9f5ff;
-  font-weight: 500;
-  min-width: 140px;
-  text-align: center;
-}
-
-.arrow {
-  transition: all 0.3s ease-in-out;
-}
-
-.arrow.active line,
-.arrow.active polygon {
-  stroke: #007bff;
-  fill: #007bff;
-}
-
-/* File: src/App.css */
-.App {
-  text-align: center;
-  padding: 40px;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-h1 {
-  color: #222;
-  margin-bottom: 20px;
-}
+export default OrchestratorStatusCard;
