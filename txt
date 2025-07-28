@@ -1,99 +1,109 @@
-npm install antd react-flow-renderer
-📂 OrchestratorStatusCard.jsx
-jsx
-Copy
-Edit
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
   addEdge,
-} from 'react-flow-renderer';
-import { Card, Tooltip } from 'antd';
+  useNodesState,
+  useEdgesState
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import { Button, Card } from 'antd';
 
 const initialNodes = [
-  { id: 'start', type: 'input', data: { label: 'Start' }, position: { x: 0, y: 200 } },
-  { id: 'requestA', data: { label: 'Topic Request A' }, position: { x: 150, y: 100 } },
-  { id: 'responseA', data: { label: 'Topic Response A' }, position: { x: 150, y: 300 } },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 350, y: 200 }, style: { borderRadius: 50 } },
-  { id: 'reqAgent', data: { label: 'Topic Request Agent' }, position: { x: 550, y: 100 } },
-  { id: 'resAgent', data: { label: 'Topic Response Agent' }, position: { x: 550, y: 300 } },
-  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 750, y: 200 } },
+  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' }, type: 'default' },
+  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' }, type: 'default' },
+  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' }, type: 'default' },
+  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' }, type: 'default' },
+  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' }, type: 'default' },
+  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' }, type: 'default' },
+  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' }, type: 'default' },
 ];
 
 const initialEdges = [
-  { id: 'e1', source: 'start', target: 'requestA', animated: true },
-  { id: 'e2', source: 'start', target: 'responseA', animated: true },
-  { id: 'e3', source: 'requestA', target: 'orchestrator' },
-  { id: 'e4', source: 'responseA', target: 'start' },
-  { id: 'e5', source: 'orchestrator', target: 'reqAgent' },
-  { id: 'e6', source: 'reqAgent', target: 'mainAgent' },
-  { id: 'e7', source: 'mainAgent', target: 'resAgent' },
-  { id: 'e8', source: 'resAgent', target: 'orchestrator' },
-  { id: 'e9', source: 'orchestrator', target: 'responseA' },
+  { id: 'e1', source: 'start', target: 'topicRequestA' },
+  { id: 'e2', source: 'topicRequestA', target: 'orchestrator' },
+  { id: 'e3', source: 'orchestrator', target: 'topicRequestAgent' },
+  { id: 'e4', source: 'topicRequestAgent', target: 'mainAgent' },
+  { id: 'e5', source: 'mainAgent', target: 'topicResponseAgent' },
+  { id: 'e6', source: 'topicResponseAgent', target: 'orchestrator' },
+  { id: 'e7', source: 'orchestrator', target: 'topicResponseA' },
+  { id: 'e8', source: 'topicResponseA', target: 'start' },
 ];
 
 const OrchestratorStatusCard = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
-    [setEdges]
-  );
+  const nodeOrder = [
+    'start',
+    'topicRequestA',
+    'orchestrator',
+    'topicRequestAgent',
+    'mainAgent',
+    'topicResponseAgent',
+    'orchestrator',
+    'topicResponseA',
+    'start'
+  ];
+
+  const intervalRef = useRef(null);
+
+  const resetNodeStyles = () => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        className: '',
+      }))
+    );
+  };
+
+  const highlightNode = (id) => {
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        className: node.id === id ? 'active-node' : '',
+      }))
+    );
+  };
+
+  const startAnimation = () => {
+    resetNodeStyles();
+    setActiveIndex(0);
+  };
+
+  useEffect(() => {
+    if (activeIndex >= 0 && activeIndex < nodeOrder.length) {
+      highlightNode(nodeOrder[activeIndex]);
+
+      intervalRef.current = setTimeout(() => {
+        setActiveIndex((prev) => prev + 1);
+      }, 3000);
+    }
+
+    return () => clearTimeout(intervalRef.current);
+  }, [activeIndex]);
 
   return (
     <Card
-      title="Orchestrator Flow"
-      bordered={false}
-      style={{ height: '600px', width: '100%', backgroundColor: '#f7f9fc' }}
+      title="Orchestrator Status Flow"
+      extra={<Button onClick={startAnimation} type="primary">Start</Button>}
+      style={{ width: '100%', height: '600px' }}
     >
-      <Tooltip title="Interactive Agent Flow" placement="top">
-        <div style={{ height: '500px' }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-            attributionPosition="bottom-left"
-          >
-            <MiniMap />
-            <Controls />
-            <Background color="#aaa" gap={16} />
-          </ReactFlow>
-        </div>
-      </Tooltip>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+      >
+        <MiniMap />
+        <Controls />
+        <Background variant="dots" gap={12} size={1} />
+      </ReactFlow>
     </Card>
   );
 };
 
 export default OrchestratorStatusCard;
-🧠 Notes:
-Start → Topic Request A → Orchestrator → Topic Request Agent → Main Agent → Topic Response Agent → Orchestrator → Topic Response A → Start
-
-Looks interactive, hoverable, and clean
-
-Style can be expanded (e.g., colors for each node type, status indicators)
-
-✅ Import it in your App.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import OrchestratorStatusCard from './components/OrchestratorStatusCard';
-import 'antd/dist/antd.min.css';
-
-function App() {
-  return (
-    <div style={{ padding: 24 }}>
-      <OrchestratorStatusCard />
-    </div>
-  );
-}
-
-export default App;
