@@ -1,191 +1,174 @@
-✅ 1. Folder Structure
-css
-Copy
-Edit
-src/
-├── components/
-│   ├── FlowBox.jsx
-│   ├── Arrow.jsx
-│   └── OrchestratorFlow.jsx
-├── App.jsx
-├── index.js
-└── styles/
-    └── flow.css
-✅ 2. FlowBox.jsx (Generic Box for each step)
-jsx
-Copy
-Edit
-import React from 'react';
-import './flow.css';
-
-const FlowBox = ({ title }) => (
-  <div className="flow-box">
-    {title}
-  </div>
-);
-
-export default FlowBox;
-✅ 3. Arrow.jsx (Simple SVG Arrow)
-jsx
-Copy
-Edit
-import React from 'react';
-
-const Arrow = () => (
-  <svg width="60" height="40">
-    <line x1="0" y1="20" x2="50" y2="20" stroke="black" strokeWidth="2" />
-    <polygon points="50,15 60,20 50,25" fill="black" />
-  </svg>
-);
-
-export default Arrow;
-✅ 4. OrchestratorFlow.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import FlowBox from './FlowBox';
-import Arrow from './Arrow';
-import './flow.css';
-
-const OrchestratorFlow = () => {
-  return (
-    <div className="flow-container">
-      <FlowBox title="Start" />
-      <Arrow />
-      <FlowBox title="Topic Request A" />
-      <Arrow />
-      <FlowBox title="Orchestrator" />
-      <Arrow />
-      <FlowBox title="Topic Request Agent" />
-      <Arrow />
-      <FlowBox title="Main Agent" />
-      <Arrow />
-      <FlowBox title="Topic Response Agent" />
-      <Arrow />
-      <FlowBox title="Orchestrator" />
-      <Arrow />
-      <FlowBox title="Topic Response A" />
-      <Arrow />
-      <FlowBox title="Start" />
-    </div>
-  );
-};
-
-export default OrchestratorFlow;
-✅ 5. flow.css
-css
-Copy
-Edit
-.flow-container {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 20px;
-}
-
-.flow-box {
-  min-width: 150px;
-  padding: 10px 15px;
-  background-color: #f0f4ff;
-  border: 2px solid #2f80ed;
-  border-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-}
-✅ 6. App.jsx
-jsx
-Copy
-Edit
+/* File: src/App.jsx */
 import React from 'react';
 import OrchestratorFlow from './components/OrchestratorFlow';
+import './App.css';
 
 function App() {
   return (
-    <div>
-      <h2>Orchestrator Flow</h2>
+    <div className="App">
+      <h1>Orchestrator Status Flow</h1>
       <OrchestratorFlow />
     </div>
   );
 }
 
 export default App;
-✅ Final Output
-You’ll get a horizontal visual flow like:
 
-css
-Copy
-Edit
-[Start] → [Topic Request A] → [Orchestrator] → [Topic Request Agent] → [Main Agent]
-  → [Topic Response Agent] → [Orchestrator] → [Topic Response A] → [Start]
-Would you like me to enhance this with animations (e.g. hopping arrows), real-time data, or convert it to a dashboard layout with sidecards like your original image?
+/* File: src/components/OrchestratorFlow.jsx */
+import React, { useState, useEffect } from 'react';
+import FlowBox from './FlowBox';
+import Arrow from './Arrow';
+import './Flow.css';
 
+const topRow = [
+  'Start',
+  'Topic Request A',
+  'Orchestrator',
+  'Topic Request Agent',
+  'Main Agent',
+];
 
+const bottomRow = [
+  'Topic Response Agent',
+  'Orchestrator',
+  'Topic Response A',
+  'Start',
+];
 
+const OrchestratorFlow = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const totalSteps = topRow.length + bottomRow.length;
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % totalSteps);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
+  return (
+    <div className="flow-2rows">
+      <div className="flow-row">
+        {topRow.map((step, index) => (
+          <React.Fragment key={index}>
+            <FlowBox title={step} />
+            {index < topRow.length - 1 && (
+              <Arrow active={activeIndex === index} direction="right" />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
 
+      <div className="flow-row reverse">
+        {bottomRow.map((step, index) => (
+          <React.Fragment key={index}>
+            <FlowBox title={step} />
+            {index < bottomRow.length - 1 && (
+              <Arrow
+                active={activeIndex === topRow.length + index}
+                direction="left"
+              />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+};
 
+export default OrchestratorFlow;
 
-You said:
-Where is header and other component. I need the complete UI code 
-
-
-ChatGPT said:
-Perfect — let’s now build the complete React UI project from scratch based on your updated orchestration flow diagram. I’ll include a basic layout with header, sidebar placeholders, and the main content showing the orchestrator flow with hopping arrows and components as per your image.
-
-✅ Tech Stack
-React (Vite)
-
-Ant Design (for clean UI)
-
-Custom CSS + SVG arrows
-
-Dummy data to simulate real-time arrow hopping
-
-✅ Folder Structure
-css
-Copy
-Edit
-src/
-├── components/
-│   ├── Header.jsx
-│   ├── Sidebar.jsx
-│   ├── FlowBox.jsx
-│   ├── Arrow.jsx
-│   └── OrchestratorFlow.jsx
-├── App.jsx
-├── main.jsx
-├── styles/
-│   └── flow.css
-✅ 1. Install Vite & Ant Design
-bash
-Copy
-Edit
-npm create vite@latest orchestrator-ui --template react
-cd orchestrator-ui
-npm install antd
-npm install
-✅ 2. main.jsx
-jsx
-Copy
-Edit
+/* File: src/components/FlowBox.jsx */
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import 'antd/dist/reset.css';
-import './styles/flow.css';
+import './Flow.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
-✅ 3. App.jsx
-jsx
-Copy
-Edit
+const FlowBox = ({ title }) => {
+  return (
+    <div className="flow-box">
+      <span>{title}</span>
+    </div>
+  );
+};
+
+export default FlowBox;
+
+/* File: src/components/Arrow.jsx */
 import React from 'react';
-import Header from './components/Header';
-import Sidebar from './
+import './Flow.css';
+
+const Arrow = ({ active, direction = 'right' }) => {
+  const isRight = direction === 'right';
+  return (
+    <svg width="60" height="40" className={`arrow ${active ? 'active' : ''}`}>
+      <line
+        x1={isRight ? 0 : 60}
+        y1="20"
+        x2={isRight ? 50 : 10}
+        y2="20"
+        stroke="black"
+        strokeWidth="2"
+      />
+      <polygon
+        points={
+          isRight
+            ? '50,15 60,20 50,25'
+            : '10,15 0,20 10,25'
+        }
+        fill="black"
+      />
+    </svg>
+  );
+};
+
+export default Arrow;
+
+/* File: src/components/Flow.css */
+.flow-2rows {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  margin-top: 40px;
+  align-items: center;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flow-row.reverse {
+  flex-direction: row-reverse;
+}
+
+.flow-box {
+  border: 2px solid #007bff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: #e9f5ff;
+  font-weight: 500;
+  min-width: 140px;
+  text-align: center;
+}
+
+.arrow {
+  transition: all 0.3s ease-in-out;
+}
+
+.arrow.active line,
+.arrow.active polygon {
+  stroke: #007bff;
+  fill: #007bff;
+}
+
+/* File: src/App.css */
+.App {
+  text-align: center;
+  padding: 40px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  color: #222;
+  margin-bottom: 20px;
+}
