@@ -1,39 +1,36 @@
- Updated OrchestratorStatusCard.jsx
-jsx
-Copy
-Edit
 import React from 'react';
-import { Card } from 'antd';
+import { Card, Button } from 'antd';
 import './OrchestratorStatusCard.css';
 
 const OrchestratorStatusCard = () => {
   return (
-    <Card title="OrchestratorStatusCard" bordered={true} className="orchestrator-card">
-      <div className="flow-container">
-        {/* Top Row */}
+    <Card title="OrchestratorStatusCard" className="orchestrator-card">
+      <div className="orchestrator-flow">
+        {/* Top Flow */}
         <div className="top-row">
-          <div className="box">Start</div>
+          <div className="node">Start</div>
           <div className="arrow">→</div>
-          <div className="box">Topic Request A</div>
+          <div className="node">Topic Request A</div>
           <div className="arrow">→</div>
-          <div className="box">Orchestrator</div>
+          <div className="node">Orchestrator</div>
           <div className="arrow">→</div>
-          <div className="box">Topic Request Agent</div>
+          <div className="node">Topic Request Agent</div>
           <div className="arrow">→</div>
-          <div className="circle-box">Main Agent</div>
+          <div className="node main-agent">Main Agent</div>
         </div>
 
-        {/* Bottom Row */}
+        {/* Connector from Main Agent to Topic Response Agent */}
+        <div className="curve-down">↘</div>
+
+        {/* Bottom Flow */}
         <div className="bottom-row">
-          <div className="circle-box">Main Agent</div>
+          <div className="node topic-response-agent">Topic Response Agent</div>
           <div className="arrow">→</div>
-          <div className="ellipse-box">Topic Response Agent</div>
+          <div className="node">Orchestrator</div>
           <div className="arrow">→</div>
-          <div className="box">Orchestrator</div>
+          <div className="node">Topic Response A</div>
           <div className="arrow">→</div>
-          <div className="box">Topic Response A</div>
-          <div className="arrow">→</div>
-          <div className="box">Start</div>
+          <div className="node">Start</div>
         </div>
       </div>
     </Card>
@@ -41,67 +38,56 @@ const OrchestratorStatusCard = () => {
 };
 
 export default OrchestratorStatusCard;
-🎨 Updated OrchestratorStatusCard.css
+📁 components/OrchestratorStatusCard.css
 css
 Copy
 Edit
 .orchestrator-card {
-  width: 100%;
-  min-height: 300px;
+  margin: 16px;
 }
 
-.flow-container {
+.orchestrator-flow {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
 }
 
 .top-row, .bottom-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  margin: 8px 0;
 }
 
-.box {
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  padding: 6px 12px;
-  background-color: #fafafa;
-  font-size: 13px;
+.node {
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f9f9f9;
   min-width: 120px;
   text-align: center;
+  font-weight: 500;
 }
 
-.circle-box {
-  border: 1px solid #91d5ff;
-  border-radius: 50%;
-  padding: 20px;
+.main-agent {
   background-color: #e6f7ff;
-  text-align: center;
-  font-size: 13px;
-  min-width: 100px;
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-color: #91d5ff;
+  border-radius: 50%;
 }
 
-.ellipse-box {
-  border: 1px solid #adc6ff;
-  border-radius: 50% / 30%;
-  padding: 20px 30px;
-  background-color: #f0f5ff;
-  text-align: center;
-  font-size: 13px;
-  min-width: 140px;
-  min-height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.topic-response-agent {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  border-radius: 50%;
 }
 
 .arrow {
-  font-size: 20px;
-  color: #333;
+  margin: 0 6px;
+  font-size: 18px;
+}
+
+.curve-down {
+  margin: 8px 0;
+  font-size: 24px;
+  align-self: flex-end;
+  margin-right: 160px;
 }
