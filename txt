@@ -1,36 +1,45 @@
-import React from 'react';
-import { Card, Button } from 'antd';
-import './OrchestratorStatusCard.css';
-
 const OrchestratorStatusCard = () => {
   return (
-    <Card title="OrchestratorStatusCard" className="orchestrator-card">
-      <div className="orchestrator-flow">
-        {/* Top Flow */}
-        <div className="top-row">
-          <div className="node">Start</div>
-          <div className="arrow">→</div>
-          <div className="node">Topic Request A</div>
-          <div className="arrow">→</div>
-          <div className="node">Orchestrator</div>
-          <div className="arrow">→</div>
-          <div className="node">Topic Request Agent</div>
-          <div className="arrow">→</div>
-          <div className="node main-agent">Main Agent</div>
+    <Card title="Orchestrator Flow" className="orchestrator-card">
+      <div className="diagram-container">
+        {/* Left side */}
+        <div className="column">
+          <div className="box">Start</div>
+          <div className="arrow down">↓</div>
+          <div className="box">Topic Request A</div>
+          <div className="arrow right">→</div>
         </div>
 
-        {/* Connector from Main Agent to Topic Response Agent */}
-        <div className="curve-down">↘</div>
+        {/* Center Orchestrator */}
+        <div className="center">
+          <div className="ellipse">Orchestrator</div>
+          <div className="center-links">
+            <div className="arrow right small">→</div>
+            <div className="arrow left small">←</div>
+          </div>
+        </div>
 
-        {/* Bottom Flow */}
-        <div className="bottom-row">
-          <div className="node topic-response-agent">Topic Response Agent</div>
-          <div className="arrow">→</div>
-          <div className="node">Orchestrator</div>
-          <div className="arrow">→</div>
-          <div className="node">Topic Response A</div>
-          <div className="arrow">→</div>
-          <div className="node">Start</div>
+        {/* Right side */}
+        <div className="column">
+          <div className="box round">Topic Request Agent</div>
+          <div className="arrow down">↓</div>
+          <div className="box">Main Agent</div>
+          <div className="arrow down">↓</div>
+          <div className="box round">Topic Response Agent</div>
+        </div>
+
+        {/* Lower center to Orchestrator again */}
+        <div className="center lower">
+          <div className="arrow left">←</div>
+          <div className="ellipse">Orchestrator</div>
+        </div>
+
+        {/* Left side return path */}
+        <div className="column">
+          <div className="arrow left">←</div>
+          <div className="box">Topic Response A</div>
+          <div className="arrow up">↑</div>
+          <div className="box">Start</div>
         </div>
       </div>
     </Card>
@@ -38,56 +47,86 @@ const OrchestratorStatusCard = () => {
 };
 
 export default OrchestratorStatusCard;
-📁 components/OrchestratorStatusCard.css
+🎨 components/OrchestratorStatusCard.css
 css
 Copy
 Edit
 .orchestrator-card {
   margin: 16px;
+  background-color: #f8f9fa;
 }
 
-.orchestrator-flow {
+.diagram-container {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  grid-gap: 16px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.column {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.top-row, .bottom-row {
+.center {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  margin: 8px 0;
 }
 
-.node {
+.center.lower {
+  grid-column: span 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.box {
+  border: 2px solid #ccc;
   padding: 8px 16px;
-  border: 1px solid #ccc;
   border-radius: 6px;
-  background-color: #f9f9f9;
-  min-width: 120px;
+  background-color: #fff;
+  min-width: 140px;
+}
+
+.round {
+  border-radius: 30px;
+  background-color: #e6f7ff;
+}
+
+.ellipse {
+  border: 2px solid #91d5ff;
+  background-color: #d6f5ff;
+  padding: 8px 20px;
+  border-radius: 999px;
+  min-width: 140px;
   text-align: center;
-  font-weight: 500;
-}
-
-.main-agent {
-  background-color: #e6f7ff;
-  border-color: #91d5ff;
-  border-radius: 50%;
-}
-
-.topic-response-agent {
-  background-color: #e6f7ff;
-  border-color: #91d5ff;
-  border-radius: 50%;
 }
 
 .arrow {
-  margin: 0 6px;
-  font-size: 18px;
+  font-size: 20px;
+  margin: 4px 0;
 }
 
-.curve-down {
-  margin: 8px 0;
-  font-size: 24px;
-  align-self: flex-end;
-  margin-right: 160px;
+.arrow.right {
+  transform: rotate(0deg);
+}
+.arrow.left {
+  transform: rotate(180deg);
+}
+.arrow.down {
+  transform: rotate(90deg);
+}
+.arrow.up {
+  transform: rotate(-90deg);
+}
+.arrow.small {
+  font-size: 14px;
+  margin: 2px 0;
 }
