@@ -3,24 +3,35 @@ import ReactFlow, {
   MiniMap,
   Controls,
   Background,
-  addEdge,
   useNodesState,
-  useEdgesState
+  useEdgesState,
 } from 'reactflow';
-import 'reactflow/dist/style.css';
 import { Button, Card } from 'antd';
+import 'reactflow/dist/style.css';
 
-const initialNodes = [
-  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' }, type: 'default' },
-  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' }, type: 'default' },
-  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' }, type: 'default' },
-  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' }, type: 'default' },
-  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' }, type: 'default' },
-  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' }, type: 'default' },
-  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' }, type: 'default' },
+const flowOrder = [
+  'start',
+  'topicRequestA',
+  'orchestrator',
+  'topicRequestAgent',
+  'mainAgent',
+  'topicResponseAgent',
+  'orchestrator',
+  'topicResponseA',
+  'start',
 ];
 
-const initialEdges = [
+const baseNodes = [
+  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' } },
+  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' } },
+  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' } },
+  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' } },
+  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' } },
+  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' } },
+  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' } },
+];
+
+const baseEdges = [
   { id: 'e1', source: 'start', target: 'topicRequestA' },
   { id: 'e2', source: 'topicRequestA', target: 'orchestrator' },
   { id: 'e3', source: 'orchestrator', target: 'topicRequestAgent' },
@@ -32,64 +43,65 @@ const initialEdges = [
 ];
 
 const OrchestratorStatusCard = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [activeIndex, setActiveIndex] = useState(-1);
-
-  const nodeOrder = [
-    'start',
-    'topicRequestA',
-    'orchestrator',
-    'topicRequestAgent',
-    'mainAgent',
-    'topicResponseAgent',
-    'orchestrator',
-    'topicResponseA',
-    'start'
-  ];
-
+  const [nodes, setNodes, onNodesChange] = useNodesState(baseNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(baseEdges);
+  const [activeStep, setActiveStep] = useState(-1);
   const intervalRef = useRef(null);
 
-  const resetNodeStyles = () => {
+  const resetAllNodes = () => {
     setNodes((nds) =>
       nds.map((node) => ({
         ...node,
-        className: '',
+        style: { ...node.style, border: '1px solid #ddd', background: '#fff' },
       }))
     );
   };
 
   const highlightNode = (id) => {
     setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        className: node.id === id ? 'active-node' : '',
-      }))
+      nds.map((node) =>
+        node.id === id
+          ? {
+              ...node,
+              style: {
+                ...node.style,
+                border: '2px solid #1890ff',
+                background: '#e6f7ff',
+              },
+            }
+          : {
+              ...node,
+              style: { ...node.style, border: '1px solid #ddd', background: '#fff' },
+            }
+      )
     );
   };
 
-  const startAnimation = () => {
-    resetNodeStyles();
-    setActiveIndex(0);
+  const startFlow = () => {
+    resetAllNodes();
+    setActiveStep(0);
   };
 
   useEffect(() => {
-    if (activeIndex >= 0 && activeIndex < nodeOrder.length) {
-      highlightNode(nodeOrder[activeIndex]);
-
+    if (activeStep >= 0 && activeStep < flowOrder.length) {
+      highlightNode(flowOrder[activeStep]);
       intervalRef.current = setTimeout(() => {
-        setActiveIndex((prev) => prev + 1);
+        setActiveStep((prev) => prev + 1);
       }, 3000);
     }
 
+    if (activeStep >= flowOrder.length) {
+      setActiveStep(-1); // Stop the animation
+    }
+
     return () => clearTimeout(intervalRef.current);
-  }, [activeIndex]);
+  }, [activeStep]);
 
   return (
     <Card
-      title="Orchestrator Status Flow"
-      extra={<Button onClick={startAnimation} type="primary">Start</Button>}
-      style={{ width: '100%', height: '600px' }}
+      title="Orchestrator Flow"
+      extra={<Button type="primary" onClick={startFlow}>Start</Button>}
+      style={{ height: '600px' }}
     >
       <ReactFlow
         nodes={nodes}
@@ -100,10 +112,17 @@ const OrchestratorStatusCard = () => {
       >
         <MiniMap />
         <Controls />
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant="lines" gap={16} size={1} />
       </ReactFlow>
     </Card>
   );
 };
 
 export default OrchestratorStatusCard;
+
+
+.react-flow__node {
+  border-radius: 6px;
+  padding: 8px;
+  transition: all 0.3s ease-in-out;
+}
