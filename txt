@@ -1,79 +1,191 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+✅ 1. Folder Structure
+css
+Copy
+Edit
+src/
+├── components/
+│   ├── FlowBox.jsx
+│   ├── Arrow.jsx
+│   └── OrchestratorFlow.jsx
+├── App.jsx
+├── index.js
+└── styles/
+    └── flow.css
+✅ 2. FlowBox.jsx (Generic Box for each step)
+jsx
+Copy
+Edit
+import React from 'react';
+import './flow.css';
 
-from agents.drift_agent import get_drift_data
-from agents.performance_agent import get_performance_data
-from agents.remediation_agent import get_remediation_logs
-from orchestrator.langgraph_orchestrator import run_graph
+const FlowBox = ({ title }) => (
+  <div className="flow-box">
+    {title}
+  </div>
+);
 
-import asyncio
+export default FlowBox;
+✅ 3. Arrow.jsx (Simple SVG Arrow)
+jsx
+Copy
+Edit
+import React from 'react';
 
-app = FastAPI(
-    title="ML Observability API",
-    version="1.0.0",
-    description="Handles drift detection, performance monitoring, and remediation coordination"
-)
+const Arrow = () => (
+  <svg width="60" height="40">
+    <line x1="0" y1="20" x2="50" y2="20" stroke="black" strokeWidth="2" />
+    <polygon points="50,15 60,20 50,25" fill="black" />
+  </svg>
+);
 
-# ✅ CORS middleware for frontend communication
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to your frontend domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+export default Arrow;
+✅ 4. OrchestratorFlow.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import FlowBox from './FlowBox';
+import Arrow from './Arrow';
+import './flow.css';
 
-# ✅ Health check
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
+const OrchestratorFlow = () => {
+  return (
+    <div className="flow-container">
+      <FlowBox title="Start" />
+      <Arrow />
+      <FlowBox title="Topic Request A" />
+      <Arrow />
+      <FlowBox title="Orchestrator" />
+      <Arrow />
+      <FlowBox title="Topic Request Agent" />
+      <Arrow />
+      <FlowBox title="Main Agent" />
+      <Arrow />
+      <FlowBox title="Topic Response Agent" />
+      <Arrow />
+      <FlowBox title="Orchestrator" />
+      <Arrow />
+      <FlowBox title="Topic Response A" />
+      <Arrow />
+      <FlowBox title="Start" />
+    </div>
+  );
+};
 
-# ✅ Drift detection endpoint
-@app.get("/drift")
-async def drift(model_id: str = "model_v1"):
-    try:
-        result = await asyncio.to_thread(get_drift_data, model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+export default OrchestratorFlow;
+✅ 5. flow.css
+css
+Copy
+Edit
+.flow-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 20px;
+}
 
-# ✅ Performance monitoring endpoint
-@app.get("/performance")
-async def performance(model_id: str = "model_v1"):
-    try:
-        result = await asyncio.to_thread(get_performance_data, model_id)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+.flow-box {
+  min-width: 150px;
+  padding: 10px 15px;
+  background-color: #f0f4ff;
+  border: 2px solid #2f80ed;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+✅ 6. App.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import OrchestratorFlow from './components/OrchestratorFlow';
 
-# ✅ Notification stub
-@app.get("/notifications")
-async def notifications():
-    return JSONResponse(content=[
-        {
-            "message": "Drift detected in feature 'accuracy'",
-            "timestamp": "2025-07-01T12:00:00Z",
-            "level": "critical"
-        }
-    ])
+function App() {
+  return (
+    <div>
+      <h2>Orchestrator Flow</h2>
+      <OrchestratorFlow />
+    </div>
+  );
+}
 
-# ✅ Remediation log endpoint
-@app.get("/remediation-log")
-async def remediation():
-    try:
-        result = await asyncio.to_thread(get_remediation_logs)
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+export default App;
+✅ Final Output
+You’ll get a horizontal visual flow like:
 
-# ✅ Full orchestrator run endpoint (LLM + drift + perf + fix)
-@app.post("/run-orchestrator")
-async def run_orchestrator(request: Request):
-    try:
-        body = await request.json()
-        model_id = body.get("model_id", "model_v1")
-        result = await run_graph(model_id)  # make sure this is an async def
-        return JSONResponse(content=result)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+css
+Copy
+Edit
+[Start] → [Topic Request A] → [Orchestrator] → [Topic Request Agent] → [Main Agent]
+  → [Topic Response Agent] → [Orchestrator] → [Topic Response A] → [Start]
+Would you like me to enhance this with animations (e.g. hopping arrows), real-time data, or convert it to a dashboard layout with sidecards like your original image?
+
+
+
+
+
+
+
+
+You said:
+Where is header and other component. I need the complete UI code 
+
+
+ChatGPT said:
+Perfect — let’s now build the complete React UI project from scratch based on your updated orchestration flow diagram. I’ll include a basic layout with header, sidebar placeholders, and the main content showing the orchestrator flow with hopping arrows and components as per your image.
+
+✅ Tech Stack
+React (Vite)
+
+Ant Design (for clean UI)
+
+Custom CSS + SVG arrows
+
+Dummy data to simulate real-time arrow hopping
+
+✅ Folder Structure
+css
+Copy
+Edit
+src/
+├── components/
+│   ├── Header.jsx
+│   ├── Sidebar.jsx
+│   ├── FlowBox.jsx
+│   ├── Arrow.jsx
+│   └── OrchestratorFlow.jsx
+├── App.jsx
+├── main.jsx
+├── styles/
+│   └── flow.css
+✅ 1. Install Vite & Ant Design
+bash
+Copy
+Edit
+npm create vite@latest orchestrator-ui --template react
+cd orchestrator-ui
+npm install antd
+npm install
+✅ 2. main.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import 'antd/dist/reset.css';
+import './styles/flow.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+✅ 3. App.jsx
+jsx
+Copy
+Edit
+import React from 'react';
+import Header from './components/Header';
+import Sidebar from './
