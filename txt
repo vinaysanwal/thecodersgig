@@ -1,13 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
   Background,
   useNodesState,
   useEdgesState,
+  Handle,
+  Position,
 } from 'reactflow';
 import { Button, Card } from 'antd';
 import 'reactflow/dist/style.css';
+import './OrchestratorStyles.css';
 
 const flowOrder = [
   'start',
@@ -21,14 +24,25 @@ const flowOrder = [
   'start',
 ];
 
+// 🔹 Custom node component with animation
+const AnimatedNode = ({ data, isActive }) => {
+  return (
+    <div className={`custom-node ${isActive ? 'active-node' : ''}`}>
+      <Handle type="target" position={Position.Top} />
+      <div className="node-label">{data.label}</div>
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+};
+
 const baseNodes = [
-  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' } },
-  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' } },
-  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' } },
-  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' } },
-  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' } },
-  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' } },
-  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' } },
+  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' }, type: 'animated' },
+  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' }, type: 'animated' },
+  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' }, type: 'animated' },
+  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' }, type: 'animated' },
+  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' }, type: 'animated' },
+  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' }, type: 'animated' },
+  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' }, type: 'animated' },
 ];
 
 const baseEdges = [
@@ -48,81 +62,88 @@ const OrchestratorStatusCard = () => {
   const [activeStep, setActiveStep] = useState(-1);
   const intervalRef = useRef(null);
 
-  const resetAllNodes = () => {
-    setNodes((nds) =>
-      nds.map((node) => ({
-        ...node,
-        style: { ...node.style, border: '1px solid #ddd', background: '#fff' },
-      }))
-    );
-  };
-
-  const highlightNode = (id) => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === id
-          ? {
-              ...node,
-              style: {
-                ...node.style,
-                border: '2px solid #1890ff',
-                background: '#e6f7ff',
-              },
-            }
-          : {
-              ...node,
-              style: { ...node.style, border: '1px solid #ddd', background: '#fff' },
-            }
-      )
-    );
-  };
-
   const startFlow = () => {
-    resetAllNodes();
     setActiveStep(0);
   };
 
+  const updateNodeStyles = useCallback(
+    (currentId) => {
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            isActive: node.id === currentId,
+          },
+        }))
+      );
+    },
+    [setNodes]
+  );
+
   useEffect(() => {
     if (activeStep >= 0 && activeStep < flowOrder.length) {
-      highlightNode(flowOrder[activeStep]);
+      const currentNodeId = flowOrder[activeStep];
+      updateNodeStyles(currentNodeId);
       intervalRef.current = setTimeout(() => {
         setActiveStep((prev) => prev + 1);
       }, 3000);
     }
 
-    if (activeStep >= flowOrder.length) {
-      setActiveStep(-1); // Stop the animation
-    }
-
     return () => clearTimeout(intervalRef.current);
-  }, [activeStep]);
+  }, [activeStep, updateNodeStyles]);
 
   return (
     <Card
-      title="Orchestrator Flow"
+      title="Orchestrator Animated Flow"
       extra={<Button type="primary" onClick={startFlow}>Start</Button>}
       style={{ height: '600px' }}
     >
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={{ animated: AnimatedNode }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         fitView
       >
         <MiniMap />
         <Controls />
-        <Background variant="lines" gap={16} size={1} />
+        <Background variant="dots" gap={12} size={1} />
       </ReactFlow>
     </Card>
   );
 };
 
 export default OrchestratorStatusCard;
-
-
-.react-flow__node {
+✅ Add this CSS: OrchestratorStyles.css
+css
+Copy
+Edit
+.custom-node {
+  padding: 10px;
+  background-color: #fff;
+  border: 2px solid #999;
   border-radius: 6px;
-  padding: 8px;
+  text-align: center;
+  min-width: 120px;
   transition: all 0.3s ease-in-out;
+}
+
+.custom-node.active-node {
+  border: 3px solid #1890ff;
+  background-color: #e6f7ff;
+  animation: pulseBorder 1s infinite ease-in-out;
+}
+
+@keyframes pulseBorder {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
 }
