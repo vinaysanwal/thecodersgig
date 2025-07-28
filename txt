@@ -1,22 +1,4 @@
-  <div style={{ height: 500, border: "1px solid #ccc", borderRadius: 6 }}>
-      <Button onClick={startAnimation} type="primary" style={{ margin: 10 }}>
-        Start
-      </Button>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-      >
-        <MiniMap />
-        <Controls />
-        <Background color="#f1f1f1" gap={16} />
-      </ReactFlow>
-    </div>
-
-
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -63,7 +45,18 @@ const OrchestratorStatusCard = () => {
     },
   })));
 
-  const flowOrder = ['start', 'topic-request-a', 'orchestrator', 'topic-request-agent', 'main-agent', 'topic-response-agent', 'orchestrator', 'topic-response-a', 'start'];
+  const flowOrder = [
+    'start',
+    'topic-request-a',
+    'orchestrator',
+    'topic-request-agent',
+    'main-agent',
+    'topic-response-agent',
+    'orchestrator',
+    'topic-response-a',
+    'start',
+  ];
+
   const intervalRef = useRef(null);
 
   const resetFlow = () => {
@@ -90,42 +83,56 @@ const OrchestratorStatusCard = () => {
       const current = flowOrder[step];
       const next = flowOrder[step + 1];
 
-      // Color current node as active (light blue)
-      setNodes((nds) =>
-        nds.map((node) => {
-          if (node.id === next) {
-            return { ...node, style: { ...node.style, backgroundColor: '#bae7ff' } };
-          } else if (node.id === current && step > 0) {
-            return { ...node, style: { ...node.style, backgroundColor: '#ffccc7' } }; // completed node
-          }
-          return node;
-        })
-      );
+      // Animate current node
+      if (next) {
+        setNodes((nds) =>
+          nds.map((node) => {
+            if (node.id === next) {
+              return { ...node, style: { ...node.style, backgroundColor: '#bae7ff' } };
+            } else if (node.id === current && step > 0) {
+              return { ...node, style: { ...node.style, backgroundColor: '#ffccc7' } };
+            }
+            return node;
+          })
+        );
 
-      // Animate current edge
-      setEdges((eds) =>
-        eds.map((edge) => {
-          if (edge.source === current && edge.target === next) {
-            return { ...edge, animated: true, style: { ...edge.style, stroke: '#1890ff' } };
-          } else if (
-            step > 0 &&
-            edge.source === flowOrder[step - 1] &&
-            edge.target === current
-          ) {
-            return { ...edge, animated: false, style: { ...edge.style, stroke: '#f5222d' } }; // completed edge
-          }
-          return edge;
-        })
-      );
+        setEdges((eds) =>
+          eds.map((edge) => {
+            if (edge.source === current && edge.target === next) {
+              return {
+                ...edge,
+                animated: true,
+                style: { ...edge.style, stroke: '#1890ff' },
+              };
+            } else if (
+              step > 0 &&
+              edge.source === flowOrder[step - 1] &&
+              edge.target === current
+            ) {
+              return {
+                ...edge,
+                animated: false,
+                style: { ...edge.style, stroke: '#f5222d' },
+              };
+            }
+            return edge;
+          })
+        );
+      }
 
       step++;
+
       if (step >= flowOrder.length) {
         clearInterval(intervalRef.current);
 
-        // Final node and edge should also be red
+        // Final node and edge red
+        const finalNodeId = flowOrder[step - 1];
+        const finalEdgeSource = flowOrder[step - 2];
+        const finalEdgeTarget = flowOrder[step - 1];
+
         setNodes((nds) =>
           nds.map((node) =>
-            node.id === flowOrder[step - 1]
+            node.id === finalNodeId
               ? { ...node, style: { ...node.style, backgroundColor: '#ffccc7' } }
               : node
           )
@@ -133,8 +140,12 @@ const OrchestratorStatusCard = () => {
 
         setEdges((eds) =>
           eds.map((edge) =>
-            edge.source === flowOrder[step - 2] && edge.target === flowOrder[step - 1]
-              ? { ...edge, animated: false, style: { ...edge.style, stroke: '#f5222d' } }
+            edge.source === finalEdgeSource && edge.target === finalEdgeTarget
+              ? {
+                  ...edge,
+                  animated: false,
+                  style: { ...edge.style, stroke: '#f5222d' },
+                }
               : edge
           )
         );
@@ -158,7 +169,8 @@ const OrchestratorStatusCard = () => {
         onNodeClick={handleNodeClick}
         fitView
       >
-        <Background />
+        {/* Cool Dotted Background */}
+        <Background variant="dots" gap={20} size={1} color="#d6d6d6" />
         <Controls />
       </ReactFlow>
     </Card>
