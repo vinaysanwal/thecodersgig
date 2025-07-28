@@ -1,181 +1,102 @@
-src/
-├── components/
-│   ├── AgentGroupCard.jsx
-│   ├── LogsPanel.jsx
-│   ├── OrchestratorStatusCard.jsx
-│   ├── UserCard.jsx
-│   └── UserRequestBox.jsx
-├── App.jsx
-└── index.js
-📄 index.js
-js
-Copy
-Edit
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import 'antd/dist/reset.css'; // Ant Design base style reset
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
-📄 App.jsx
+✅ OrchestratorStatusCard.jsx
 jsx
 Copy
 Edit
 import React from 'react';
-import { Layout, Typography, Row, Col } from 'antd';
-import UserCard from './components/UserCard';
-import UserRequestBox from './components/UserRequestBox';
-import OrchestratorStatusCard from './components/OrchestratorStatusCard';
-import AgentGroupCard from './components/AgentGroupCard';
-import LogsPanel from './components/LogsPanel';
+import { Card, Typography } from 'antd';
+import './OrchestratorStatusCard.css';
 
-const { Header, Content } = Layout;
 const { Title } = Typography;
 
-const App = () => {
+const OrchestratorStatusCard = () => {
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ backgroundColor: '#001529', padding: '0 20px' }}>
-        <Title level={3} style={{ color: 'white', margin: 0 }}>
-          Dashboard
-        </Title>
-      </Header>
+    <Card title="OrchestratorStatusCard" bordered={true} className="orchestrator-card">
+      <div className="flow-container">
+        {/* Top Flow */}
+        <div className="top-row">
+          <div className="box">Start</div>
+          <div className="arrow">→</div>
+          <div className="box">Topic Request A</div>
+          <div className="arrow">→</div>
+          <div className="box">Orchestrator</div>
+          <div className="arrow">→</div>
+          <div className="box">Topic Request Agent</div>
+          <div className="arrow">→</div>
+          <div className="circle-box">Main Agent</div>
+        </div>
 
-      <Content style={{ padding: 20 }}>
-        <Row gutter={[16, 16]}>
-          {/* Left Side */}
-          <Col span={6}>
-            <UserCard />
-            <UserRequestBox />
-            <LogsPanel title="Observability" />
-          </Col>
+        {/* Curved Flow (down to response agent) */}
+        <div className="curved-connector">
+          ⟳
+        </div>
 
-          {/* Center Area */}
-          <Col span={12}>
-            <OrchestratorStatusCard />
-            <LogsPanel title="Observability" />
-          </Col>
-
-          {/* Right Side */}
-          <Col span={6}>
-            <AgentGroupCard />
-          </Col>
-        </Row>
-      </Content>
-    </Layout>
+        {/* Bottom Flow */}
+        <div className="bottom-row">
+          <div className="circle-box">Topic Response Agent</div>
+          <div className="arrow">←</div>
+          <div className="box">Orchestrator</div>
+          <div className="arrow">←</div>
+          <div className="box">Topic Response A</div>
+          <div className="arrow">←</div>
+          <div className="box">Start</div>
+        </div>
+      </div>
+    </Card>
   );
 };
 
-export default App;
-📄 components/UserCard.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import { Card, Avatar, Button } from 'antd';
-import { UserOutlined, SafetyOutlined } from '@ant-design/icons';
-
-const UserCard = () => (
-  <Card title="UserCard" style={{ marginBottom: 16 }}>
-    <Avatar size={64} icon={<UserOutlined />} />
-    <p style={{ marginTop: 8 }}>Username</p>
-    <Button icon={<SafetyOutlined />} type="primary" block>
-      I/O guardrails
-    </Button>
-  </Card>
-);
-
-export default UserCard;
-📄 components/UserRequestBox.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import { Card, Input } from 'antd';
-
-const UserRequestBox = () => (
-  <Card title="UserRequestBox" style={{ marginBottom: 16 }}>
-    <Input placeholder="user_request" style={{ marginBottom: 8 }} />
-    <Input placeholder="user_response" />
-  </Card>
-);
-
-export default UserRequestBox;
-📄 components/LogsPanel.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import { Card, List, Skeleton } from 'antd';
-
-const LogsPanel = ({ title }) => (
-  <Card title={title} style={{ marginTop: 16 }}>
-    <List
-      dataSource={['log_1', 'log_2', 'log_3']}
-      renderItem={(item) => (
-        <List.Item>
-          <Skeleton active title={false} paragraph={{ rows: 1 }} loading={false}>
-            {item}
-          </Skeleton>
-        </List.Item>
-      )}
-    />
-  </Card>
-);
-
-export default LogsPanel;
-📄 components/AgentGroupCard.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import { Card } from 'antd';
-
-const AgentGroupCard = () => (
-  <Card title="AgentGroupCard">
-    <Card type="inner" title="Agent A" style={{ marginBottom: 16 }}>
-      Agent A ≡
-    </Card>
-    <Card type="inner" title="Agent B" style={{ marginBottom: 16 }}>
-      Agent B ≡
-    </Card>
-    <Card type="inner" title="MCP Server">
-      -- --
-    </Card>
-  </Card>
-);
-
-export default AgentGroupCard;
-📄 components/OrchestratorStatusCard.jsx
-jsx
-Copy
-Edit
-import React from 'react';
-import { Card } from 'antd';
-
-const boxStyle = {
-  border: '1px solid red',
-  borderRadius: 4,
-  padding: 8,
-  margin: 8,
-  textAlign: 'center',
-  minWidth: 120,
-  display: 'inline-block',
-};
-
-const OrchestratorStatusCard = () => (
-  <Card title="OrchestratorStatusCard">
-    <div style={{ textAlign: 'center' }}>
-      <div style={boxStyle}>start</div>
-      <div style={boxStyle}>request queue A</div>
-      <div style={boxStyle}>response queue A</div>
-    </div>
-    <div style={{ marginTop: 16, textAlign: 'center' }}>
-      <div style={{ ...boxStyle, borderColor: '#1890ff' }}>→ Agent A</div>
-      <div style={{ ...boxStyle, borderColor: '#1890ff' }}>→ Agent B</div>
-    </div>
-  </Card>
-);
-
 export default OrchestratorStatusCard;
+🎨 OrchestratorStatusCard.css
+css
+Copy
+Edit
+.orchestrator-card {
+  width: 100%;
+  min-height: 260px;
+}
+
+.flow-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-row, .bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.box {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 6px 12px;
+  background-color: #fafafa;
+  font-size: 13px;
+  min-width: 100px;
+  text-align: center;
+}
+
+.circle-box {
+  border: 1px solid #d9d9d9;
+  border-radius: 50%;
+  padding: 20px;
+  background-color: #e6f7ff;
+  text-align: center;
+  font-size: 13px;
+  min-width: 100px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arrow {
+  font-size: 20px;
+}
+
+.curved-connector {
+  font-size: 24px;
+  color: #999;
+}
