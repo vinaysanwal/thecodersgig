@@ -1,149 +1,166 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import ReactFlow, {
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  Handle,
-  Position,
-} from 'reactflow';
-import { Button, Card } from 'antd';
-import 'reactflow/dist/style.css';
-import './OrchestratorStyles.css';
+import React, { useState, useEffect } from "react";
+import { Card, Button } from "antd";
+import "./OrchestratorStatusCard.css";
 
-const flowOrder = [
-  'start',
-  'topicRequestA',
-  'orchestrator',
-  'topicRequestAgent',
-  'mainAgent',
-  'topicResponseAgent',
-  'orchestrator',
-  'topicResponseA',
-  'start',
-];
-
-// 🔹 Custom node component with animation
-const AnimatedNode = ({ data, isActive }) => {
-  return (
-    <div className={`custom-node ${isActive ? 'active-node' : ''}`}>
-      <Handle type="target" position={Position.Top} />
-      <div className="node-label">{data.label}</div>
-      <Handle type="source" position={Position.Bottom} />
-    </div>
-  );
-};
-
-const baseNodes = [
-  { id: 'start', position: { x: 0, y: 100 }, data: { label: 'Start' }, type: 'animated' },
-  { id: 'topicRequestA', position: { x: 200, y: 100 }, data: { label: 'Topic Request A' }, type: 'animated' },
-  { id: 'orchestrator', position: { x: 400, y: 100 }, data: { label: 'Orchestrator' }, type: 'animated' },
-  { id: 'topicRequestAgent', position: { x: 600, y: 100 }, data: { label: 'Topic Request Agent' }, type: 'animated' },
-  { id: 'mainAgent', position: { x: 800, y: 100 }, data: { label: 'Main Agent' }, type: 'animated' },
-  { id: 'topicResponseAgent', position: { x: 600, y: 250 }, data: { label: 'Topic Response Agent' }, type: 'animated' },
-  { id: 'topicResponseA', position: { x: 200, y: 250 }, data: { label: 'Topic Response A' }, type: 'animated' },
-];
-
-const baseEdges = [
-  { id: 'e1', source: 'start', target: 'topicRequestA' },
-  { id: 'e2', source: 'topicRequestA', target: 'orchestrator' },
-  { id: 'e3', source: 'orchestrator', target: 'topicRequestAgent' },
-  { id: 'e4', source: 'topicRequestAgent', target: 'mainAgent' },
-  { id: 'e5', source: 'mainAgent', target: 'topicResponseAgent' },
-  { id: 'e6', source: 'topicResponseAgent', target: 'orchestrator' },
-  { id: 'e7', source: 'orchestrator', target: 'topicResponseA' },
-  { id: 'e8', source: 'topicResponseA', target: 'start' },
+const flowNodes = [
+  "Start",
+  "Topic Request A",
+  "Orchestrator",
+  "Topic Request Agent",
+  "Main Agent",
+  "Topic Response Agent",
+  "Orchestrator",
+  "Topic Response A",
+  "Start",
 ];
 
 const OrchestratorStatusCard = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(baseNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(baseEdges);
-  const [activeStep, setActiveStep] = useState(-1);
-  const intervalRef = useRef(null);
-
-  const startFlow = () => {
-    setActiveStep(0);
-  };
-
-  const updateNodeStyles = useCallback(
-    (currentId) => {
-      setNodes((nds) =>
-        nds.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            isActive: node.id === currentId,
-          },
-        }))
-      );
-    },
-    [setNodes]
-  );
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    if (activeStep >= 0 && activeStep < flowOrder.length) {
-      const currentNodeId = flowOrder[activeStep];
-      updateNodeStyles(currentNodeId);
-      intervalRef.current = setTimeout(() => {
-        setActiveStep((prev) => prev + 1);
+    let timer;
+    if (running && currentStep < flowNodes.length - 1) {
+      timer = setTimeout(() => {
+        const nextStep = currentStep + 1;
+        console.log("Activating node:", flowNodes[nextStep]);
+        setCurrentStep(nextStep);
       }, 3000);
+    } else if (currentStep === flowNodes.length - 1) {
+      console.log("Flow completed.");
+      setRunning(false);
     }
 
-    return () => clearTimeout(intervalRef.current);
-  }, [activeStep, updateNodeStyles]);
+    return () => clearTimeout(timer);
+  }, [currentStep, running]);
+
+  const startFlow = () => {
+    console.log("Starting flow...");
+    setCurrentStep(0);
+    setRunning(true);
+  };
+
+  const getNodeClass = (label, index) =>
+    index === currentStep ? "node active" : "node";
 
   return (
-    <Card
-      title="Orchestrator Animated Flow"
-      extra={<Button type="primary" onClick={startFlow}>Start</Button>}
-      style={{ height: '600px' }}
-    >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={{ animated: AnimatedNode }}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-      >
-        <MiniMap />
-        <Controls />
-        <Background variant="dots" gap={12} size={1} />
-      </ReactFlow>
+    <Card title="🧠 Orchestrator Flow" extra={<Button onClick={startFlow}>Start</Button>} className="orchestrator-card">
+      <div className="flow-container">
+        {/* Top Row */}
+        <div className="row top-row">
+          {["Start", "Topic Request A", "Orchestrator", "Topic Request Agent", "Main Agent"].map((label, i) => (
+            <div key={label} className={getNodeClass(label, flowNodes.indexOf(label))}>{label}</div>
+          ))}
+        </div>
+
+        {/* Arrows */}
+        <svg className="arrow-layer">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#1890ff" />
+            </marker>
+          </defs>
+          <line x1="100" y1="40" x2="250" y2="40" className="arrow" />
+          <line x1="250" y1="40" x2="400" y2="40" className="arrow" />
+          <line x1="400" y1="40" x2="550" y2="40" className="arrow" />
+          <line x1="550" y1="40" x2="700" y2="40" className="arrow" />
+        </svg>
+
+        {/* Bottom Row */}
+        <div className="row bottom-row">
+          <div className="spacer" />
+          <div className={getNodeClass("Topic Response Agent", flowNodes.indexOf("Topic Response Agent"))}>Topic Response Agent</div>
+          <div className={getNodeClass("Orchestrator", 6)}>Orchestrator</div>
+          <div className={getNodeClass("Topic Response A", flowNodes.indexOf("Topic Response A"))}>Topic Response A</div>
+          <div className={getNodeClass("Start", 8)}>Start</div>
+        </div>
+
+        {/* Connecting Line (Main Agent -> Topic Response Agent) */}
+        <svg className="curve-layer">
+          <path d="M700,40 Q720,100 150,140" stroke="#1890ff" strokeWidth="2" fill="none" markerEnd="url(#arrow)" />
+        </svg>
+
+        {/* Arrows in Bottom Row */}
+        <svg className="arrow-layer">
+          <line x1="150" y1="140" x2="300" y2="140" className="arrow" />
+          <line x1="300" y1="140" x2="450" y2="140" className="arrow" />
+          <line x1="450" y1="140" x2="600" y2="140" className="arrow" />
+        </svg>
+      </div>
     </Card>
   );
 };
 
 export default OrchestratorStatusCard;
-✅ Add this CSS: OrchestratorStyles.css
+✅ OrchestratorStatusCard.css
 css
 Copy
 Edit
-.custom-node {
-  padding: 10px;
-  background-color: #fff;
-  border: 2px solid #999;
-  border-radius: 6px;
-  text-align: center;
-  min-width: 120px;
-  transition: all 0.3s ease-in-out;
+.orchestrator-card {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+  background: #f9f9f9;
 }
 
-.custom-node.active-node {
-  border: 3px solid #1890ff;
-  background-color: #e6f7ff;
-  animation: pulseBorder 1s infinite ease-in-out;
+.flow-container {
+  position: relative;
+  padding: 20px;
+  min-height: 220px;
 }
 
-@keyframes pulseBorder {
-  0% {
-    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
-  }
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.top-row {
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+.bottom-row {
+  padding-left: 100px;
+  padding-right: 60px;
+}
+
+.node {
+  padding: 10px 20px;
+  background: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.node.active {
+  background-color: #bae7ff;
+  border-color: #1890ff;
+  box-shadow: 0 0 10px #1890ff;
+}
+
+.arrow-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 220px;
+  pointer-events: none;
+}
+
+.arrow {
+  stroke: #1890ff;
+  stroke-width: 2;
+  marker-end: url(#arrow);
+}
+
+.curve-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 220px;
+  pointer-events: none;
 }
