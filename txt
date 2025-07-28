@@ -1,14 +1,40 @@
-✅ Updated OrchestratorStatusCard.jsx
-Here's the full improved version with non-overlapping arrows:
-
-jsx
-Copy
-Edit
 import React, { useState, useEffect } from "react";
-import { Card, Button } from "antd";
-import "./OrchestratorStatusCard.css";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { Button } from "antd";
 
-const flowNodes = [
+const nodeStyle = {
+  padding: 10,
+  border: "2px solid #ccc",
+  borderRadius: 8,
+  textAlign: "center",
+  background: "#fff",
+  width: 180,
+};
+
+const highlightStyle = {
+  border: "3px solid #1890ff",
+  background: "#e6f7ff",
+};
+
+const nodeList = [
+  "Start",
+  "Topic Request A",
+  "Orchestrator",
+  "Topic Request Agent",
+  "Main Agent",
+  "Topic Response Agent",
+  "Topic Response A",
+];
+
+const flowPath = [
   "Start",
   "Topic Request A",
   "Orchestrator",
@@ -20,135 +46,97 @@ const flowNodes = [
   "Start",
 ];
 
+const initialNodes = [
+  { id: "Start", data: { label: "Start" }, position: { x: 0, y: 200 }, style: nodeStyle },
+  { id: "Topic Request A", data: { label: "Topic Request A" }, position: { x: 200, y: 100 }, style: nodeStyle },
+  { id: "Orchestrator", data: { label: "Orchestrator" }, position: { x: 400, y: 200 }, style: nodeStyle },
+  { id: "Topic Request Agent", data: { label: "Topic Request Agent" }, position: { x: 600, y: 100 }, style: nodeStyle },
+  { id: "Main Agent", data: { label: "Main Agent" }, position: { x: 800, y: 200 }, style: nodeStyle },
+  { id: "Topic Response Agent", data: { label: "Topic Response Agent" }, position: { x: 600, y: 300 }, style: nodeStyle },
+  { id: "Topic Response A", data: { label: "Topic Response A" }, position: { x: 200, y: 300 }, style: nodeStyle },
+];
+
+const initialEdges = [
+  { id: "e1", source: "Start", target: "Topic Request A", animated: false },
+  { id: "e2", source: "Topic Request A", target: "Orchestrator", animated: false },
+  { id: "e3", source: "Orchestrator", target: "Topic Request Agent", animated: false },
+  { id: "e4", source: "Topic Request Agent", target: "Main Agent", animated: false },
+  { id: "e5", source: "Main Agent", target: "Topic Response Agent", animated: false },
+  { id: "e6", source: "Topic Response Agent", target: "Orchestrator", animated: false },
+  { id: "e7", source: "Orchestrator", target: "Topic Response A", animated: false },
+  { id: "e8", source: "Topic Response A", target: "Start", animated: false },
+];
+
 const OrchestratorStatusCard = () => {
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [running, setRunning] = useState(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [step, setStep] = useState(0);
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    let timer;
-    if (running && currentStep < flowNodes.length - 1) {
-      timer = setTimeout(() => {
-        const nextStep = currentStep + 1;
-        console.log("Activating node:", flowNodes[nextStep]);
-        setCurrentStep(nextStep);
-      }, 3000);
-    } else if (currentStep === flowNodes.length - 1) {
-      console.log("Flow completed.");
-      setRunning(false);
+    if (!animating) return;
+
+    if (step >= flowPath.length - 1) {
+      setAnimating(false);
+      return;
     }
 
-    return () => clearTimeout(timer);
-  }, [currentStep, running]);
+    const timer = setTimeout(() => {
+      const fromNode = flowPath[step];
+      const toNode = flowPath[step + 1];
 
-  const startFlow = () => {
-    console.log("Starting flow...");
-    setCurrentStep(0);
-    setRunning(true);
+      // Highlight nodes
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          style: {
+            ...nodeStyle,
+            ...(node.id === toNode ? highlightStyle : {}),
+          },
+        }))
+      );
+
+      // Highlight edges
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          animated: edge.source === fromNode && edge.target === toNode,
+          style:
+            edge.source === fromNode && edge.target === toNode
+              ? { stroke: "#1890ff", strokeWidth: 2 }
+              : { stroke: "#888" },
+        }))
+      );
+
+      setStep((s) => s + 1);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [step, animating]);
+
+  const startAnimation = () => {
+    setStep(0);
+    setAnimating(true);
   };
 
-  const getNodeClass = (label, index) =>
-    index === currentStep ? "node active" : "node";
-
   return (
-    <Card title="🧠 Orchestrator Flow" extra={<Button onClick={startFlow}>Start</Button>} className="orchestrator-card">
-      <div className="flow-container">
-        {/* Top Row */}
-        <div className="row top-row">
-          <div className={getNodeClass("Start", 0)} id="Start">Start</div>
-          <div className={getNodeClass("Topic Request A", 1)} id="TopicRequestA">Topic Request A</div>
-          <div className={getNodeClass("Orchestrator", 2)} id="OrchestratorTop">Orchestrator</div>
-          <div className={getNodeClass("Topic Request Agent", 3)} id="TopicRequestAgent">Topic Request Agent</div>
-          <div className={getNodeClass("Main Agent", 4)} id="MainAgent">Main Agent</div>
-        </div>
-
-        {/* Bottom Row */}
-        <div className="row bottom-row">
-          <div className={getNodeClass("Topic Response Agent", 5)} id="TopicResponseAgent">Topic Response Agent</div>
-          <div className={getNodeClass("Orchestrator", 6)} id="OrchestratorBottom">Orchestrator</div>
-          <div className={getNodeClass("Topic Response A", 7)} id="TopicResponseA">Topic Response A</div>
-          <div className={getNodeClass("Start", 8)} id="StartEnd">Start</div>
-        </div>
-
-        {/* Arrows */}
-        <svg className="arrow-layer">
-          <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L0,6 L9,3 z" fill="#1890ff" />
-            </marker>
-          </defs>
-
-          {/* Top row arrows */}
-          <line x1="80" y1="40" x2="220" y2="40" className="arrow" />
-          <line x1="220" y1="40" x2="360" y2="40" className="arrow" />
-          <line x1="360" y1="40" x2="500" y2="40" className="arrow" />
-          <line x1="500" y1="40" x2="640" y2="40" className="arrow" />
-
-          {/* Curved arrow from Main Agent (top) to Topic Response Agent (bottom) */}
-          <path d="M640,40 C660,80 160,130 160,170" className="arrow" fill="none" />
-
-          {/* Bottom row arrows */}
-          <line x1="160" y1="170" x2="300" y2="170" className="arrow" />
-          <line x1="300" y1="170" x2="440" y2="170" className="arrow" />
-          <line x1="440" y1="170" x2="580" y2="170" className="arrow" />
-        </svg>
-      </div>
-    </Card>
+    <div style={{ height: 500, border: "1px solid #ccc", borderRadius: 6 }}>
+      <Button onClick={startAnimation} type="primary" style={{ margin: 10 }}>
+        Start
+      </Button>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+      >
+        <MiniMap />
+        <Controls />
+        <Background color="#f1f1f1" gap={16} />
+      </ReactFlow>
+    </div>
   );
 };
 
 export default OrchestratorStatusCard;
-✅ Updated OrchestratorStatusCard.css
-css
-Copy
-Edit
-.orchestrator-card {
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-  background: #f9f9f9;
-}
-
-.flow-container {
-  position: relative;
-  padding: 20px;
-  min-height: 250px;
-}
-
-.row {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  margin-bottom: 80px;
-}
-
-.node {
-  padding: 10px 16px;
-  background: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-weight: 500;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  min-width: 120px;
-  text-align: center;
-}
-
-.node.active {
-  background-color: #bae7ff;
-  border-color: #1890ff;
-  box-shadow: 0 0 10px #1890ff;
-}
-
-.arrow-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 250px;
-  pointer-events: none;
-}
-
-.arrow {
-  stroke: #1890ff;
-  stroke-width: 2;
-  marker-end: url(#arrow);
-}
