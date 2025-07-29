@@ -1,20 +1,27 @@
+✅ Fixed and Updated Code
+Here’s your updated OrchestratorFlow.jsx:
+
+jsx
+Copy
+Edit
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
+  addEdge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import './styles.css';
+import './styles.css'; // Add appropriate class colors here
 
 const initialNodes = [
-  { id: 'start', data: { label: 'Start' }, position: { x: 300, y: 0 } },
-  { id: 'topicRequestA', data: { label: 'Topic Request A' }, position: { x: 100, y: 100 } },
-  { id: 'topicRequestAgent', data: { label: 'Topic Request Agent' }, position: { x: 500, y: 100 } },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 300, y: 180 } },
-  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 700, y: 100 } },
-  { id: 'topicResponseA', data: { label: 'Topic Response A' }, position: { x: 100, y: 280 } },
-  { id: 'topicResponseAgent', data: { label: 'Topic Response Agent' }, position: { x: 500, y: 280 } },
+  { id: 'start', data: { label: 'Start' }, position: { x: 300, y: 0 }, className: 'node' },
+  { id: 'topicRequestA', data: { label: 'Topic Request A' }, position: { x: 100, y: 100 }, className: 'node' },
+  { id: 'topicRequestAgent', data: { label: 'Topic Request Agent' }, position: { x: 500, y: 100 }, className: 'node' },
+  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 300, y: 180 }, className: 'node' },
+  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 700, y: 100 }, className: 'node' },
+  { id: 'topicResponseA', data: { label: 'Topic Response A' }, position: { x: 100, y: 280 }, className: 'node' },
+  { id: 'topicResponseAgent', data: { label: 'Topic Response Agent' }, position: { x: 500, y: 280 }, className: 'node' },
 ];
 
 const flowSequence = [
@@ -30,7 +37,7 @@ const flowSequence = [
 
 const createNodeComponent = (label, status = 'inactive') => (
   <div className={`custom-node ${status}`}>
-    <div className="node-label">{label}</div>
+    {label}
     <div className="squares">
       {[1, 2, 3, 4].map((i) => (
         <div key={i} className={`square ${status}`} />
@@ -43,9 +50,8 @@ const OrchestratorFlow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(
     initialNodes.map((n) => ({
       ...n,
-      className: 'node',
       data: {
-        label: createNodeComponent(n.data.label, 'inactive'),
+        label: createNodeComponent(n.data.label),
       },
     }))
   );
@@ -69,8 +75,8 @@ const OrchestratorFlow = () => {
 
   const startAnimation = () => {
     if (isAnimating) return;
-    resetFlow();
     setIsAnimating(true);
+    resetFlow();
   };
 
   useEffect(() => {
@@ -83,7 +89,7 @@ const OrchestratorFlow = () => {
 
     const [sourceId, targetId] = flowSequence[currentStep];
 
-    // Set current source as completed and target as active
+    // Set active and completed node states
     setNodes((nds) =>
       nds.map((n) => {
         if (n.id === sourceId) {
@@ -105,7 +111,7 @@ const OrchestratorFlow = () => {
       })
     );
 
-    // Add animated edge in blue
+    // Add animated edge
     setEdges((eds) => [
       ...eds,
       {
@@ -113,32 +119,28 @@ const OrchestratorFlow = () => {
         source: sourceId,
         target: targetId,
         animated: true,
-        style: { stroke: '#00f', strokeWidth: 2 },
+        style: { stroke: '#00f', strokeWidth: 2 }, // blue animation
         markerEnd: {
           type: 'arrowclosed',
-          color: '#00f',
         },
       },
     ]);
 
-    // Schedule step completion
     intervalRef.current = setTimeout(() => {
+      // Change animated edge to green (completed)
       setEdges((eds) =>
         eds.map((e) =>
           e.id === `${sourceId}-${targetId}`
             ? {
                 ...e,
                 animated: false,
-                style: { stroke: '#0f0', strokeWidth: 2 },
-                markerEnd: {
-                  type: 'arrowclosed',
-                  color: '#0f0',
-                },
+                style: { stroke: '#0f0', strokeWidth: 2 }, // green after animation
               }
             : e
         )
       );
 
+      // Target node completed
       setNodes((nds) =>
         nds.map((n) =>
           n.id === targetId
@@ -162,7 +164,7 @@ const OrchestratorFlow = () => {
     (_, node) => {
       if (node.id === 'start') startAnimation();
     },
-    []
+    [startAnimation]
   );
 
   return (
@@ -182,22 +184,22 @@ const OrchestratorFlow = () => {
 };
 
 export default OrchestratorFlow;
-✅ Update your styles.css if not already:
+✅ Make Sure These CSS Classes Are in styles.css
 css
 Copy
 Edit
 .custom-node {
-  border: 2px solid #ccc;
-  border-radius: 8px;
+  border: 2px solid gray;
   padding: 10px;
+  border-radius: 10px;
+  background-color: white;
   text-align: center;
-  width: 150px;
-  background: #fff;
-  transition: border 0.3s ease;
+  font-weight: bold;
+  transition: all 0.3s ease;
 }
 
 .custom-node.inactive {
-  border-color: grey;
+  border-color: gray;
 }
 
 .custom-node.active {
@@ -209,33 +211,30 @@ Edit
 }
 
 .squares {
-  margin-top: 6px;
   display: flex;
   justify-content: center;
-  gap: 4px;
+  margin-top: 5px;
 }
 
 .square {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
+  margin: 2px;
   border-radius: 2px;
-  background-color: grey;
+  background-color: lightgray;
 }
 
 .square.active {
   background-color: blue;
-  animation: glow 1s infinite alternate;
+  animation: pulse 1s infinite;
 }
 
 .square.completed {
   background-color: green;
 }
 
-@keyframes glow {
-  0% {
-    box-shadow: 0 0 2px blue;
-  }
-  100% {
-    box-shadow: 0 0 8px blue;
-  }
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
 }
