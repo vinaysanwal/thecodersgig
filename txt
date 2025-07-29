@@ -1,11 +1,203 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import ReactFlow, {
+  Background,
+  useNodesState,
+  useEdgesState,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import './styles.css';
+
+const initialNodes = [
+  { id: 'start', data: { label: 'Start' }, position: { x: 300, y: 0 } },
+  { id: 'topicRequestA', data: { label: 'Topic Request A' }, position: { x: 100, y: 100 } },
+  { id: 'topicRequestAgent', data: { label: 'Topic Request Agent' }, position: { x: 500, y: 100 } },
+  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 300, y: 180 } },
+  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 700, y: 100 } },
+  { id: 'topicResponseA', data: { label: 'Topic Response A' }, position: { x: 100, y: 280 } },
+  { id: 'topicResponseAgent', data: { label: 'Topic Response Agent' }, position: { x: 500, y: 280 } },
+];
+
+const flowSequence = [
+  ['start', 'topicRequestA'],
+  ['topicRequestA', 'orchestrator'],
+  ['orchestrator', 'topicRequestAgent'],
+  ['topicRequestAgent', 'mainAgent'],
+  ['mainAgent', 'topicResponseAgent'],
+  ['topicResponseAgent', 'orchestrator'],
+  ['orchestrator', 'topicResponseA'],
+  ['topicResponseA', 'start'],
+];
+
+const createNodeComponent = (label, status = 'inactive') => (
+  <div className={`custom-node ${status}`}>
+    <div className="node-label">{label}</div>
+    <div className="squares">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className={`square ${status}`} />
+      ))}
+    </div>
+  </div>
+);
+
+const OrchestratorFlow = () => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    initialNodes.map((n) => ({
+      ...n,
+      className: 'node',
+      data: {
+        label: createNodeComponent(n.data.label, 'inactive'),
+      },
+    }))
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const intervalRef = useRef(null);
+
+  const resetFlow = () => {
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: {
+          label: createNodeComponent(n.data.label.props.children[0], 'inactive'),
+        },
+      }))
+    );
+    setEdges([]);
+    setCurrentStep(0);
+  };
+
+  const startAnimation = () => {
+    if (isAnimating) return;
+    resetFlow();
+    setIsAnimating(true);
+  };
+
+  useEffect(() => {
+    if (!isAnimating) return;
+
+    if (currentStep >= flowSequence.length) {
+      setIsAnimating(false);
+      return;
+    }
+
+    const [sourceId, targetId] = flowSequence[currentStep];
+
+    // Set current source as completed and target as active
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === sourceId) {
+          return {
+            ...n,
+            data: {
+              label: createNodeComponent(n.data.label.props.children[0], 'completed'),
+            },
+          };
+        } else if (n.id === targetId) {
+          return {
+            ...n,
+            data: {
+              label: createNodeComponent(n.data.label.props.children[0], 'active'),
+            },
+          };
+        }
+        return n;
+      })
+    );
+
+    // Add animated edge in blue
+    setEdges((eds) => [
+      ...eds,
+      {
+        id: `${sourceId}-${targetId}`,
+        source: sourceId,
+        target: targetId,
+        animated: true,
+        style: { stroke: '#00f', strokeWidth: 2 },
+        markerEnd: {
+          type: 'arrowclosed',
+          color: '#00f',
+        },
+      },
+    ]);
+
+    // Schedule step completion
+    intervalRef.current = setTimeout(() => {
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === `${sourceId}-${targetId}`
+            ? {
+                ...e,
+                animated: false,
+                style: { stroke: '#0f0', strokeWidth: 2 },
+                markerEnd: {
+                  type: 'arrowclosed',
+                  color: '#0f0',
+                },
+              }
+            : e
+        )
+      );
+
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === targetId
+            ? {
+                ...n,
+                data: {
+                  label: createNodeComponent(n.data.label.props.children[0], 'completed'),
+                },
+              }
+            : n
+        )
+      );
+
+      setCurrentStep((step) => step + 1);
+    }, 3000);
+
+    return () => clearTimeout(intervalRef.current);
+  }, [currentStep, isAnimating]);
+
+  const onNodeClick = useCallback(
+    (_, node) => {
+      if (node.id === 'start') startAnimation();
+    },
+    []
+  );
+
+  return (
+    <div style={{ height: '700px', width: '100%' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+        onNodeClick={onNodeClick}
+      >
+        <Background variant="dots" gap={12} size={1} color="#aaa" />
+      </ReactFlow>
+    </div>
+  );
+};
+
+export default OrchestratorFlow;
+✅ Update your styles.css if not already:
+css
+Copy
+Edit
 .custom-node {
-  padding: 12px;
-  border: 2px solid #999;
-  border-radius: 6px;
-  background: #fff;
-  font-weight: 500;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
   text-align: center;
-  min-width: 120px;
+  width: 150px;
+  background: #fff;
+  transition: border 0.3s ease;
+}
+
+.custom-node.inactive {
+  border-color: grey;
 }
 
 .custom-node.active {
@@ -17,10 +209,10 @@
 }
 
 .squares {
+  margin-top: 6px;
   display: flex;
   justify-content: center;
   gap: 4px;
-  margin-top: 5px;
 }
 
 .square {
@@ -32,19 +224,18 @@
 
 .square.active {
   background-color: blue;
-  animation: blink 1s infinite;
+  animation: glow 1s infinite alternate;
 }
 
 .square.completed {
   background-color: green;
 }
 
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 2px blue;
   }
-  50% {
-    opacity: 0.3;
+  100% {
+    box-shadow: 0 0 8px blue;
   }
 }
