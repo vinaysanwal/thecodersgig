@@ -1,167 +1,197 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
-  ReactFlowProvider,
-  addEdge,
   MiniMap,
   Controls,
   Background,
-} from 'react-flow-renderer';
-import { Button, Card } from 'antd';
-import './orchestrator.css';
+  useNodesState,
+  useEdgesState,
+  addEdge,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import './orchestratorStyles.css'; // Make sure to include this CSS (see below)
 
 const initialNodes = [
-  { id: 'start', data: { label: 'Start' }, position: { x: 0, y: 0 } },
-  { id: 'topicRequestA', data: { label: 'Topic Request A' }, position: { x: 200, y: 0 } },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 400, y: 0 } },
-  { id: 'topicRequestAgent', data: { label: 'Topic Request Agent' }, position: { x: 600, y: 0 } },
-  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 800, y: 0 } },
-  { id: 'topicResponseAgent', data: { label: 'Topic Response Agent' }, position: { x: 600, y: 150 } },
-  { id: 'topicResponseA', data: { label: 'Topic Response A' }, position: { x: 400, y: 150 } },
+  { id: 'Start', data: { label: 'Start' }, position: { x: 50, y: 300 } },
+  { id: 'Topic Request A', data: { label: 'Topic Request A' }, position: { x: 250, y: 100 } },
+  { id: 'Orchestrator', data: { label: 'Orchestrator' }, position: { x: 500, y: 300 } },
+  { id: 'Topic Request Agent', data: { label: 'Topic Request Agent' }, position: { x: 750, y: 100 } },
+  { id: 'Main Agent', data: { label: 'Main Agent' }, position: { x: 1000, y: 300 } },
+  { id: 'Topic Response Agent', data: { label: 'Topic Response Agent' }, position: { x: 750, y: 500 } },
+  { id: 'Topic Response A', data: { label: 'Topic Response A' }, position: { x: 250, y: 500 } },
 ];
 
-const fullSequence = [
-  ['start', 'topicRequestA'],
-  ['topicRequestA', 'orchestrator'],
-  ['orchestrator', 'topicRequestAgent'],
-  ['topicRequestAgent', 'mainAgent'],
-  ['mainAgent', 'topicResponseAgent'],
-  ['topicResponseAgent', 'orchestrator'],
-  ['orchestrator', 'topicResponseA'],
-  ['topicResponseA', 'start'],
+const initialEdges = [
+  { id: 'e1', source: 'Start', target: 'Topic Request A' },
+  { id: 'e2', source: 'Topic Request A', target: 'Orchestrator' },
+  { id: 'e3', source: 'Orchestrator', target: 'Topic Request Agent' },
+  { id: 'e4', source: 'Topic Request Agent', target: 'Main Agent' },
+  { id: 'e5', source: 'Main Agent', target: 'Topic Response Agent' },
+  { id: 'e6', source: 'Topic Response Agent', target: 'Orchestrator' },
+  { id: 'e7', source: 'Orchestrator', target: 'Topic Response A' },
+  { id: 'e8', source: 'Topic Response A', target: 'Start' },
 ];
 
-const OrchestratorStatusCard = () => {
-  const [nodes, setNodes] = useState(initialNodes.map((node) => ({
-    ...node,
-    style: { border: '2px solid gray', borderRadius: 8, padding: 10 },
-    data: { ...node.data, status: 'inactive' }
-  })));
-
-  const [edges, setEdges] = useState([]);
-  const [step, setStep] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-
-  const updateNodeStatus = (id, status) => {
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === id
-          ? {
-              ...node,
-              data: { ...node.data, status },
-              style: {
-                ...node.style,
-                border: status === 'active' ? '2px solid green' : status === 'done' ? '2px solid red' : '2px solid gray',
-              },
-            }
-          : node
-      )
-    );
-  };
-
-  useEffect(() => {
-    if (!isRunning || step >= fullSequence.length) return;
-
-    const [from, to] = fullSequence[step];
-
-    updateNodeStatus(from, 'done');
-    updateNodeStatus(to, 'active');
-
-    setEdges((eds) => [
-      ...eds,
-      {
-        id: `${from}-${to}`,
-        source: from,
-        target: to,
-        animated: true,
-        style: { stroke: 'green' },
-        data: { status: 'active' },
-      },
-    ]);
-
-    const timer = setTimeout(() => {
-      setEdges((eds) =>
-        eds.map((edge) =>
-          edge.id === `${from}-${to}`
-            ? {
-                ...edge,
-                animated: false,
-                style: { stroke: 'red' },
-                data: { status: 'done' },
-              }
-            : edge
-        )
-      );
-      updateNodeStatus(to, 'done');
-      setStep((prev) => prev + 1);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [step, isRunning]);
-
-  const handleStart = () => {
-    setNodes(initialNodes.map((node) => ({
-      ...node,
-      style: { border: '2px solid gray', borderRadius: 8 },
-      data: { ...node.data, status: node.id === 'start' ? 'active' : 'inactive' }
-    })));
-    setEdges([]);
-    setStep(0);
-    setIsRunning(true);
-  };
-
-  const customNode = ({ data, id }) => {
-    const status = data.status || 'inactive';
-    const color = status === 'active' ? 'green' : status === 'done' ? 'red' : 'gray';
-
-    return (
-      <div style={{
-        background: 'white',
-        padding: 10,
-        borderRadius: 8,
-        border: `2px solid ${color}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        minWidth: 120,
-        position: 'relative',
-      }}>
-        <div>{data.label}</div>
-        <div style={{
-          width: 12,
-          height: 12,
-          background: color,
-          borderRadius: '50%',
-          marginLeft: 8
-        }} />
-        {id === 'start' && (
-          <Button
-            size="small"
-            type="primary"
-            onClick={handleStart}
-            style={{ position: 'absolute', top: -30, left: 0 }}
-          >
-            Start
-          </Button>
-        )}
-      </div>
-    );
-  };
+const glowBoxes = (isActive, isCompleted) => {
+  const colors = isActive
+    ? ['green', 'red', 'green', 'red']
+    : isCompleted
+    ? ['#cc0000', '#cc0000', '#cc0000', '#cc0000']
+    : ['#ccc', '#ccc', '#ccc', '#ccc'];
 
   return (
-    <Card title="Orchestrator Flow" style={{ height: '600px' }}>
-      <ReactFlowProvider>
-        <ReactFlow
-          elements={[...nodes.map((node) => ({ ...node, type: 'custom' })), ...edges]}
-          nodeTypes={{ custom: customNode }}
-          fitView
-        >
-          <MiniMap />
-          <Controls />
-          <Background variant="dots" gap={20} size={1} />
-        </ReactFlow>
-      </ReactFlowProvider>
-    </Card>
+    <div className="glow-boxes">
+      {colors.map((color, index) => (
+        <div
+          key={index}
+          className="glow-box"
+          style={{ backgroundColor: color }}
+        ></div>
+      ))}
+    </div>
   );
 };
 
-export default OrchestratorStatusCard;
+const CustomNode = ({ data, id }) => {
+  const [isActive, setIsActive] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  useEffect(() => {
+    const unsub = window.subscribeNodeStatus?.(id, ({ active, completed }) => {
+      setIsActive(active);
+      setIsCompleted(completed);
+    });
+    return () => unsub?.();
+  }, [id]);
+
+  const shouldRenderGlow =
+    id === 'Topic Request A' ||
+    id === 'Topic Response A' ||
+    id === 'Topic Request Agent' ||
+    id === 'Topic Response Agent';
+
+  return (
+    <div className={`node-box ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
+      <div>{data.label}</div>
+      {shouldRenderGlow && glowBoxes(isActive, isCompleted)}
+    </div>
+  );
+};
+
+const nodeTypes = {
+  default: CustomNode,
+};
+
+export default function OrchestratorStatusCard() {
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    initialNodes.map((node) => ({
+      ...node,
+      type: 'default',
+    }))
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  const sequence = [
+    'Start',
+    'Topic Request A',
+    'Orchestrator',
+    'Topic Request Agent',
+    'Main Agent',
+    'Topic Response Agent',
+    'Orchestrator',
+    'Topic Response A',
+    'Start',
+  ];
+
+  // Broadcast status to each CustomNode using global event pub/sub
+  useEffect(() => {
+    window.subscribeNodeStatus = (id, callback) => {
+      const handler = ({ node, activeIndex }) => {
+        const current = sequence[activeIndex];
+        const completed = sequence.slice(0, activeIndex);
+        callback({
+          active: node === id,
+          completed: completed.includes(id),
+        });
+      };
+      window.addEventListener('node-status', handler);
+      return () => window.removeEventListener('node-status', handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    let timer;
+
+    if (activeIndex >= 0 && activeIndex < sequence.length) {
+      const event = new CustomEvent('node-status', {
+        detail: { node: sequence[activeIndex], activeIndex },
+      });
+      window.dispatchEvent(event);
+
+      timer = setTimeout(() => {
+        setActiveIndex((prev) => prev + 1);
+      }, 3000);
+    }
+  }, [activeIndex]);
+
+  const onStart = () => {
+    setActiveIndex(0);
+  };
+
+  return (
+    <div style={{ height: '90vh', background: '#f2f5f9', borderRadius: 10 }}>
+      <button onClick={onStart} style={{ margin: 10, padding: '6px 12px' }}>
+        Start Animation
+      </button>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+        nodeTypes={nodeTypes}
+      >
+        <MiniMap />
+        <Controls />
+        <Background variant="dots" gap={16} size={1} />
+      </ReactFlow>
+    </div>
+  );
+}
+✅ orchestratorStyles.css
+css
+Copy
+Edit
+.node-box {
+  border: 2px solid #aaa;
+  border-radius: 6px;
+  padding: 8px;
+  background: white;
+  text-align: center;
+  min-width: 120px;
+}
+
+.node-box.active {
+  border-color: green;
+  background-color: #e0ffe0;
+}
+
+.node-box.completed {
+  border-color: red;
+  background-color: #ffe0e0;
+}
+
+.glow-boxes {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+  gap: 4px;
+}
+
+.glow-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transition: background-color 0.3s ease-in-out;
+}
