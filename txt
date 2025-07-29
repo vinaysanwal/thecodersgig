@@ -1,24 +1,49 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactFlow, {
-  MiniMap,
-  Controls,
-  Background,
   useNodesState,
   useEdgesState,
-  addEdge,
+  Background,
+  Controls,
+  MiniMap,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import './orchestratorStyles.css'; // Make sure to include this CSS (see below)
+import './orchestratorStyles.css';
 
-const initialNodes = [
-  { id: 'Start', data: { label: 'Start' }, position: { x: 50, y: 300 } },
-  { id: 'Topic Request A', data: { label: 'Topic Request A' }, position: { x: 250, y: 100 } },
-  { id: 'Orchestrator', data: { label: 'Orchestrator' }, position: { x: 500, y: 300 } },
-  { id: 'Topic Request Agent', data: { label: 'Topic Request Agent' }, position: { x: 750, y: 100 } },
-  { id: 'Main Agent', data: { label: 'Main Agent' }, position: { x: 1000, y: 300 } },
-  { id: 'Topic Response Agent', data: { label: 'Topic Response Agent' }, position: { x: 750, y: 500 } },
-  { id: 'Topic Response A', data: { label: 'Topic Response A' }, position: { x: 250, y: 500 } },
+const sequence = [
+  'Start',
+  'Topic Request A',
+  'Orchestrator',
+  'Topic Request Agent',
+  'Main Agent',
+  'Topic Response Agent',
+  'Orchestrator',
+  'Topic Response A',
+  'Start',
 ];
+
+const initialNodes = sequence.map((id, index) => {
+  const position = [
+    { x: 50, y: 300 },
+    { x: 250, y: 100 },
+    { x: 500, y: 300 },
+    { x: 750, y: 100 },
+    { x: 1000, y: 300 },
+    { x: 750, y: 500 },
+    { x: 250, y: 500 },
+  ];
+
+  return {
+    id,
+    data: { label: id },
+    position: position[index % position.length],
+    style: {
+      border: '2px solid #aaa',
+      padding: 10,
+      borderRadius: 8,
+      backgroundColor: '#fff',
+    },
+  };
+});
 
 const initialEdges = [
   { id: 'e1', source: 'Start', target: 'Topic Request A' },
@@ -31,108 +56,87 @@ const initialEdges = [
   { id: 'e8', source: 'Topic Response A', target: 'Start' },
 ];
 
-const glowBoxes = (isActive, isCompleted) => {
-  const colors = isActive
-    ? ['green', 'red', 'green', 'red']
-    : isCompleted
-    ? ['#cc0000', '#cc0000', '#cc0000', '#cc0000']
-    : ['#ccc', '#ccc', '#ccc', '#ccc'];
-
-  return (
-    <div className="glow-boxes">
-      {colors.map((color, index) => (
-        <div
-          key={index}
-          className="glow-box"
-          style={{ backgroundColor: color }}
-        ></div>
-      ))}
-    </div>
-  );
-};
-
-const CustomNode = ({ data, id }) => {
-  const [isActive, setIsActive] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-
-  useEffect(() => {
-    const unsub = window.subscribeNodeStatus?.(id, ({ active, completed }) => {
-      setIsActive(active);
-      setIsCompleted(completed);
-    });
-    return () => unsub?.();
-  }, [id]);
-
-  const shouldRenderGlow =
-    id === 'Topic Request A' ||
-    id === 'Topic Response A' ||
-    id === 'Topic Request Agent' ||
-    id === 'Topic Response Agent';
-
-  return (
-    <div className={`node-box ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
-      <div>{data.label}</div>
-      {shouldRenderGlow && glowBoxes(isActive, isCompleted)}
-    </div>
-  );
-};
-
-const nodeTypes = {
-  default: CustomNode,
-};
-
 export default function OrchestratorStatusCard() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    initialNodes.map((node) => ({
-      ...node,
-      type: 'default',
-    }))
-  );
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  const sequence = [
-    'Start',
-    'Topic Request A',
-    'Orchestrator',
-    'Topic Request Agent',
-    'Main Agent',
-    'Topic Response Agent',
-    'Orchestrator',
-    'Topic Response A',
-    'Start',
-  ];
-
-  // Broadcast status to each CustomNode using global event pub/sub
-  useEffect(() => {
-    window.subscribeNodeStatus = (id, callback) => {
-      const handler = ({ node, activeIndex }) => {
-        const current = sequence[activeIndex];
-        const completed = sequence.slice(0, activeIndex);
-        callback({
-          active: node === id,
-          completed: completed.includes(id),
-        });
-      };
-      window.addEventListener('node-status', handler);
-      return () => window.removeEventListener('node-status', handler);
-    };
-  }, []);
+  // Glow box nodes
+  const glowBoxNodes = ['Topic Request A', 'Topic Response A', 'Topic Request Agent', 'Topic Response Agent'];
 
   useEffect(() => {
-    let timer;
+    if (activeIndex === -1 || activeIndex >= sequence.length) return;
 
-    if (activeIndex >= 0 && activeIndex < sequence.length) {
-      const event = new CustomEvent('node-status', {
-        detail: { node: sequence[activeIndex], activeIndex },
-      });
-      window.dispatchEvent(event);
+    const currentNodeId = sequence[activeIndex];
+    const updatedNodes = nodes.map((node) => {
+      if (node.id === currentNodeId) {
+        return {
+          ...node,
+          style: { ...node.style, backgroundColor: '#e0ffe0', borderColor: 'green' },
+          data: {
+            ...node.data,
+            label: (
+              <div>
+                {node.id}
+                {glowBoxNodes.includes(node.id) && (
+                  <div className="glow-boxes">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="glow-box green" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ),
+          },
+        };
+      } else if (sequence.indexOf(node.id) < activeIndex) {
+        return {
+          ...node,
+          style: { ...node.style, backgroundColor: '#ffe0e0', borderColor: 'red' },
+        };
+      } else {
+        return {
+          ...node,
+          style: { ...node.style, backgroundColor: '#fff', borderColor: '#aaa' },
+          data: {
+            ...node.data,
+            label: (
+              <div>
+                {node.id}
+                {glowBoxNodes.includes(node.id) && (
+                  <div className="glow-boxes">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="glow-box grey" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ),
+          },
+        };
+      }
+    });
 
-      timer = setTimeout(() => {
-        setActiveIndex((prev) => prev + 1);
-      }, 3000);
-    }
+    const updatedEdges = initialEdges.map((edge) => {
+      const fromIdx = sequence.indexOf(edge.source);
+      const toIdx = sequence.indexOf(edge.target);
+      if (fromIdx === activeIndex && toIdx === activeIndex + 1) {
+        return { ...edge, style: { stroke: 'green', strokeWidth: 3 }, animated: true };
+      } else if (toIdx <= activeIndex) {
+        return { ...edge, style: { stroke: 'red', strokeWidth: 2 } };
+      } else {
+        return { ...edge, style: { stroke: '#bbb' } };
+      }
+    });
+
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+
+    const timer = setTimeout(() => {
+      setActiveIndex((prev) => prev + 1);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [activeIndex]);
 
   const onStart = () => {
@@ -150,7 +154,6 @@ export default function OrchestratorStatusCard() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         fitView
-        nodeTypes={nodeTypes}
       >
         <MiniMap />
         <Controls />
@@ -159,28 +162,7 @@ export default function OrchestratorStatusCard() {
     </div>
   );
 }
-✅ orchestratorStyles.css
-css
-Copy
-Edit
-.node-box {
-  border: 2px solid #aaa;
-  border-radius: 6px;
-  padding: 8px;
-  background: white;
-  text-align: center;
-  min-width: 120px;
-}
 
-.node-box.active {
-  border-color: green;
-  background-color: #e0ffe0;
-}
-
-.node-box.completed {
-  border-color: red;
-  background-color: #ffe0e0;
-}
 
 .glow-boxes {
   display: flex;
@@ -190,8 +172,22 @@ Edit
 }
 
 .glow-box {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   transition: background-color 0.3s ease-in-out;
+}
+
+.glow-box.green {
+  background-color: #00cc44;
+  box-shadow: 0 0 4px #00cc44;
+}
+
+.glow-box.red {
+  background-color: #cc0000;
+  box-shadow: 0 0 4px #cc0000;
+}
+
+.glow-box.grey {
+  background-color: #ccc;
 }
