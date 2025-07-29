@@ -1,146 +1,247 @@
-// OrchestratorStatusCard.jsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactFlow, {
-  MiniMap,
-  Controls,
   Background,
+  Controls,
   useNodesState,
   useEdgesState,
   addEdge,
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import './styles.css'; // Optional custom styling
+import AnimatedHoppingEdge from './AnimatedHoppingEdge';
 
 const initialNodes = [
-  { id: 'Start', position: { x: 300, y: 50 }, data: { label: 'Start' }, style: {} },
-  { id: 'Topic Request A', position: { x: 100, y: 150 }, data: { label: 'Topic Request A' }, style: {} },
-  { id: 'Orchestrator', position: { x: 300, y: 250 }, data: { label: 'Orchestrator' }, style: {} },
-  { id: 'Topic Request Agent', position: { x: 500, y: 150 }, data: { label: 'Topic Request Agent' }, style: {} },
-  { id: 'Main Agent', position: { x: 700, y: 250 }, data: { label: 'Main Agent' }, style: {} },
-  { id: 'Topic Response Agent', position: { x: 500, y: 350 }, data: { label: 'Topic Response Agent' }, style: {} },
-  { id: 'Topic Response A', position: { x: 100, y: 350 }, data: { label: 'Topic Response A' }, style: {} },
+  { id: 'Start', position: { x: 0, y: 0 }, data: { label: 'Start' }, type: 'statusNode' },
+  { id: 'TopicRequestA', position: { x: 250, y: 0 }, data: { label: 'Topic Request A' }, type: 'statusNode' },
+  { id: 'Orchestrator', position: { x: 500, y: 0 }, data: { label: 'Orchestrator' }, type: 'statusNode' },
+  { id: 'TopicRequestAgent', position: { x: 750, y: 0 }, data: { label: 'Topic Request Agent' }, type: 'statusNode' },
+  { id: 'MainAgent', position: { x: 750, y: 150 }, data: { label: 'Main Agent' }, type: 'statusNode' },
+  { id: 'TopicResponseAgent', position: { x: 500, y: 150 }, data: { label: 'Topic Response Agent' }, type: 'statusNode' },
+  { id: 'TopicResponseA', position: { x: 250, y: 150 }, data: { label: 'Topic Response A' }, type: 'statusNode' },
 ];
 
-const stepSequence = [
-  { from: null, to: 'Start' },
-  { from: 'Start', to: 'Topic Request A' },
-  { from: 'Topic Request A', to: 'Orchestrator' },
-  { from: 'Orchestrator', to: 'Topic Request Agent' },
-  { from: 'Topic Request Agent', to: 'Main Agent' },
-  { from: 'Main Agent', to: 'Topic Response Agent' },
-  { from: 'Topic Response Agent', to: 'Orchestrator' },
-  { from: 'Orchestrator', to: 'Topic Response A' },
-  { from: 'Topic Response A', to: 'Start' },
+const flowSteps = [
+  { from: 'Start', to: 'TopicRequestA' },
+  { from: 'TopicRequestA', to: 'Orchestrator' },
+  { from: 'Orchestrator', to: 'TopicRequestAgent' },
+  { from: 'TopicRequestAgent', to: 'MainAgent' },
+  { from: 'MainAgent', to: 'TopicResponseAgent' },
+  { from: 'TopicResponseAgent', to: 'Orchestrator' },
+  { from: 'Orchestrator', to: 'TopicResponseA' },
+  { from: 'TopicResponseA', to: 'Start' },
 ];
 
-const squareNodes = ['Topic Request A', 'Topic Response A', 'Topic Request Agent', 'Topic Response Agent'];
+const StatusNode = ({ data, id, nodeStatus }) => {
+  const isActive = nodeStatus === 'active';
+  const isCompleted = nodeStatus === 'completed';
+  const borderColor = isActive ? '#52c41a' : isCompleted ? 'red' : '#ccc';
+  const backgroundColor = isActive ? '#e6ffe6' : isCompleted ? '#ffe6e6' : '#fff';
+  const dotColor = isActive ? '#52c41a' : isCompleted ? 'red' : 'gray';
+
+  return (
+    <div style={{
+      padding: 12,
+      border: `2px solid ${borderColor}`,
+      borderRadius: 8,
+      backgroundColor,
+      textAlign: 'center',
+      width: 140,
+      position: 'relative',
+      fontWeight: 600
+    }}>
+      {data.label}
+      <div style={{
+        position: 'absolute',
+        bottom: 6,
+        right: 6,
+        width: 14,
+        height: 14,
+        borderRadius: '50%',
+        backgroundColor: dotColor,
+        boxShadow: isActive || isCompleted ? `0 0 8px ${dotColor}` : 'none',
+        transition: 'all 0.3s ease'
+      }} />
+    </div>
+  );
+};
+
+const nodeTypes = {
+  statusNode: (props) => (
+    <StatusNode {...props} nodeStatus={props.data.status} />
+  ),
+};
+
+const edgeTypes = {
+  bouncing: AnimatedHoppingEdge,
+};
 
 const OrchestratorStatusCard = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(n => ({
+    ...n,
+    data: { ...n.data, status: 'inactive' }
+  })));
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [activeStep, setActiveStep] = useState(0);
-  const [nodeStatus, setNodeStatus] = useState({}); // { nodeId: 'inactive' | 'active' | 'completed' }
-  const [squareColor, setSquareColor] = useState({}); // { nodeId: 'red' | 'green' | 'blue' }
+  const [stepIndex, setStepIndex] = useState(-1);
 
-  const animateNode = useCallback((id) => {
-    setNodeStatus((prev) => ({ ...prev, [id]: 'active' }));
-    let cycle = ['red', 'green', 'blue'];
-    let i = 0;
-    const interval = setInterval(() => {
-      setSquareColor((prev) => ({ ...prev, [id]: cycle[i % 3] }));
-      i++;
-    }, 500);
+  const runAnimation = useCallback(() => {
+    if (stepIndex >= flowSteps.length) return;
 
-    setTimeout(() => {
-      clearInterval(interval);
-      setNodeStatus((prev) => ({ ...prev, [id]: 'completed' }));
-      setSquareColor((prev) => ({ ...prev, [id]: 'red' }));
-    }, 3000);
-  }, []);
-
-  useEffect(() => {
-    if (activeStep >= stepSequence.length) return;
-
-    const step = stepSequence[activeStep];
-    if (step.to) {
-      animateNode(step.to);
-    }
-
-    if (step.from && step.to) {
+    if (stepIndex >= 0) {
+      const prevStep = flowSteps[stepIndex];
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === prevStep.from
+            ? { ...n, data: { ...n.data, status: 'completed' } }
+            : n
+        )
+      );
       setEdges((eds) =>
-        addEdge(
-          {
-            id: `${step.from}-${step.to}`,
-            source: step.from,
-            target: step.to,
-            animated: true,
-            style: { stroke: nodeStatus[step.from] === 'completed' ? 'red' : '#1890ff' },
-          },
-          eds
+        eds.map((e) =>
+          e.source === prevStep.from && e.target === prevStep.to
+            ? { ...e, style: { stroke: 'red' } }
+            : e
         )
       );
     }
 
-    const timer = setTimeout(() => {
-      setActiveStep((s) => s + 1);
-    }, 3200);
+    const nextStep = flowSteps[stepIndex + 1];
+    if (!nextStep) return;
 
-    return () => clearTimeout(timer);
-  }, [activeStep]);
+    const newEdge = {
+      id: `${nextStep.from}-${nextStep.to}`,
+      source: nextStep.from,
+      target: nextStep.to,
+      animated: true,
+      type: 'bouncing',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: '#1890ff',
+      },
+      style: {
+        stroke: '#1890ff',
+      },
+    };
 
-  const getNodeStyle = (id) => {
-    const status = nodeStatus[id];
-    if (status === 'active') return { border: '2px solid #52c41a', background: '#f6ffed' };
-    if (status === 'completed') return { border: '2px solid red', background: '#fff1f0' };
-    return { border: '1px solid #d9d9d9' };
+    setEdges((eds) => addEdge(newEdge, eds));
+
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === nextStep.from
+          ? { ...n, data: { ...n.data, status: 'active' } }
+          : n
+      )
+    );
+
+    setTimeout(() => {
+      setStepIndex((prev) => prev + 1);
+    }, 3000);
+  }, [stepIndex]);
+
+  useEffect(() => {
+    if (stepIndex >= 0 && stepIndex < flowSteps.length) {
+      runAnimation();
+    } else if (stepIndex === flowSteps.length) {
+      // Final node status
+      const last = flowSteps[stepIndex - 1];
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === last.to
+            ? { ...n, data: { ...n.data, status: 'completed' } }
+            : n
+        )
+      );
+    }
+  }, [stepIndex, runAnimation]);
+
+  const handleStartClick = () => {
+    if (stepIndex === -1) setStepIndex(0);
   };
-
-  const nodeTypes = {
-    default: ({ id, data }) => (
-      <div style={{ padding: 10, textAlign: 'center' }}>
-        <div>{data.label}</div>
-        {squareNodes.includes(id) && (
-          <div style={{ marginTop: 5, display: 'flex', justifyContent: 'center', gap: 3 }}>
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 2,
-                  backgroundColor: squareColor[id] || 'lightgrey',
-                  transition: 'background-color 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    ),
-  };
-
-  const renderedNodes = nodes.map((n) => ({
-    ...n,
-    data: { ...n.data },
-    style: getNodeStyle(n.id),
-    type: 'default',
-  }));
 
   return (
-    <div style={{ height: '600px', width: '100%' }}>
+    <div style={{ height: '600px', border: '1px solid #eee' }}>
       <ReactFlow
-        nodes={renderedNodes}
+        nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        fitView
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        proOptions={{ hideAttribution: true }}
       >
-        <MiniMap />
+        <Background color="#f0f2f5" gap={16} />
         <Controls />
-        <Background />
       </ReactFlow>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
+        <button onClick={handleStartClick} style={{
+          padding: '8px 16px',
+          fontSize: 16,
+          background: '#1890ff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer'
+        }}>
+          Start Animation
+        </button>
+      </div>
     </div>
   );
 };
 
 export default OrchestratorStatusCard;
+
+
+
+// AnimatedHoppingEdge.jsx
+import React from 'react';
+import { BaseEdge, getBezierPath } from 'reactflow';
+
+const AnimatedHoppingEdge = ({
+  id,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  style = {},
+  markerEnd,
+}) => {
+  const [edgePath] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          strokeDasharray: '8',
+          strokeWidth: 2.5,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          stroke: style.stroke || '#1890ff',
+          animation: 'bounce 1s linear infinite',
+          ...style,
+        }}
+        markerEnd={markerEnd}
+      />
+      <style>{`
+        @keyframes bounce {
+          0% { stroke-dashoffset: 0; }
+          100% { stroke-dashoffset: -16; }
+        }
+      `}</style>
+    </>
+  );
+};
+
+export default AnimatedHoppingEdge;
