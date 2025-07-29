@@ -1,177 +1,172 @@
-import React, { useRef, useState, useCallback } from 'react';
+// src/components/OrchestratorFlow.jsx
+
+import React, { useCallback, useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
+  MiniMap,
   useNodesState,
   useEdgesState,
-  MarkerType,
-} from 'reactflow';
+  addEdge,
+  MarkerType
+} from 'react-flow-renderer';
 import { Card } from 'antd';
-import 'reactflow/dist/style.css';
-
-const nodeBaseStyle = {
-  width: 150,
-  height: 50,
-  backgroundColor: '#f0f0f0',
-  border: '1px solid #ccc',
-};
 
 const initialNodes = [
-  { id: 'start', data: { label: 'Start' }, position: { x: 0, y: 0 }, style: nodeBaseStyle },
-  { id: 'topic-request-a', data: { label: 'Topic Request A' }, position: { x: 200, y: 0 }, style: nodeBaseStyle },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 450, y: 0 }, style: nodeBaseStyle },
-  { id: 'topic-request-agent', data: { label: 'Topic Request Agent' }, position: { x: 700, y: 0 }, style: nodeBaseStyle },
-  { id: 'main-agent', data: { label: 'Main Agent' }, position: { x: 950, y: 0 }, style: nodeBaseStyle },
-  { id: 'topic-response-agent', data: { label: 'Topic Response Agent' }, position: { x: 700, y: 120 }, style: nodeBaseStyle },
-  { id: 'topic-response-a', data: { label: 'Topic Response A' }, position: { x: 200, y: 120 }, style: nodeBaseStyle },
+  { id: 'Start', position: { x: 0, y: 0 }, data: { label: 'Start' }, type: 'customNode' },
+  { id: 'TopicRequestA', position: { x: 180, y: 0 }, data: { label: 'Topic Request A' }, type: 'customNode' },
+  { id: 'Orchestrator1', position: { x: 380, y: 0 }, data: { label: 'Orchestrator' }, type: 'customNode' },
+  { id: 'TopicRequestAgent', position: { x: 580, y: 0 }, data: { label: 'Topic Request Agent' }, type: 'customNode' },
+  { id: 'MainAgent', position: { x: 780, y: 0 }, data: { label: 'Main Agent' }, type: 'customNode' },
+  { id: 'TopicResponseAgent', position: { x: 580, y: 150 }, data: { label: 'Topic Response Agent' }, type: 'customNode' },
+  { id: 'Orchestrator2', position: { x: 380, y: 150 }, data: { label: 'Orchestrator' }, type: 'customNode' },
+  { id: 'TopicResponseA', position: { x: 180, y: 150 }, data: { label: 'Topic Response A' }, type: 'customNode' }
 ];
 
-const fullEdges = [
-  { id: 'e1', source: 'start', target: 'topic-request-a' },
-  { id: 'e2', source: 'topic-request-a', target: 'orchestrator' },
-  { id: 'e3', source: 'orchestrator', target: 'topic-request-agent' },
-  { id: 'e4', source: 'topic-request-agent', target: 'main-agent' },
-  { id: 'e5', source: 'main-agent', target: 'topic-response-agent' },
-  { id: 'e6', source: 'topic-response-agent', target: 'orchestrator' },
-  { id: 'e7', source: 'orchestrator', target: 'topic-response-a' },
-  { id: 'e8', source: 'topic-response-a', target: 'start' },
+const path = [
+  'Start',
+  'TopicRequestA',
+  'Orchestrator1',
+  'TopicRequestAgent',
+  'MainAgent',
+  'TopicResponseAgent',
+  'Orchestrator2',
+  'TopicResponseA',
+  'Start'
 ];
 
-const flowOrder = [
-  'start',
-  'topic-request-a',
-  'orchestrator',
-  'topic-request-agent',
-  'main-agent',
-  'topic-response-agent',
-  'orchestrator',
-  'topic-response-a',
-  'start',
-];
+const initialEdges = [];
 
-const OrchestratorStatusCard = () => {
+const CustomNode = ({ data, isActive, isCompleted }) => {
+  const bgColor = isActive ? '#52c41a' : isCompleted ? '#ff4d4f' : '#d9d9d9';
+
+  return (
+    <Card
+      size="small"
+      style={{
+        width: 120,
+        textAlign: 'center',
+        border: `2px solid ${bgColor}`,
+        backgroundColor: '#fff',
+        borderRadius: 6,
+        boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+        position: 'relative'
+      }}
+    >
+      <div
+        style={{
+          width: 12,
+          height: 12,
+          backgroundColor: bgColor,
+          position: 'absolute',
+          top: 6,
+          right: 6,
+          borderRadius: '50%'
+        }}
+      />
+      {data.label}
+    </Card>
+  );
+};
+
+const nodeTypes = {
+  customNode: CustomNode
+};
+
+const OrchestratorFlow = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const stepRef = useRef(0);
-  const intervalRef = useRef(null);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const resetFlow = () => {
     setNodes((nds) =>
       nds.map((node) => ({
         ...node,
-        style: { ...node.style, backgroundColor: '#f0f0f0' },
+        data: {
+          ...node.data,
+          isActive: false,
+          isCompleted: false
+        }
       }))
     );
-    setEdges([]); // Hide all edges initially
-    stepRef.current = 0;
+    setEdges([]);
+    setActiveIndex(-1);
   };
 
   const triggerFlow = () => {
     resetFlow();
 
-    intervalRef.current = setInterval(() => {
-      const step = stepRef.current;
-
-      if (step >= flowOrder.length - 1) {
-        clearInterval(intervalRef.current);
-
-        // Final red node + edge
-        const finalNodeId = flowOrder[step];
-        const finalEdgeSource = flowOrder[step - 1];
-        const finalEdgeTarget = flowOrder[step];
-
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === finalNodeId
-              ? { ...node, style: { ...node.style, backgroundColor: '#ffccc7' } }
-              : node
-          )
-        );
-
-        setEdges((eds) =>
-          eds.map((edge) =>
-            edge.source === finalEdgeSource && edge.target === finalEdgeTarget
-              ? { ...edge, animated: false, style: { stroke: '#f5222d' } }
-              : edge
-          )
-        );
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i >= path.length) {
+        clearInterval(interval);
         return;
       }
 
-      const current = flowOrder[step];
-      const next = flowOrder[step + 1];
+      const current = path[i];
+      const prev = path[i - 1];
 
-      // Set next node to blue (active)
       setNodes((nds) =>
         nds.map((node) => {
-          if (node.id === next) {
-            return { ...node, style: { ...node.style, backgroundColor: '#bae7ff' } };
-          } else if (node.id === current && step > 0) {
-            return { ...node, style: { ...node.style, backgroundColor: '#ffccc7' } };
+          if (node.id === current) {
+            return {
+              ...node,
+              data: { ...node.data, isActive: true, isCompleted: false }
+            };
+          } else if (node.id === prev) {
+            return {
+              ...node,
+              data: { ...node.data, isActive: false, isCompleted: true }
+            };
           }
           return node;
         })
       );
 
-      // Add or update edge
-      const newEdgeId = `e-${current}-${next}`;
-      const newEdge = {
-        id: newEdgeId,
-        source: current,
-        target: next,
-        animated: true,
-        markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#1890ff' },
-      };
+      if (i > 0) {
+        const from = path[i - 1];
+        const to = path[i];
+        setEdges((eds) => [
+          ...eds,
+          {
+            id: `${from}->${to}`,
+            source: from,
+            target: to,
+            type: 'default',
+            markerEnd: { type: MarkerType.ArrowClosed },
+            style: { stroke: '#ff4d4f', strokeWidth: 2 },
+            animated: false
+          }
+        ]);
+      }
 
-      setEdges((eds) => {
-        const prevEdge =
-          step > 0
-            ? eds.find(
-                (e) =>
-                  e.source === flowOrder[step - 1] &&
-                  e.target === current
-              )
-            : null;
-
-        const updatedEdges = [...eds];
-        if (prevEdge) {
-          const index = updatedEdges.findIndex((e) => e.id === prevEdge.id);
-          updatedEdges[index] = {
-            ...prevEdge,
-            animated: false,
-            style: { stroke: '#f5222d' },
-          };
-        }
-
-        return [...updatedEdges, newEdge];
-      });
-
-      stepRef.current += 1;
+      i++;
     }, 3000);
   };
 
-  const handleNodeClick = useCallback((_, node) => {
-    if (node.id === 'start') {
+  const onNodeClick = useCallback((event, node) => {
+    if (node.id === 'Start') {
       triggerFlow();
     }
   }, []);
 
   return (
-    <Card title="Orchestrator Flow" style={{ width: '100%', height: '600px' }}>
+    <div style={{ width: '100%', height: '700px' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodeClick={handleNodeClick}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        nodeTypes={nodeTypes}
         fitView
       >
-        <Background variant="dots" gap={20} size={1} color="#ccc" />
+        <Background color="#f0f2f5" gap={16} />
+        <MiniMap />
         <Controls />
       </ReactFlow>
-    </Card>
+    </div>
   );
 };
 
-export default OrchestratorStatusCard;
+export default OrchestratorFlow;
