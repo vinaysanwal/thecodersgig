@@ -1,179 +1,166 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, {
-  Background,
-  useNodesState,
-  useEdgesState,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import './styles.css'; // You must update CSS to reflect new border colors
+main.jsx
 
-const initialNodes = [
-  { id: 'start', data: { label: 'Start' }, position: { x: 300, y: 0 } },
-  { id: 'topicRequestA', data: { label: 'Topic Request A' }, position: { x: 100, y: 100 } },
-  { id: 'topicRequestAgent', data: { label: 'Topic Request Agent' }, position: { x: 500, y: 100 } },
-  { id: 'orchestrator', data: { label: 'Orchestrator' }, position: { x: 300, y: 180 } },
-  { id: 'mainAgent', data: { label: 'Main Agent' }, position: { x: 700, y: 100 } },
-  { id: 'topicResponseA', data: { label: 'Topic Response A' }, position: { x: 100, y: 280 } },
-  { id: 'topicResponseAgent', data: { label: 'Topic Response Agent' }, position: { x: 500, y: 280 } },
-];
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import "./index.css";
 
-const flowSequence = [
-  ['start', 'topicRequestA'],
-  ['topicRequestA', 'orchestrator'],
-  ['orchestrator', 'topicRequestAgent'],
-  ['topicRequestAgent', 'mainAgent'],
-  ['mainAgent', 'topicResponseAgent'],
-  ['topicResponseAgent', 'orchestrator'],
-  ['orchestrator', 'topicResponseA'],
-  ['topicResponseA', 'start'],
-];
-
-const createNodeComponent = (label, status = 'inactive') => (
-  <div className={`custom-node ${status}`}>
-    {label}
-    <div className="squares">
-      {[1, 2, 3, 4].map((i) => (
-        <div key={i} className={`square ${status}`} />
-      ))}
-    </div>
-  </div>
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 );
 
-const OrchestratorFlow = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(
-    initialNodes.map((n) => ({
-      ...n,
-      data: {
-        label: createNodeComponent(n.data.label),
-      },
-      className: 'inactive',
-    }))
+App,jsx
+
+import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Observability from "./pages/Observability";
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/observability" element={<Observability />} />
+    </Routes>
   );
+}
 
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const intervalRef = useRef(null);
+export default App;
 
-  const resetFlow = () => {
-    setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        className: 'inactive',
-        data: {
-          label: createNodeComponent(n.data.label.props.children[0], 'inactive'),
-        },
-      }))
-    );
-    setEdges([]);
-    setCurrentStep(0);
-  };
 
-  const startAnimation = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    resetFlow();
-  };
+pages/obs
 
-  useEffect(() => {
-    if (!isAnimating) return;
+import EaseFlow from "../components/easeFlow";
 
-    if (currentStep >= flowSequence.length) {
-      setIsAnimating(false);
-      return;
-    }
+export default function Observability() {
+  return <EaseFlow />;
+}
 
-    const [sourceId, targetId] = flowSequence[currentStep];
+pages/landing
 
-    setNodes((nds) =>
-      nds.map((n) => {
-        if (n.id === sourceId) {
-          return {
-            ...n,
-            className: 'completed',
-            data: {
-              label: createNodeComponent(n.data.label.props.children[0], 'completed'),
-            },
-          };
-        } else if (n.id === targetId) {
-          return {
-            ...n,
-            className: 'active',
-            data: {
-              label: createNodeComponent(n.data.label.props.children[0], 'active'),
-            },
-          };
-        }
-        return n;
-      })
-    );
 
-    setEdges((eds) => [
-      ...eds,
-      {
-        id: `${sourceId}-${targetId}`,
-        source: sourceId,
-        target: targetId,
-        animated: true,
-        style: { stroke: '#00f', strokeWidth: 2 }, // Blue during animation
-        markerEnd: { type: 'arrowclosed' },
-      },
-    ]);
+import { useNavigate } from "react-router-dom";
+import "../styles/landing.css";
 
-    intervalRef.current = setTimeout(() => {
-      setEdges((eds) =>
-        eds.map((e) =>
-          e.id === `${sourceId}-${targetId}`
-            ? {
-                ...e,
-                animated: false,
-                style: { stroke: '#0f0', strokeWidth: 2 }, // Turn green
-              }
-            : e
-        )
-      );
+export default function Landing() {
+  const navigate = useNavigate();
 
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === targetId
-            ? {
-                ...n,
-                className: 'completed',
-                data: {
-                  label: createNodeComponent(n.data.label.props.children[0], 'completed'),
-                },
-              }
-            : n
-        )
-      );
-
-      setCurrentStep((step) => step + 1);
-    }, 3000);
-
-    return () => clearTimeout(intervalRef.current);
-  }, [currentStep, isAnimating]);
-
-  const onNodeClick = useCallback(
-    (_, node) => {
-      if (node.id === 'start') startAnimation();
-    },
-    [startAnimation]
-  );
+  const agents = [
+    "Observability Agent",
+    "Brokerage Agent",
+    "Disclosure Agent",
+    "Compliance Agent",
+    "Risk Agent",
+    "Analytics Agent",
+    "Audit Agent",
+    "Orchestration Agent",
+  ];
 
   return (
-    <div style={{ height: '700px', width: '100%' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-        onNodeClick={onNodeClick}
-      >
-        <Background variant="dots" gap={12} size={1} color="#aaa" />
-      </ReactFlow>
+    <div className="landing-wrapper">
+      <h1 className="ease-header">EASE</h1>
+
+      <div className="agent-grid">
+        {agents.map((agent, index) => (
+          <div
+            key={index}
+            className="agent-card"
+            onClick={() => navigate("/observability")}
+          >
+            {agent}
+          </div>
+        ))}
+      </div>
     </div>
   );
-};
+}
 
-export default OrchestratorFlow;
+
+landing.css::
+
+
+.landing-wrapper {
+  height: 100vh;
+  background: radial-gradient(circle at center, #0f2027, #090a0f);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
+  color: white;
+}
+
+/* Header Animation */
+.ease-header {
+  font-size: 80px;
+  letter-spacing: 10px;
+  margin-bottom: 60px;
+  animation: glowPulse 2s infinite ease-in-out;
+}
+
+@keyframes glowPulse {
+  0% {
+    text-shadow: 0 0 15px #00ffff;
+  }
+  50% {
+    text-shadow: 0 0 40px #00ffff, 0 0 70px #00ffff;
+  }
+  100% {
+    text-shadow: 0 0 15px #00ffff;
+  }
+}
+
+/* Grid Layout */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 220px);
+  gap: 30px;
+}
+
+/* Cards */
+.agent-card {
+  height: 140px;
+  background: rgba(20, 20, 35, 0.7);
+  border-radius: 18px;
+  border: 1px solid rgba(0, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+}
+
+/* Hover Glow */
+.agent-card:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.7);
+}
+
+/* Floating Animation */
+.agent-card:nth-child(odd) {
+  animation: float 3s infinite ease-in-out;
+}
+
+.agent-card:nth-child(even) {
+  animation: floatReverse 3s infinite ease-in-out;
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes floatReverse {
+  0% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+  100% { transform: translateY(-5px); }
+}
+
