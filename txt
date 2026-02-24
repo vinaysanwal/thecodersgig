@@ -1,158 +1,84 @@
-/* ===================================== */
-/* BASE PAGE */
-/* ===================================== */
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "../styles/landing.css";
 
-html,
-body,
-#root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: "Inter", sans-serif;
-}
+const AGENTS = [
+  "Observability Agent",
+  "Brokerage Agent",
+  "Disclosure Agent",
+  "Compliance Agent",
+  "Risk Agent",
+  "Analytics Agent",
+  "Audit Agent",
+  "Orchestration Agent",
+];
 
-.landing-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a, #111827);
-  color: white;
-  padding-bottom: 60px;
-}
+export default function Landing() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState([]);
 
-/* ===================================== */
-/* HEADER */
-/* ===================================== */
+  useEffect(() => {
+    const generateStats = () =>
+      AGENTS.map(() => ({
+        running: Math.floor(Math.random() * 10) + 1,
+        queue: Math.floor(Math.random() * 20),
+        success: Math.floor(Math.random() * 10) + 90,
+      }));
 
-.landing-header {
-  height: 70px;
-  display: flex;
-  align-items: center;
-  padding: 0 40px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
+    setStats(generateStats());
+    const interval = setInterval(() => {
+      setStats(generateStats());
+    }, 3000);
 
-.brand-left {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ef4444;
-}
+    return () => clearInterval(interval);
+  }, []);
 
-.brand-divider {
-  margin: 0 12px;
-  opacity: 0.4;
-}
+  return (
+    <div className="landing-page">
+      {/* HEADER */}
+      <div className="landing-header">
+        <div className="brand-left">UBS</div>
+        <div className="brand-divider">|</div>
+        <div className="brand-right">EASE</div>
+      </div>
 
-.brand-right {
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  color: #0ea5e9;
-}
+      {/* CENTER HERO BOX */}
+      <div className="hero-container">
+        <div className="hero-box">
+          <div className="hero-ring"></div>
+          <div className="hero-core">EASE</div>
+        </div>
+      </div>
 
-/* ===================================== */
-/* HERO SECTION */
-/* ===================================== */
+      {/* AGENT GRID */}
+      <div className="agent-grid">
+        {AGENTS.map((agent, index) => (
+          <div
+            key={agent}
+            className="agent-card"
+            onClick={() => navigate("/observability")}
+          >
+            <div className="agent-title">{agent}</div>
 
-.hero-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 60px;
-}
-
-.hero-box {
-  position: relative;
-  width: 260px;
-  height: 260px;
-  border-radius: 20px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  backdrop-filter: blur(10px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hero-ring {
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 2px solid rgba(14, 165, 233, 0.4);
-  animation: rotateRing 12s linear infinite;
-}
-
-@keyframes rotateRing {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.hero-core {
-  position: absolute;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #0ea5e9, #0369a1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 600;
-  box-shadow: 0 0 40px rgba(14, 165, 233, 0.6);
-  animation: pulseCore 3s infinite ease-in-out;
-}
-
-@keyframes pulseCore {
-  0% { box-shadow: 0 0 25px rgba(14,165,233,0.4); }
-  50% { box-shadow: 0 0 60px rgba(14,165,233,0.9); }
-  100% { box-shadow: 0 0 25px rgba(14,165,233,0.4); }
-}
-
-/* ===================================== */
-/* AGENT GRID */
-/* ===================================== */
-
-.agent-grid {
-  margin-top: 80px;
-  display: grid;
-  grid-template-columns: repeat(4, 260px);
-  gap: 35px;
-  justify-content: center;
-}
-
-.agent-card {
-  padding: 24px;
-  border-radius: 18px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  transition: 0.3s ease;
-  cursor: pointer;
-}
-
-.agent-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(14, 165, 233, 0.6);
-  box-shadow: 0 0 30px rgba(14, 165, 233, 0.3);
-}
-
-.agent-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.agent-stats {
-  display: flex;
-  justify-content: space-between;
-}
-
-.stat span {
-  display: block;
-  font-size: 18px;
-  font-weight: 600;
-  color: #0ea5e9;
-}
-
-.stat label {
-  font-size: 11px;
-  opacity: 0.7;
+            {stats[index] && (
+              <div className="agent-stats">
+                <div className="stat">
+                  <span>{stats[index].running}</span>
+                  <label>Running</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].queue}</span>
+                  <label>Queue</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].success}%</span>
+                  <label>Success</label>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
