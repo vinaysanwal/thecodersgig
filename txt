@@ -1,130 +1,101 @@
-/* ============================= */
-/* MAIN WRAPPER */
-/* ============================= */
+import React from "react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
+} from "reactflow";
+import { useNavigate } from "react-router-dom";
+import "reactflow/dist/style.css";
+import "../styles/ease.css";
 
-.cyber-wrapper {
-  width: 100%;
-  height: calc(100vh - 70px);
-  position: relative;
-  overflow: hidden;
-}
+const initialNodes = [
+  {
+    id: "datamesh",
+    position: { x: 150, y: 120 },
+    data: { label: "Data Mesh" },
+    className: "flow-node",
+  },
+  {
+    id: "msteams",
+    position: { x: 900, y: 120 },
+    data: { label: "MS Teams" },
+    className: "flow-node",
+  },
+  {
+    id: "observability",
+    position: { x: 150, y: 550 },
+    data: { label: "Observability" },
+    className: "flow-node",
+  },
+  {
+    id: "gfagent",
+    position: { x: 900, y: 550 },
+    data: { label: "GF Agent" },
+    className: "flow-node clickable-node",
+  },
+  {
+    id: "compliance",
+    position: { x: 525, y: 730 },
+    data: { label: "Compliance" },
+    className: "flow-node",
+  },
+  {
+    id: "ease",
+    position: { x: 525, y: 360 },
+    data: {
+      label: (
+        <div className="ease-core">
+          <div className="ease-core-ring"></div>
+          <div className="ease-core-inner">EASE</div>
+        </div>
+      ),
+    },
+    className: "ease-node",
+  },
+];
 
-.enhanced-bg {
-  background: radial-gradient(circle at center, #0f2027, #05070d);
-  animation: bgPulse 6s infinite alternate;
-}
+const initialEdges = [
+  "datamesh",
+  "msteams",
+  "observability",
+  "gfagent",
+  "compliance",
+].map((source, index) => ({
+  id: `e${index}`,
+  source,
+  target: "ease",
+  type: "smoothstep",
+  animated: true,
+  markerEnd: { type: MarkerType.ArrowClosed },
+}));
 
-@keyframes bgPulse {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1); }
-}
+export default function EaseFlow() {
+  const navigate = useNavigate();
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
+  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
-/* ============================= */
-/* NODES */
-/* ============================= */
+  const handleNodeClick = (_, node) => {
+    if (node.id === "gfagent") {
+      navigate("/agent/gf-agent");
+    }
+  };
 
-.cyber-node {
-  padding: 18px;
-  width: 190px;
-  border-radius: 16px;
-  background: rgba(20, 20, 35, 0.7);
-  border: 1px solid rgba(0, 255, 255, 0.4);
-  color: #ffffff;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  transition: 0.3s ease;
-}
-
-.flow-node {
-  animation: nodeGlow 3s infinite alternate;
-}
-
-@keyframes nodeGlow {
-  0% { box-shadow: 0 0 15px rgba(0,255,255,0.3); }
-  100% { box-shadow: 0 0 35px rgba(0,255,255,0.8); }
-}
-
-.clickable-node {
-  cursor: pointer;
-}
-
-.clickable-node:hover {
-  transform: scale(1.07);
-  box-shadow: 0 0 40px rgba(0,255,255,0.9);
-}
-
-/* ============================= */
-/* ENHANCED AI CORE */
-/* ============================= */
-
-.ai-node-enhanced {
-  padding: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #00ffff22, #000);
-  border: 2px solid #00ffff;
-  box-shadow: 0 0 60px #00ffff;
-}
-
-.ai-core-enhanced {
-  position: relative;
-  font-size: 28px;
-  text-align: center;
-  animation: corePulse 2s infinite ease-in-out;
-}
-
-@keyframes corePulse {
-  0% { text-shadow: 0 0 20px #00ffff; }
-  50% { text-shadow: 0 0 60px #00ffff; }
-  100% { text-shadow: 0 0 20px #00ffff; }
-}
-
-.core-ripple {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 2px solid #00ffff;
-  top: -40px;
-  left: -30px;
-  animation: ripple 3s infinite;
-  opacity: 0.4;
-}
-
-@keyframes ripple {
-  0% { transform: scale(0.7); opacity: 0.6; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-/* ============================= */
-/* EDGES */
-/* ============================= */
-
-.react-flow__edge-path {
-  stroke: #00ffff;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 8px #00ffff);
-}
-
-.react-flow__edge.animated path {
-  stroke-dasharray: 6;
-  animation: dashFlow 1s linear infinite;
-}
-
-@keyframes dashFlow {
-  to { stroke-dashoffset: -12; }
-}
-
-.react-flow__arrowhead path {
-  fill: #00ffff;
-  filter: drop-shadow(0 0 6px #00ffff);
-}
-
-/* ============================= */
-/* CONTROLS */
-/* ============================= */
-
-.react-flow__controls {
-  background: rgba(15, 15, 25, 0.8);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+  return (
+    <div className="observability-wrapper">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodeClick={handleNodeClick}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        fitView
+      >
+        <Background gap={28} size={1} color="rgba(255,255,255,0.05)" />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
 }
