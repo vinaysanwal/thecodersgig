@@ -1,6 +1,5 @@
-import React from "react";
-import {
-  ReactFlow,
+import React, { useMemo } from "react";
+import ReactFlow, {
   Background,
   Controls,
   useNodesState,
@@ -9,81 +8,56 @@ import {
 } from "reactflow";
 import { useNavigate } from "react-router-dom";
 import "reactflow/dist/style.css";
+import "../styles/ease.css";
 
-/* ========================= */
-/* NODE DEFINITIONS */
-/* ========================= */
-
-const initialNodes = [
-  {
-    id: "datamesh",
-    position: { x: 150, y: 120 },
-    data: { label: "Data Mesh" },
-    className: "flow-node",
-  },
-  {
-    id: "msteams",
-    position: { x: 900, y: 120 },
-    data: { label: "MS Teams" },
-    className: "flow-node",
-  },
-  {
-    id: "observability",
-    position: { x: 150, y: 550 },
-    data: { label: "Observability" },
-    className: "flow-node",
-  },
-  {
-    id: "gfagent",
-    position: { x: 900, y: 550 },
-    data: { label: "GF Agent" },
-    className: "flow-node clickable-node",
-  },
-  {
-    id: "compliance",
-    position: { x: 525, y: 730 },
-    data: { label: "Compliance" },
-    className: "flow-node",
-  },
-  {
-    id: "ease",
-    position: { x: 525, y: 360 },
-    data: {
-      label: (
-        <div className="ease-core">
-          EASE
-        </div>
-      ),
-    },
-    className: "ease-node",
-  },
+const nodesData = [
+  { id: "datamesh", label: "Data Mesh", x: 150, y: 120 },
+  { id: "msteams", label: "MS Teams", x: 900, y: 120 },
+  { id: "observability", label: "Observability", x: 150, y: 550 },
+  { id: "gfagent", label: "GF Agent", x: 900, y: 550 },
+  { id: "compliance", label: "Compliance", x: 525, y: 730 },
 ];
-
-/* ========================= */
-/* EDGE DEFINITIONS */
-/* ========================= */
-
-const initialEdges = [
-  "datamesh",
-  "msteams",
-  "observability",
-  "gfagent",
-  "compliance",
-].map((source, index) => ({
-  id: `e${index}`,
-  source,
-  target: "ease",
-  type: "smoothstep",
-  animated: true,
-  markerEnd: { type: MarkerType.ArrowClosed },
-}));
-
-/* ========================= */
-/* COMPONENT */
-/* ========================= */
 
 export default function EaseFlow() {
   const navigate = useNavigate();
+
+  const initialNodes = useMemo(() => {
+    return [
+      ...nodesData.map((n) => ({
+        id: n.id,
+        position: { x: n.x, y: n.y },
+        data: { label: n.label },
+        className:
+          n.id === "gfagent"
+            ? "flow-node clickable-node"
+            : "flow-node",
+      })),
+      {
+        id: "ease",
+        position: { x: 525, y: 360 },
+        data: {
+          label: (
+            <div className="ease-core">
+              <div className="ease-core-ring"></div>
+              <div className="ease-core-inner">EASE</div>
+            </div>
+          ),
+        },
+        className: "ease-node",
+      },
+    ];
+  }, []);
+
+  const initialEdges = useMemo(() => {
+    return nodesData.map((n, i) => ({
+      id: `e${i}`,
+      source: n.id,
+      target: "ease",
+      type: "smoothstep",
+      animated: true,
+      markerEnd: { type: MarkerType.ArrowClosed },
+    }));
+  }, []);
 
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
@@ -95,19 +69,20 @@ export default function EaseFlow() {
   };
 
   return (
-    <div className="reactflow-wrapper">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodeClick={handleNodeClick}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-        style={{ width: "100%", height: "100%" }}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
+    <div className="flow-page">
+      <div className="flow-container">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodeClick={handleNodeClick}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          fitView
+        >
+          <Background gap={28} size={1} color="rgba(255,255,255,0.05)" />
+          <Controls />
+        </ReactFlow>
+      </div>
     </div>
   );
 }
