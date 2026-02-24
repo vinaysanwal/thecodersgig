@@ -1,50 +1,38 @@
-import { Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Observability from "./pages/Observability";
-import GFAgent from "./pages/GFAgent";
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/observability" element={<Observability />} />
-      <Route path="/agent/gf-agent" element={<GFAgent />} />
-    </Routes>
-  );
-}
-
-export default App;
-
-
-
 import { useEffect, useState } from "react";
 import "../styles/gfagent.css";
 
 export default function GFAgent() {
   const [traces, setTraces] = useState([]);
+  const [selectedTrace, setSelectedTrace] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const newTrace = {
         id: crypto.randomUUID(),
         status: Math.random() > 0.3 ? "Completed" : "Working",
-        time: new Date().toLocaleTimeString(),
+        time: new Date().toLocaleString(),
+        duration: Math.floor(Math.random() * 100) + " ms",
+        raw: {
+          contextId: crypto.randomUUID(),
+          kind: "status-update",
+          status: "Task completed successfully.",
+          timestamp: new Date().toISOString(),
+        },
       };
 
-      setTraces(prev => [newTrace, ...prev.slice(0, 8)]);
-    }, 2000);
+      setTraces(prev => [newTrace, ...prev.slice(0, 9)]);
+    }, 2500);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="gf-wrapper">
-
       <div className="gf-header">GF Agent</div>
 
       <div className="gf-body">
 
-        {/* LEFT PANEL */}
+        {/* LEFT PANEL – Agent Running */}
         <div className="gf-left">
           <div className="agent-core">
             🤖
@@ -54,24 +42,55 @@ export default function GFAgent() {
 
         {/* RIGHT PANEL */}
         <div className="gf-right">
-          <div className="trace-title">Live Traces</div>
 
-          <div className="trace-list">
-            {traces.map(trace => (
-              <div key={trace.id} className="trace-item">
-                <div className={`status-dot ${trace.status === "Completed" ? "green" : "yellow"}`}></div>
-                <div className="trace-info">
-                  <div className="trace-id">{trace.id.slice(0, 18)}</div>
-                  <div className="trace-meta">
-                    {trace.status} • {trace.time}
+          {/* TRACE LIST */}
+          <div className="trace-section">
+            <div className="trace-title">Live Traces</div>
+
+            <div className="trace-list">
+              {traces.map(trace => (
+                <div
+                  key={trace.id}
+                  className={`trace-item ${selectedTrace?.id === trace.id ? "active" : ""}`}
+                  onClick={() => setSelectedTrace(trace)}
+                >
+                  <div className={`status-dot ${trace.status === "Completed" ? "green" : "yellow"}`}></div>
+
+                  <div className="trace-info">
+                    <div className="trace-id">
+                      {trace.id.slice(0, 20)}
+                    </div>
+                    <div className="trace-meta">
+                      {trace.status} • {trace.time}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-        </div>
+          {/* TRACE DETAILS */}
+          {selectedTrace && (
+            <div className="trace-details">
+              <div className="details-header">
+                Status {selectedTrace.status}
+              </div>
 
+              <div className="details-content">
+                <div><strong>Trace ID:</strong> {selectedTrace.id}</div>
+                <div><strong>Duration:</strong> {selectedTrace.duration}</div>
+                <div><strong>Time:</strong> {selectedTrace.time}</div>
+
+                <div className="raw-box">
+                  <pre>
+                    {JSON.stringify(selectedTrace.raw, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
@@ -79,263 +98,57 @@ export default function GFAgent() {
 
 
 
-.gf-wrapper {
-  height: 100vh;
-  background: radial-gradient(circle at center, #0f2027, #090a0f);
-  color: white;
-  display: flex;
-  flex-direction: column;
-}
-
-.gf-header {
-  height: 70px;
-  display: flex;
-  align-items: center;
-  padding-left: 30px;
-  font-size: 28px;
-  text-shadow: 0 0 12px #00ffff;
-  border-bottom: 1px solid rgba(0,255,255,0.2);
-}
-
-.gf-body {
-  flex: 1;
-  display: flex;
-}
-
-/* LEFT PANEL */
-.gf-left {
-  width: 40%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-right: 1px solid rgba(0,255,255,0.2);
-}
-
-.agent-core {
-  font-size: 80px;
-  text-align: center;
-  animation: pulse 2s infinite ease-in-out;
-}
-
-.agent-status {
-  font-size: 18px;
-  margin-top: 15px;
-  color: #00ffcc;
-}
-
-@keyframes pulse {
-  0% { text-shadow: 0 0 10px #00ffff; }
-  50% { text-shadow: 0 0 40px #00ffff; }
-  100% { text-shadow: 0 0 10px #00ffff; }
-}
-
-/* RIGHT PANEL */
+/* RIGHT SIDE SPLIT */
 .gf-right {
   flex: 1;
-  padding: 30px;
+  display: flex;
+  gap: 20px;
+  padding: 25px;
+  overflow: hidden;
+}
+
+.trace-section {
+  width: 40%;
   overflow-y: auto;
 }
 
-.trace-title {
-  font-size: 20px;
-  margin-bottom: 20px;
-}
-
-.trace-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.trace-item {
+.trace-details {
+  flex: 1;
   background: rgba(20,20,35,0.7);
   border: 1px solid rgba(0,255,255,0.3);
+  border-radius: 14px;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+.details-header {
+  font-size: 18px;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+.details-content {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.raw-box {
+  margin-top: 15px;
+  background: #0a0f18;
   padding: 12px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  animation: slideIn 0.4s ease;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(30px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 12px;
-}
-
-.green {
-  background: #00ff99;
-  box-shadow: 0 0 8px #00ff99;
-}
-
-.yellow {
-  background: #ffcc00;
-  box-shadow: 0 0 8px #ffcc00;
-}
-
-.trace-id {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.trace-meta {
+  border-radius: 8px;
   font-size: 12px;
-  opacity: 0.7;
+  overflow-x: auto;
+  border: 1px solid rgba(0,255,255,0.2);
 }
 
-
-
-
-
-
-import React from "react";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  useNodesState,
-  useEdgesState,
-  MarkerType,
-} from "reactflow";
-import { useNavigate } from "react-router-dom";
-import "reactflow/dist/style.css";
-import "../styles/ease.css";
-
-const initialNodes = [
-  {
-    id: "datamesh",
-    position: { x: 150, y: 100 },
-    data: { label: "Data Mesh" },
-    className: "cyber-node",
-  },
-  {
-    id: "msteams",
-    position: { x: 900, y: 100 },
-    data: { label: "MS Teams" },
-    className: "cyber-node",
-  },
-  {
-    id: "observability",
-    position: { x: 150, y: 550 },
-    data: { label: "Observability" },
-    className: "cyber-node",
-  },
-  {
-    id: "gfagent",
-    position: { x: 900, y: 550 },
-    data: { label: "GF Agent" },
-    className: "cyber-node clickable-node",
-  },
-  {
-    id: "compliance",
-    position: { x: 525, y: 720 },
-    data: { label: "Compliance" },
-    className: "cyber-node",
-  },
-  {
-    id: "ease",
-    position: { x: 525, y: 350 },
-    data: {
-      label: (
-        <div className="ai-core">
-          🤖
-          <div>EASE</div>
-        </div>
-      ),
-    },
-    className: "ai-node",
-  },
-];
-
-const initialEdges = [
-  {
-    id: "e1",
-    source: "datamesh",
-    target: "ease",
-    type: "smoothstep",
-    animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed },
-  },
-  {
-    id: "e2",
-    source: "msteams",
-    target: "ease",
-    type: "smoothstep",
-    animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed },
-  },
-  {
-    id: "e3",
-    source: "observability",
-    target: "ease",
-    type: "smoothstep",
-    animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed },
-  },
-  {
-    id: "e4",
-    source: "gfagent",
-    target: "ease",
-    type: "smoothstep",
-    animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed },
-  },
-  {
-    id: "e5",
-    source: "compliance",
-    target: "ease",
-    type: "smoothstep",
-    animated: true,
-    markerEnd: { type: MarkerType.ArrowClosed },
-  },
-];
-
-export default function EaseFlow() {
-  const navigate = useNavigate();
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-  const handleNodeClick = (event, node) => {
-    if (node.id === "gfagent") {
-      navigate("/agent/gf-agent");
-    }
-  };
-
-  return (
-    <div className="cyber-wrapper">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        fitView
-      >
-        <Background gap={25} size={1} color="rgba(0,255,255,0.15)" />
-        <Controls />
-      </ReactFlow>
-    </div>
-  );
+.trace-item.active {
+  border: 1px solid #00ffff;
+  box-shadow: 0 0 15px rgba(0,255,255,0.6);
 }
 
-
-
-
-
-
-
-.clickable-node {
-  cursor: pointer;
-}
-
-.clickable-node:hover {
-  box-shadow: 0 0 35px rgba(0, 255, 255, 0.9);
-  transform: scale(1.07);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 }
