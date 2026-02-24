@@ -1,81 +1,165 @@
-<div
-  key={agent}
-  className="agent-card"
-  onClick={() => navigate("/observability")}
->
-  <div className="agent-title">{agent}</div>
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "../styles/landing.css";
 
-  {/* Animated Icon */}
-  <div className="agent-icon-wrapper">
-    <div className="agent-ring"></div>
-    <div className="agent-core-dot"></div>
-  </div>
+const AGENTS = [
+  "Observability Agent",
+  "Brokerage Agent",
+  "Disclosure Agent",
+  "Compliance Agent",
+  "Risk Agent",
+  "Analytics Agent",
+  "Audit Agent",
+  "Orchestration Agent",
+];
 
-  {stats[index] && (
-    <div className="agent-stats">
-      <div className="stat running">
-        <span>{stats[index].running}</span>
-        <label>Running</label>
-      </div>
-      <div className="stat queue">
-        <span>{stats[index].queue}</span>
-        <label>Queue</label>
-      </div>
-      <div className="stat success">
-        <span>{stats[index].success}%</span>
-        <label>Success</label>
+export default function Landing() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState([]);
+
+  useEffect(() => {
+    const generateStats = () =>
+      AGENTS.map(() => ({
+        running: Math.floor(Math.random() * 10) + 1,
+        queue: Math.floor(Math.random() * 20),
+        success: Math.floor(Math.random() * 10) + 90,
+      }));
+
+    setStats(generateStats());
+
+    const interval = setInterval(() => {
+      setStats(generateStats());
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="landing-wrapper">
+      <h1 className="ease-header">EASE</h1>
+
+      <div className="agent-grid">
+        {AGENTS.map((agent, index) => (
+          <div
+            key={agent}
+            className={`agent-card theme-${index}`}
+            onClick={() => navigate("/observability")}
+          >
+            <div className="agent-title">{agent}</div>
+
+            {/* COOL ANIMATED AGENT CORE */}
+            <div className="ai-icon">
+              <div className="energy-ring"></div>
+              <div className="energy-ring delay"></div>
+              <div className="orbit-dot"></div>
+              <div className="core"></div>
+            </div>
+
+            {stats[index] && (
+              <div className="agent-stats">
+                <div className="stat">
+                  <span>{stats[index].running}</span>
+                  <label>Running</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].queue}</span>
+                  <label>Queue</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].success}%</span>
+                  <label>Success</label>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
-  )}
-</div>
-
-
-/* ============================= */
-/* ANIMATED AGENT ICON */
-/* ============================= */
-
-.agent-icon-wrapper {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  margin: 15px auto;
+  );
 }
 
-/* Rotating ring */
-.agent-ring {
-  position: absolute;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 255, 255, 0.6);
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
-  animation: rotateRing 4s linear infinite;
-}
 
-/* Core glowing dot */
-.agent-core-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 18px;
-  height: 18px;
-  background: #00ffff;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 15px #00ffff,
-              0 0 30px rgba(0,255,255,0.7);
-  animation: pulseCore 2s infinite ease-in-out;
-}
 
-/* Ring rotation */
-@keyframes rotateRing {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
-/* Core pulse */
-@keyframes pulseCore {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.3); }
-  100% { transform: translate(-50%, -50%) scale(1); }
+
+
+
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "../styles/landing.css";
+
+const AGENTS = [
+  "Observability Agent",
+  "Brokerage Agent",
+  "Disclosure Agent",
+  "Compliance Agent",
+  "Risk Agent",
+  "Analytics Agent",
+  "Audit Agent",
+  "Orchestration Agent",
+];
+
+export default function Landing() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState([]);
+
+  useEffect(() => {
+    const generateStats = () =>
+      AGENTS.map(() => ({
+        running: Math.floor(Math.random() * 10) + 1,
+        queue: Math.floor(Math.random() * 20),
+        success: Math.floor(Math.random() * 10) + 90,
+      }));
+
+    setStats(generateStats());
+
+    const interval = setInterval(() => {
+      setStats(generateStats());
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="landing-wrapper">
+      <h1 className="ease-header">EASE</h1>
+
+      <div className="agent-grid">
+        {AGENTS.map((agent, index) => (
+          <div
+            key={agent}
+            className={`agent-card theme-${index}`}
+            onClick={() => navigate("/observability")}
+          >
+            <div className="agent-title">{agent}</div>
+
+            {/* COOL ANIMATED AGENT CORE */}
+            <div className="ai-icon">
+              <div className="energy-ring"></div>
+              <div className="energy-ring delay"></div>
+              <div className="orbit-dot"></div>
+              <div className="core"></div>
+            </div>
+
+            {stats[index] && (
+              <div className="agent-stats">
+                <div className="stat">
+                  <span>{stats[index].running}</span>
+                  <label>Running</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].queue}</span>
+                  <label>Queue</label>
+                </div>
+                <div className="stat">
+                  <span>{stats[index].success}%</span>
+                  <label>Success</label>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
