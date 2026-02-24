@@ -1,182 +1,81 @@
+<div
+  key={agent}
+  className="agent-card"
+  onClick={() => navigate("/observability")}
+>
+  <div className="agent-title">{agent}</div>
+
+  {/* Animated Icon */}
+  <div className="agent-icon-wrapper">
+    <div className="agent-ring"></div>
+    <div className="agent-core-dot"></div>
+  </div>
+
+  {stats[index] && (
+    <div className="agent-stats">
+      <div className="stat running">
+        <span>{stats[index].running}</span>
+        <label>Running</label>
+      </div>
+      <div className="stat queue">
+        <span>{stats[index].queue}</span>
+        <label>Queue</label>
+      </div>
+      <div className="stat success">
+        <span>{stats[index].success}%</span>
+        <label>Success</label>
+      </div>
+    </div>
+  )}
+</div>
+
+
 /* ============================= */
-/* PAGE WRAPPER */
+/* ANIMATED AGENT ICON */
 /* ============================= */
 
-.gf-wrapper {
-  height: 100vh;
-  width: 100%;
-  background: radial-gradient(circle at center, #0f2027, #090a0f);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ============================= */
-/* HEADER */
-/* ============================= */
-
-.gf-header {
+.agent-icon-wrapper {
+  position: relative;
+  width: 70px;
   height: 70px;
-  display: flex;
-  align-items: center;
-  padding-left: 30px;
-  font-size: 26px;
-  text-shadow: 0 0 12px #00ffff;
-  border-bottom: 1px solid rgba(0,255,255,0.2);
+  margin: 15px auto;
 }
 
-/* ============================= */
-/* BODY */
-/* ============================= */
-
-.gf-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-/* ============================= */
-/* LEFT PANEL */
-/* ============================= */
-
-.gf-left {
-  width: 35%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-right: 1px solid rgba(0,255,255,0.2);
-}
-
-.agent-core {
-  font-size: 70px;
-  text-align: center;
-  animation: pulse 2s infinite ease-in-out;
-}
-
-.agent-status {
-  margin-top: 10px;
-  font-size: 16px;
-  color: #00ffcc;
-}
-
-@keyframes pulse {
-  0% { text-shadow: 0 0 10px #00ffff; }
-  50% { text-shadow: 0 0 35px #00ffff; }
-  100% { text-shadow: 0 0 10px #00ffff; }
-}
-
-/* ============================= */
-/* RIGHT PANEL */
-/* ============================= */
-
-.gf-right {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
-
-/* LEFT SIDE TRACE LIST */
-.trace-section {
-  width: 40%;
-  padding: 20px;
-  border-right: 1px solid rgba(0,255,255,0.2);
-  overflow-y: auto;
-}
-
-.trace-title {
-  font-size: 18px;
-  margin-bottom: 15px;
-}
-
-/* TRACE ITEMS */
-
-.trace-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.trace-item {
-  background: rgba(20,20,35,0.7);
-  border: 1px solid rgba(0,255,255,0.3);
-  padding: 12px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.trace-item:hover {
-  box-shadow: 0 0 15px rgba(0,255,255,0.5);
-}
-
-.trace-item.active {
-  border: 1px solid #00ffff;
-  box-shadow: 0 0 20px rgba(0,255,255,0.8);
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
+/* Rotating ring */
+.agent-ring {
+  position: absolute;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  margin-right: 10px;
+  border: 2px solid rgba(0, 255, 255, 0.6);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+  animation: rotateRing 4s linear infinite;
 }
 
-.green {
-  background: #00ff99;
-  box-shadow: 0 0 8px #00ff99;
+/* Core glowing dot */
+.agent-core-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  background: #00ffff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 15px #00ffff,
+              0 0 30px rgba(0,255,255,0.7);
+  animation: pulseCore 2s infinite ease-in-out;
 }
 
-.yellow {
-  background: #ffcc00;
-  box-shadow: 0 0 8px #ffcc00;
+/* Ring rotation */
+@keyframes rotateRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.trace-id {
-  font-size: 13px;
-  font-weight: bold;
-}
-
-.trace-meta {
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-/* ============================= */
-/* DETAILS PANEL */
-/* ============================= */
-
-.trace-details {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  animation: fadeIn 0.3s ease;
-}
-
-.details-header {
-  font-size: 18px;
-  margin-bottom: 15px;
-  text-shadow: 0 0 10px #00ffff;
-}
-
-.details-content {
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.raw-box {
-  margin-top: 15px;
-  background: #0a0f18;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  border: 1px solid rgba(0,255,255,0.2);
-  overflow-x: auto;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateX(15px); }
-  to { opacity: 1; transform: translateX(0); }
+/* Core pulse */
+@keyframes pulseCore {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); }
 }
