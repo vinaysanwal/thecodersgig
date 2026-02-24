@@ -1,167 +1,81 @@
-/* ===================================================== */
-/* GLOBAL RESET (REQUIRED FOR REACT FLOW HEIGHT) */
-/* ===================================================== */
+/* =============================== */
+/* FULL PAGE HEIGHT FIX */
+/* =============================== */
 
 html,
 body,
 #root {
+  height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* =============================== */
+/* PAGE LAYOUT */
+/* =============================== */
+
+.observability-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0f172a;
+}
+
+.observability-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+}
+
+.observability-content {
+  flex: 1; /* THIS IS IMPORTANT */
+  position: relative;
+}
+
+/* =============================== */
+/* REACT FLOW WRAPPER */
+/* =============================== */
+
+.reactflow-wrapper {
+  width: 100%;
   height: 100%;
 }
 
-/* ===================================================== */
-/* OBSERVABILITY PAGE WRAPPER */
-/* ===================================================== */
-
-.observability-wrapper {
-  width: 100%;
-  height: 100vh;              /* CRITICAL */
-  position: relative;
-  background: linear-gradient(135deg, #0b1220, #111827);
-  overflow: hidden;
-}
-
-/* Subtle animated radial glow */
-.observability-wrapper::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 50% 40%,
-    rgba(14, 165, 233, 0.08),
-    transparent 60%
-  );
-  animation: backgroundPulse 10s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes backgroundPulse {
-  0%   { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(1.15); opacity: 1; }
-}
-
-/* ===================================================== */
-/* FLOW NODES */
-/* ===================================================== */
+/* =============================== */
+/* NODES */
+/* =============================== */
 
 .flow-node {
-  padding: 16px 20px;
-  width: 190px;
-  border-radius: 14px;
-  background: rgba(30, 41, 59, 0.75);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  color: #e5e7eb;
-  font-weight: 500;
+  padding: 16px;
+  width: 180px;
+  border-radius: 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: white;
   text-align: center;
-  backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
+  font-weight: 500;
 }
-
-/* Hover effect */
-.flow-node:hover {
-  border-color: rgba(14, 165, 233, 0.7);
-  box-shadow: 0 0 18px rgba(14, 165, 233, 0.35);
-  transform: translateY(-4px);
-}
-
-.clickable-node {
-  cursor: pointer;
-}
-
-/* ===================================================== */
-/* EASE CORE */
-/* ===================================================== */
 
 .ease-node {
   background: transparent !important;
   border: none !important;
 }
 
-/* Outer container */
 .ease-core {
-  position: relative;
-  width: 180px;
-  height: 180px;
-  margin: 0 auto;
-}
-
-/* Rotating outer ring */
-.ease-core-ring {
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  border: 2px solid rgba(14, 165, 233, 0.4);
-  animation: rotateRing 18s linear infinite;
-}
-
-@keyframes rotateRing {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* Inner glowing core */
-.ease-core-inner {
-  position: absolute;
-  inset: 0;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   background: radial-gradient(circle, #0ea5e9, #0369a1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
-  box-shadow: 0 0 35px rgba(14, 165, 233, 0.5);
-  animation: corePulse 3.5s ease-in-out infinite;
-}
-
-@keyframes corePulse {
-  0%   { box-shadow: 0 0 25px rgba(14,165,233,0.4); }
-  50%  { box-shadow: 0 0 55px rgba(14,165,233,0.8); }
-  100% { box-shadow: 0 0 25px rgba(14,165,233,0.4); }
-}
-
-/* ===================================================== */
-/* EDGES */
-/* ===================================================== */
-
-.react-flow__edge-path {
-  stroke: rgba(14, 165, 233, 0.7);
-  stroke-width: 2;
-  transition: stroke 0.3s ease;
-}
-
-/* Animated data flow */
-.react-flow__edge.animated path {
-  stroke-dasharray: 6;
-  animation: edgeFlow 1.2s linear infinite;
-}
-
-@keyframes edgeFlow {
-  to { stroke-dashoffset: -12; }
-}
-
-/* Arrow */
-.react-flow__arrowhead path {
-  fill: rgba(14, 165, 233, 0.8);
-}
-
-/* ===================================================== */
-/* CONTROLS */
-/* ===================================================== */
-
-.react-flow__controls {
-  background: rgba(17, 24, 39, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 0 8px rgba(14, 165, 233, 0.2);
-}
-
-/* ===================================================== */
-/* OPTIONAL: SMOOTH VIEWPORT TRANSITION */
-/* ===================================================== */
-
-.react-flow__viewport {
-  transition: transform 0.2s ease;
 }
