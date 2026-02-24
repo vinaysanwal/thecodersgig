@@ -1,101 +1,157 @@
-import React from "react";
-import {
-  ReactFlow,
-  Background,
-  Controls,
-  useNodesState,
-  useEdgesState,
-  MarkerType,
-} from "reactflow";
-import { useNavigate } from "react-router-dom";
-import "reactflow/dist/style.css";
-import "../styles/ease.css";
+/* ===================================== */
+/* OBSERVABILITY WRAPPER */
+/* ===================================== */
 
-const initialNodes = [
-  {
-    id: "datamesh",
-    position: { x: 150, y: 120 },
-    data: { label: "Data Mesh" },
-    className: "flow-node",
-  },
-  {
-    id: "msteams",
-    position: { x: 900, y: 120 },
-    data: { label: "MS Teams" },
-    className: "flow-node",
-  },
-  {
-    id: "observability",
-    position: { x: 150, y: 550 },
-    data: { label: "Observability" },
-    className: "flow-node",
-  },
-  {
-    id: "gfagent",
-    position: { x: 900, y: 550 },
-    data: { label: "GF Agent" },
-    className: "flow-node clickable-node",
-  },
-  {
-    id: "compliance",
-    position: { x: 525, y: 730 },
-    data: { label: "Compliance" },
-    className: "flow-node",
-  },
-  {
-    id: "ease",
-    position: { x: 525, y: 360 },
-    data: {
-      label: (
-        <div className="ease-core">
-          <div className="ease-core-ring"></div>
-          <div className="ease-core-inner">EASE</div>
-        </div>
-      ),
-    },
-    className: "ease-node",
-  },
-];
+.observability-wrapper {
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #0c0f17, #111827);
+  position: relative;
+}
 
-const initialEdges = [
-  "datamesh",
-  "msteams",
-  "observability",
-  "gfagent",
-  "compliance",
-].map((source, index) => ({
-  id: `e${index}`,
-  source,
-  target: "ease",
-  type: "smoothstep",
-  animated: true,
-  markerEnd: { type: MarkerType.ArrowClosed },
-}));
-
-export default function EaseFlow() {
-  const navigate = useNavigate();
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
-
-  const handleNodeClick = (_, node) => {
-    if (node.id === "gfagent") {
-      navigate("/agent/gf-agent");
-    }
-  };
-
-  return (
-    <div className="observability-wrapper">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodeClick={handleNodeClick}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-      >
-        <Background gap={28} size={1} color="rgba(255,255,255,0.05)" />
-        <Controls />
-      </ReactFlow>
-    </div>
+/* Subtle animated background pulse */
+.observability-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 40%,
+    rgba(0, 200, 255, 0.08),
+    transparent 60%
   );
+  animation: bgMove 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes bgMove {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ===================================== */
+/* FLOW NODES */
+/* ===================================== */
+
+.flow-node {
+  padding: 16px 20px;
+  width: 190px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #e5e7eb;
+  font-weight: 500;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.flow-node:hover {
+  border-color: rgba(0, 200, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+  transform: translateY(-4px);
+}
+
+.clickable-node {
+  cursor: pointer;
+}
+
+/* ===================================== */
+/* EASE CORE */
+/* ===================================== */
+
+.ease-node {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ease-core {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+}
+
+.ease-core-ring {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 200, 255, 0.4);
+  animation: rotateRing 12s linear infinite;
+}
+
+@keyframes rotateRing {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ease-core-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0ea5e9, #0369a1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 26px;
+  font-weight: 600;
+  box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
+  animation: pulseCore 3s ease-in-out infinite;
+}
+
+@keyframes pulseCore {
+  0% {
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 55px rgba(14, 165, 233, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(14, 165, 233, 0.4);
+  }
+}
+
+/* ===================================== */
+/* EDGES */
+/* ===================================== */
+
+.react-flow__edge-path {
+  stroke: rgba(0, 200, 255, 0.6);
+  stroke-width: 2;
+  transition: stroke 0.3s ease;
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 6;
+  animation: edgeFlow 1.2s linear infinite;
+}
+
+@keyframes edgeFlow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+.react-flow__arrowhead path {
+  fill: rgba(0, 200, 255, 0.8);
+}
+
+/* ===================================== */
+/* CONTROLS */
+/* ===================================== */
+
+.react-flow__controls {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
