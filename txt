@@ -1,123 +1,157 @@
-import { useEffect, useState } from "react";
-import "../styles/gfagent.css";
+/* ============================= */
+/* PAGE WRAPPER */
+/* ============================= */
 
-export default function GFAgent() {
-  const [traces, setTraces] = useState([]);
-  const [selectedTrace, setSelectedTrace] = useState(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newTrace = {
-        id: crypto.randomUUID(),
-        status: Math.random() > 0.3 ? "Completed" : "Working",
-        time: new Date().toLocaleString(),
-        duration: Math.floor(Math.random() * 100) + " ms",
-        raw: {
-          contextId: crypto.randomUUID(),
-          kind: "status-update",
-          status: "Task completed successfully.",
-          timestamp: new Date().toISOString(),
-        },
-      };
-
-      setTraces(prev => [newTrace, ...prev.slice(0, 9)]);
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="gf-wrapper">
-      <div className="gf-header">GF Agent</div>
-
-      <div className="gf-body">
-
-        {/* LEFT PANEL – Agent Running */}
-        <div className="gf-left">
-          <div className="agent-core">
-            🤖
-            <div className="agent-status">Running</div>
-          </div>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div className="gf-right">
-
-          {/* TRACE LIST */}
-          <div className="trace-section">
-            <div className="trace-title">Live Traces</div>
-
-            <div className="trace-list">
-              {traces.map(trace => (
-                <div
-                  key={trace.id}
-                  className={`trace-item ${selectedTrace?.id === trace.id ? "active" : ""}`}
-                  onClick={() => setSelectedTrace(trace)}
-                >
-                  <div className={`status-dot ${trace.status === "Completed" ? "green" : "yellow"}`}></div>
-
-                  <div className="trace-info">
-                    <div className="trace-id">
-                      {trace.id.slice(0, 20)}
-                    </div>
-                    <div className="trace-meta">
-                      {trace.status} • {trace.time}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* TRACE DETAILS */}
-          {selectedTrace && (
-            <div className="trace-details">
-              <div className="details-header">
-                Status {selectedTrace.status}
-              </div>
-
-              <div className="details-content">
-                <div><strong>Trace ID:</strong> {selectedTrace.id}</div>
-                <div><strong>Duration:</strong> {selectedTrace.duration}</div>
-                <div><strong>Time:</strong> {selectedTrace.time}</div>
-
-                <div className="raw-box">
-                  <pre>
-                    {JSON.stringify(selectedTrace.raw, null, 2)}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-      </div>
-    </div>
-  );
-
-
-
-
-/* RIGHT SIDE SPLIT */
-.gf-right {
-  flex: 1;
+.gf-wrapper {
+  height: 100vh;
+  width: 100%;
+  background: radial-gradient(circle at center, #0f2027, #090a0f);
+  color: white;
   display: flex;
-  gap: 20px;
-  padding: 25px;
+  flex-direction: column;
   overflow: hidden;
 }
 
+/* ============================= */
+/* HEADER */
+/* ============================= */
+
+.gf-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+  font-size: 26px;
+  text-shadow: 0 0 12px #00ffff;
+  border-bottom: 1px solid rgba(0,255,255,0.2);
+}
+
+/* ============================= */
+/* BODY */
+/* ============================= */
+
+.gf-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ============================= */
+/* LEFT PANEL */
+/* ============================= */
+
+.gf-left {
+  width: 35%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(0,255,255,0.2);
+}
+
+.agent-core {
+  font-size: 70px;
+  text-align: center;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.agent-status {
+  margin-top: 10px;
+  font-size: 16px;
+  color: #00ffcc;
+}
+
+@keyframes pulse {
+  0% { text-shadow: 0 0 10px #00ffff; }
+  50% { text-shadow: 0 0 35px #00ffff; }
+  100% { text-shadow: 0 0 10px #00ffff; }
+}
+
+/* ============================= */
+/* RIGHT PANEL */
+/* ============================= */
+
+.gf-right {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* LEFT SIDE TRACE LIST */
 .trace-section {
   width: 40%;
+  padding: 20px;
+  border-right: 1px solid rgba(0,255,255,0.2);
   overflow-y: auto;
 }
 
-.trace-details {
-  flex: 1;
+.trace-title {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+/* TRACE ITEMS */
+
+.trace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trace-item {
   background: rgba(20,20,35,0.7);
   border: 1px solid rgba(0,255,255,0.3);
-  border-radius: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.trace-item:hover {
+  box-shadow: 0 0 15px rgba(0,255,255,0.5);
+}
+
+.trace-item.active {
+  border: 1px solid #00ffff;
+  box-shadow: 0 0 20px rgba(0,255,255,0.8);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.green {
+  background: #00ff99;
+  box-shadow: 0 0 8px #00ff99;
+}
+
+.yellow {
+  background: #ffcc00;
+  box-shadow: 0 0 8px #ffcc00;
+}
+
+.trace-id {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.trace-meta {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ============================= */
+/* DETAILS PANEL */
+/* ============================= */
+
+.trace-details {
+  flex: 1;
   padding: 20px;
+  overflow-y: auto;
   animation: fadeIn 0.3s ease;
 }
 
@@ -138,17 +172,11 @@ export default function GFAgent() {
   padding: 12px;
   border-radius: 8px;
   font-size: 12px;
-  overflow-x: auto;
   border: 1px solid rgba(0,255,255,0.2);
-}
-
-.trace-item.active {
-  border: 1px solid #00ffff;
-  box-shadow: 0 0 15px rgba(0,255,255,0.6);
+  overflow-x: auto;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(15px); }
   to { opacity: 1; transform: translateX(0); }
-}
 }
