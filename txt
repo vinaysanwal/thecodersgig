@@ -1,165 +1,170 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import "../styles/landing.css";
+/* ============================= */
+/* MAIN WRAPPER */
+/* ============================= */
 
-const AGENTS = [
-  "Observability Agent",
-  "Brokerage Agent",
-  "Disclosure Agent",
-  "Compliance Agent",
-  "Risk Agent",
-  "Analytics Agent",
-  "Audit Agent",
-  "Orchestration Agent",
-];
-
-export default function Landing() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState([]);
-
-  useEffect(() => {
-    const generateStats = () =>
-      AGENTS.map(() => ({
-        running: Math.floor(Math.random() * 10) + 1,
-        queue: Math.floor(Math.random() * 20),
-        success: Math.floor(Math.random() * 10) + 90,
-      }));
-
-    setStats(generateStats());
-
-    const interval = setInterval(() => {
-      setStats(generateStats());
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="landing-wrapper">
-      <h1 className="ease-header">EASE</h1>
-
-      <div className="agent-grid">
-        {AGENTS.map((agent, index) => (
-          <div
-            key={agent}
-            className={`agent-card theme-${index}`}
-            onClick={() => navigate("/observability")}
-          >
-            <div className="agent-title">{agent}</div>
-
-            {/* COOL ANIMATED AGENT CORE */}
-            <div className="ai-icon">
-              <div className="energy-ring"></div>
-              <div className="energy-ring delay"></div>
-              <div className="orbit-dot"></div>
-              <div className="core"></div>
-            </div>
-
-            {stats[index] && (
-              <div className="agent-stats">
-                <div className="stat">
-                  <span>{stats[index].running}</span>
-                  <label>Running</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].queue}</span>
-                  <label>Queue</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].success}%</span>
-                  <label>Success</label>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+.landing-wrapper {
+  height: 100vh;
+  background: radial-gradient(circle at center, #0f2027, #090a0f);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+  color: white;
 }
 
+/* ============================= */
+/* HEADER */
+/* ============================= */
 
+.ease-header {
+  font-size: 80px;
+  letter-spacing: 12px;
+  margin-bottom: 50px;
+  animation: glowPulse 2s infinite ease-in-out;
+}
 
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 20px #00ffff; }
+  50% { text-shadow: 0 0 60px #00ffff; }
+  100% { text-shadow: 0 0 20px #00ffff; }
+}
 
+/* ============================= */
+/* GRID */
+/* ============================= */
 
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 260px);
+  gap: 35px;
+}
 
+/* ============================= */
+/* AGENT CARD */
+/* ============================= */
 
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import "../styles/landing.css";
+.agent-card {
+  height: 260px;
+  padding: 20px;
+  background: rgba(20, 20, 35, 0.7);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: 0.4s ease;
+  cursor: pointer;
+  animation: float 4s infinite ease-in-out;
+}
 
-const AGENTS = [
-  "Observability Agent",
-  "Brokerage Agent",
-  "Disclosure Agent",
-  "Compliance Agent",
-  "Risk Agent",
-  "Analytics Agent",
-  "Audit Agent",
-  "Orchestration Agent",
-];
+.agent-card:hover {
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.7);
+}
 
-export default function Landing() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState([]);
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
 
-  useEffect(() => {
-    const generateStats = () =>
-      AGENTS.map(() => ({
-        running: Math.floor(Math.random() * 10) + 1,
-        queue: Math.floor(Math.random() * 20),
-        success: Math.floor(Math.random() * 10) + 90,
-      }));
+.agent-title {
+  font-size: 16px;
+  text-align: center;
+  font-weight: 600;
+}
 
-    setStats(generateStats());
+/* ============================= */
+/* COOL AI ICON */
+/* ============================= */
 
-    const interval = setInterval(() => {
-      setStats(generateStats());
-    }, 3000);
+.ai-icon {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto;
+}
 
-    return () => clearInterval(interval);
-  }, []);
+.energy-ring {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid #00ffff;
+  animation: expandRing 3s infinite;
+  opacity: 0.6;
+}
 
-  return (
-    <div className="landing-wrapper">
-      <h1 className="ease-header">EASE</h1>
+.energy-ring.delay {
+  animation-delay: 1.5s;
+}
 
-      <div className="agent-grid">
-        {AGENTS.map((agent, index) => (
-          <div
-            key={agent}
-            className={`agent-card theme-${index}`}
-            onClick={() => navigate("/observability")}
-          >
-            <div className="agent-title">{agent}</div>
+@keyframes expandRing {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
 
-            {/* COOL ANIMATED AGENT CORE */}
-            <div className="ai-icon">
-              <div className="energy-ring"></div>
-              <div className="energy-ring delay"></div>
-              <div className="orbit-dot"></div>
-              <div className="core"></div>
-            </div>
+.core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  background: #00ffff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+  animation: pulseCore 2s infinite;
+}
 
-            {stats[index] && (
-              <div className="agent-stats">
-                <div className="stat">
-                  <span>{stats[index].running}</span>
-                  <label>Running</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].queue}</span>
-                  <label>Queue</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].success}%</span>
-                  <label>Success</label>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+@keyframes pulseCore {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Orbiting particle */
+.orbit-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #00ffff;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform-origin: -35px center;
+  animation: orbit 4s linear infinite;
+  box-shadow: 0 0 10px #00ffff;
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(35px); }
+  to { transform: rotate(360deg) translateX(35px); }
+}
+
+/* ============================= */
+/* STATS */
+/* ============================= */
+
+.agent-stats {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat span {
+  display: block;
+  font-size: 20px;
+  font-weight: bold;
+  color: #00ffff;
+  text-shadow: 0 0 12px #00ffff;
+}
+
+.stat label {
+  font-size: 11px;
+  opacity: 0.8;
 }
