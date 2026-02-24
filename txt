@@ -1,81 +1,16 @@
-/* =============================== */
-/* FULL PAGE HEIGHT FIX */
-/* =============================== */
+import EaseFlow from "../components/easeFlow";
+import "../styles/ease.css";
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
+export default function Observability() {
+  return (
+    <div className="observability-page">
+      <div className="observability-header">
+        Observability
+      </div>
 
-/* =============================== */
-/* PAGE LAYOUT */
-/* =============================== */
-
-.observability-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #0f172a;
-}
-
-.observability-header {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  padding-left: 20px;
-  font-size: 22px;
-  font-weight: 600;
-  color: white;
-  background: #111827;
-  border-bottom: 1px solid #1f2937;
-}
-
-.observability-content {
-  flex: 1; /* THIS IS IMPORTANT */
-  position: relative;
-}
-
-/* =============================== */
-/* REACT FLOW WRAPPER */
-/* =============================== */
-
-.reactflow-wrapper {
-  width: 100%;
-  height: 100%;
-}
-
-/* =============================== */
-/* NODES */
-/* =============================== */
-
-.flow-node {
-  padding: 16px;
-  width: 180px;
-  border-radius: 12px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: white;
-  text-align: center;
-  font-weight: 500;
-}
-
-.ease-node {
-  background: transparent !important;
-  border: none !important;
-}
-
-.ease-core {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #0ea5e9, #0369a1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 22px;
-  font-weight: 600;
+      <div className="observability-content">
+        <EaseFlow />
+      </div>
+    </div>
+  );
 }
