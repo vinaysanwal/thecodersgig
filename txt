@@ -1,84 +1,77 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import "../styles/landing.css";
-
-const AGENTS = [
-  "Observability Agent",
-  "Brokerage Agent",
-  "Disclosure Agent",
-  "Compliance Agent",
-  "Risk Agent",
-  "Analytics Agent",
-  "Audit Agent",
-  "Orchestration Agent",
-];
-
 export default function Landing() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState([]);
-
-  useEffect(() => {
-    const generateStats = () =>
-      AGENTS.map(() => ({
-        running: Math.floor(Math.random() * 10) + 1,
-        queue: Math.floor(Math.random() * 20),
-        success: Math.floor(Math.random() * 10) + 90,
-      }));
-
-    setStats(generateStats());
-    const interval = setInterval(() => {
-      setStats(generateStats());
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="landing-page">
-      {/* HEADER */}
-      <div className="landing-header">
-        <div className="brand-left">UBS</div>
-        <div className="brand-divider">|</div>
-        <div className="brand-right">EASE</div>
+    <div className="landing-wrapper">
+
+      {/* NEW HEADER */}
+      <div className="top-header">
+        <div className="header-left">UBS</div>
+        <div className="header-divider">|</div>
+        <div className="header-right">EASE</div>
       </div>
 
-      {/* CENTER HERO BOX */}
-      <div className="hero-container">
-        <div className="hero-box">
-          <div className="hero-ring"></div>
-          <div className="hero-core">EASE</div>
+      {/* EXISTING CONTENT BELOW */}
+      <div className="landing-content">
+        {/* Your existing EASE glow title */}
+        <h1 className="ease-header">EASE</h1>
+
+        {/* Your existing agent grid */}
+        <div className="agent-grid">
+          {/* DO NOT change your card JSX */}
         </div>
       </div>
 
-      {/* AGENT GRID */}
-      <div className="agent-grid">
-        {AGENTS.map((agent, index) => (
-          <div
-            key={agent}
-            className="agent-card"
-            onClick={() => navigate("/observability")}
-          >
-            <div className="agent-title">{agent}</div>
-
-            {stats[index] && (
-              <div className="agent-stats">
-                <div className="stat">
-                  <span>{stats[index].running}</span>
-                  <label>Running</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].queue}</span>
-                  <label>Queue</label>
-                </div>
-                <div className="stat">
-                  <span>{stats[index].success}%</span>
-                  <label>Success</label>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
+}
+
+
+
+/* ===================================== */
+/* HEADER (NEW) */
+/* ===================================== */
+
+.top-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  background: rgba(10, 15, 25, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  z-index: 100;
+}
+
+.header-left {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff4d4f; /* UBS red */
+}
+
+.header-divider {
+  margin: 0 14px;
+  opacity: 0.4;
+  color: #ffffff;
+}
+
+.header-right {
+  font-size: 18px;
+  font-weight: 600;
+  color: #00ffff;
+  letter-spacing: 2px;
+}
+
+/* Push content below fixed header */
+.landing-content {
+  padding-top: 90px;
+}
+
+
+
+.header-right {
+  color: #00ffff;
+  text-shadow: 0 0 10px rgba(0,255,255,0.6);
 }
