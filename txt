@@ -1,103 +1,19 @@
-main.jsx
-
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import "./index.css";
-
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
-);
-
-App,jsx
-
-import { Routes, Route } from "react-router-dom";
-import Landing from "./pages/Landing";
-import Observability from "./pages/Observability";
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/observability" element={<Observability />} />
-    </Routes>
-  );
-}
-
-export default App;
-
-
-pages/obs
-
-import EaseFlow from "../components/easeFlow";
-
-export default function Observability() {
-  return <EaseFlow />;
-}
-
-pages/landing
-
-
-import { useNavigate } from "react-router-dom";
-import "../styles/landing.css";
-
-export default function Landing() {
-  const navigate = useNavigate();
-
-  const agents = [
-    "Observability Agent",
-    "Brokerage Agent",
-    "Disclosure Agent",
-    "Compliance Agent",
-    "Risk Agent",
-    "Analytics Agent",
-    "Audit Agent",
-    "Orchestration Agent",
-  ];
-
-  return (
-    <div className="landing-wrapper">
-      <h1 className="ease-header">EASE</h1>
-
-      <div className="agent-grid">
-        {agents.map((agent, index) => (
-          <div
-            key={index}
-            className="agent-card"
-            onClick={() => navigate("/observability")}
-          >
-            {agent}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-
-landing.css::
-
-
 .landing-wrapper {
   height: 100vh;
   background: radial-gradient(circle at center, #0f2027, #090a0f);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 60px;
+  padding-top: 50px;
   color: white;
+  overflow: hidden;
 }
 
-/* Header Animation */
+/* Header */
 .ease-header {
-  font-size: 80px;
-  letter-spacing: 10px;
-  margin-bottom: 60px;
+  font-size: 78px;
+  letter-spacing: 12px;
+  margin-bottom: 50px;
   animation: glowPulse 2s infinite ease-in-out;
 }
 
@@ -113,41 +29,38 @@ landing.css::
   }
 }
 
-/* Grid Layout */
+/* Grid */
 .agent-grid {
   display: grid;
-  grid-template-columns: repeat(4, 220px);
-  gap: 30px;
+  grid-template-columns: repeat(4, 260px);
+  gap: 35px;
 }
 
-/* Cards */
+/* Agent Card */
 .agent-card {
-  height: 140px;
+  height: 200px;
+  padding: 20px;
   background: rgba(20, 20, 35, 0.7);
-  border-radius: 18px;
+  border-radius: 20px;
   border: 1px solid rgba(0, 255, 255, 0.4);
   backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 20px;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition: all 0.35s ease;
   box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-/* Hover Glow */
 .agent-card:hover {
-  transform: translateY(-10px) scale(1.05);
-  box-shadow: 0 0 35px rgba(0, 255, 255, 0.7);
+  transform: translateY(-12px) scale(1.06);
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
 }
 
-/* Floating Animation */
+/* Floating motion */
 .agent-card:nth-child(odd) {
   animation: float 3s infinite ease-in-out;
 }
-
 .agent-card:nth-child(even) {
   animation: floatReverse 3s infinite ease-in-out;
 }
@@ -159,8 +72,140 @@ landing.css::
 }
 
 @keyframes floatReverse {
-  0% { transform: translateY(-5px); }
-  50% { transform: translateY(5px); }
-  100% { transform: translateY(-5px); }
+  0% { transform: translateY(-6px); }
+  50% { transform: translateY(6px); }
+  100% { transform: translateY(-6px); }
+}
+
+/* Title */
+.agent-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+/* Stats Section */
+.agent-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+/* Individual Stat */
+.stat {
+  text-align: center;
+  flex: 1;
+}
+
+.stat span {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+  animation: countGlow 1.5s ease-in-out infinite;
+}
+
+.stat label {
+  font-size: 11px;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+/* Colors */
+.stat.running span {
+  color: #00ffcc;
+}
+.stat.queue span {
+  color: #00aaff;
+}
+.stat.success span {
+  color: #a970ff;
+}
+
+@keyframes countGlow {
+  0% {
+    text-shadow: 0 0 6px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 14px currentColor;
+  }
+  100% {
+    text-shadow: 0 0 6px currentColor;
+  }
+}
+
+
+
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "../styles/landing.css";
+
+const AGENTS = [
+  "Observability Agent",
+  "Brokerage Agent",
+  "Disclosure Agent",
+  "Compliance Agent",
+  "Risk Agent",
+  "Analytics Agent",
+  "Audit Agent",
+  "Orchestration Agent",
+];
+
+export default function Landing() {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState([]);
+
+  // simulate live agent numbers
+  useEffect(() => {
+    const generateStats = () =>
+      AGENTS.map(() => ({
+        running: Math.floor(Math.random() * 10) + 1,
+        queue: Math.floor(Math.random() * 20),
+        success: Math.floor(Math.random() * 10) + 90,
+      }));
+
+    setStats(generateStats());
+
+    const interval = setInterval(() => {
+      setStats(generateStats());
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="landing-wrapper">
+      <h1 className="ease-header">EASE</h1>
+
+      <div className="agent-grid">
+        {AGENTS.map((agent, index) => (
+          <div
+            key={agent}
+            className="agent-card"
+            onClick={() => navigate("/observability")}
+          >
+            <div className="agent-title">{agent}</div>
+
+            {stats[index] && (
+              <div className="agent-stats">
+                <div className="stat running">
+                  <span>{stats[index].running}</span>
+                  <label>Running</label>
+                </div>
+                <div className="stat queue">
+                  <span>{stats[index].queue}</span>
+                  <label>Queue</label>
+                </div>
+                <div className="stat success">
+                  <span>{stats[index].success}%</span>
+                  <label>Success</label>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
