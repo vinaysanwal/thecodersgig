@@ -1,25 +1,209 @@
-import EaseFlow from "../components/easeFlow";
-import "../styles/ease.css";
+import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Observability from "./pages/Observability";
+import GFAgent from "./pages/GFAgent";
 
-export default function Observability() {
+function App() {
   return (
-    <div className="obs-simple-wrapper">
-      <div className="obs-simple-header">Observability</div>
-      <EaseFlow />
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/observability" element={<Observability />} />
+      <Route path="/agent/gf-agent" element={<GFAgent />} />
+    </Routes>
+  );
+}
+
+export default App;
+
+
+
+import { useEffect, useState } from "react";
+import "../styles/gfagent.css";
+
+export default function GFAgent() {
+  const [traces, setTraces] = useState([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTrace = {
+        id: crypto.randomUUID(),
+        status: Math.random() > 0.3 ? "Completed" : "Working",
+        time: new Date().toLocaleTimeString(),
+      };
+
+      setTraces(prev => [newTrace, ...prev.slice(0, 8)]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="gf-wrapper">
+
+      <div className="gf-header">GF Agent</div>
+
+      <div className="gf-body">
+
+        {/* LEFT PANEL */}
+        <div className="gf-left">
+          <div className="agent-core">
+            🤖
+            <div className="agent-status">Running</div>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="gf-right">
+          <div className="trace-title">Live Traces</div>
+
+          <div className="trace-list">
+            {traces.map(trace => (
+              <div key={trace.id} className="trace-item">
+                <div className={`status-dot ${trace.status === "Completed" ? "green" : "yellow"}`}></div>
+                <div className="trace-info">
+                  <div className="trace-id">{trace.id.slice(0, 18)}</div>
+                  <div className="trace-meta">
+                    {trace.status} • {trace.time}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
+
+
+
+
+.gf-wrapper {
+  height: 100vh;
+  background: radial-gradient(circle at center, #0f2027, #090a0f);
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.gf-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+  font-size: 28px;
+  text-shadow: 0 0 12px #00ffff;
+  border-bottom: 1px solid rgba(0,255,255,0.2);
+}
+
+.gf-body {
+  flex: 1;
+  display: flex;
+}
+
+/* LEFT PANEL */
+.gf-left {
+  width: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(0,255,255,0.2);
+}
+
+.agent-core {
+  font-size: 80px;
+  text-align: center;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.agent-status {
+  font-size: 18px;
+  margin-top: 15px;
+  color: #00ffcc;
+}
+
+@keyframes pulse {
+  0% { text-shadow: 0 0 10px #00ffff; }
+  50% { text-shadow: 0 0 40px #00ffff; }
+  100% { text-shadow: 0 0 10px #00ffff; }
+}
+
+/* RIGHT PANEL */
+.gf-right {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.trace-title {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.trace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trace-item {
+  background: rgba(20,20,35,0.7);
+  border: 1px solid rgba(0,255,255,0.3);
+  padding: 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.green {
+  background: #00ff99;
+  box-shadow: 0 0 8px #00ff99;
+}
+
+.yellow {
+  background: #ffcc00;
+  box-shadow: 0 0 8px #ffcc00;
+}
+
+.trace-id {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.trace-meta {
+  font-size: 12px;
+  opacity: 0.7;
 }
 
 
 
+
+
+
 import React from "react";
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   useNodesState,
   useEdgesState,
   MarkerType,
 } from "reactflow";
+import { useNavigate } from "react-router-dom";
 import "reactflow/dist/style.css";
 import "../styles/ease.css";
 
@@ -32,31 +216,31 @@ const initialNodes = [
   },
   {
     id: "msteams",
-    position: { x: 850, y: 100 },
+    position: { x: 900, y: 100 },
     data: { label: "MS Teams" },
     className: "cyber-node",
   },
   {
     id: "observability",
-    position: { x: 150, y: 500 },
+    position: { x: 150, y: 550 },
     data: { label: "Observability" },
     className: "cyber-node",
   },
   {
     id: "gfagent",
-    position: { x: 850, y: 500 },
+    position: { x: 900, y: 550 },
     data: { label: "GF Agent" },
-    className: "cyber-node",
+    className: "cyber-node clickable-node",
   },
   {
     id: "compliance",
-    position: { x: 500, y: 650 },
+    position: { x: 525, y: 720 },
     data: { label: "Compliance" },
     className: "cyber-node",
   },
   {
     id: "ease",
-    position: { x: 500, y: 320 },
+    position: { x: 525, y: 350 },
     data: {
       label: (
         <div className="ai-core">
@@ -113,8 +297,15 @@ const initialEdges = [
 ];
 
 export default function EaseFlow() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialEdges);
+  const navigate = useNavigate();
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const handleNodeClick = (event, node) => {
+    if (node.id === "gfagent") {
+      navigate("/agent/gf-agent");
+    }
+  };
 
   return (
     <div className="cyber-wrapper">
@@ -123,6 +314,7 @@ export default function EaseFlow() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
         fitView
       >
         <Background gap={25} size={1} color="rgba(0,255,255,0.15)" />
@@ -130,29 +322,20 @@ export default function EaseFlow() {
       </ReactFlow>
     </div>
   );
-
-
-
-
-/* Simple Observability Layout */
-
-.obs-simple-wrapper {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: radial-gradient(circle at center, #0f2027, #090a0f);
-  color: white;
 }
 
-.obs-simple-header {
-  height: 70px;
-  display: flex;
-  align-items: center;
-  padding-left: 30px;
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-shadow: 0 0 12px #00ffff;
-  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+
+
+
+
+
+
+.clickable-node {
+  cursor: pointer;
+}
+
+.clickable-node:hover {
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.9);
+  transform: scale(1.07);
 }
 }
