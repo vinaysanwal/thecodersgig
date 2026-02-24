@@ -64,14 +64,13 @@ const initialEdges = [
   "observability",
   "gfagent",
   "compliance",
-].map((source, i) => ({
-  id: `e${i}`,
+].map((source, index) => ({
+  id: `e${index}`,
   source,
   target: "ease",
   type: "smoothstep",
   animated: true,
   markerEnd: { type: MarkerType.ArrowClosed },
-  className: "neon-edge",
 }));
 
 export default function EaseFlow() {
@@ -100,113 +99,4 @@ export default function EaseFlow() {
       </ReactFlow>
     </div>
   );
-}
-
-
-
-
-
-
-/* ============================= */
-/* ENHANCED BACKGROUND */
-/* ============================= */
-
-.enhanced-bg {
-  background: radial-gradient(circle at center, #0f2027, #05070d);
-  animation: bgPulse 6s infinite alternate;
-}
-
-@keyframes bgPulse {
-  0% { filter: brightness(1); }
-  100% { filter: brightness(1.1); }
-}
-
-/* ============================= */
-/* ENHANCED AI CORE */
-/* ============================= */
-
-.ai-node-enhanced {
-  padding: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #00ffff22, #000);
-  border: 2px solid #00ffff;
-  box-shadow: 0 0 60px #00ffff;
-}
-
-.ai-core-enhanced {
-  position: relative;
-  font-size: 28px;
-  text-align: center;
-  animation: corePulse 2s infinite ease-in-out;
-}
-
-@keyframes corePulse {
-  0% { text-shadow: 0 0 20px #00ffff; }
-  50% { text-shadow: 0 0 60px #00ffff; }
-  100% { text-shadow: 0 0 20px #00ffff; }
-}
-
-.core-ripple {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 2px solid #00ffff;
-  top: -40px;
-  left: -30px;
-  animation: ripple 3s infinite;
-  opacity: 0.4;
-}
-
-@keyframes ripple {
-  0% { transform: scale(0.7); opacity: 0.6; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-/* ============================= */
-/* FLOWING DATA EFFECT */
-/* ============================= */
-
-.neon-edge .react-flow__edge-path {
-  stroke: #00ffff;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 8px #00ffff);
-}
-
-.react-flow__edge.animated path {
-  stroke-dasharray: 6;
-  animation: dashFlow 1s linear infinite;
-}
-
-@keyframes dashFlow {
-  to { stroke-dashoffset: -12; }
-}
-
-/* Simulated data packet glow */
-.react-flow__edge path::after {
-  content: "";
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background: #00ffff;
-  border-radius: 50%;
-  animation: packetMove 2s linear infinite;
-}
-
-@keyframes packetMove {
-  from { transform: translateX(0); }
-  to { transform: translateX(100px); }
-}
-
-/* ============================= */
-/* FLOW NODE ACTIVE PULSE */
-/* ============================= */
-
-.flow-node {
-  animation: nodeGlow 3s infinite alternate;
-}
-
-@keyframes nodeGlow {
-  0% { box-shadow: 0 0 15px rgba(0,255,255,0.3); }
-  100% { box-shadow: 0 0 35px rgba(0,255,255,0.8); }
 }
