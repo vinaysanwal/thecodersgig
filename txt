@@ -1,105 +1,136 @@
 body {
   margin: 0;
-  background: radial-gradient(circle at center, #0a0a0a 0%, #000 80%);
+  background: radial-gradient(circle at center, #0b0b0b 0%, #000 80%);
   font-family: "Segoe UI", sans-serif;
   color: white;
 }
 
-.ease-container {
-  padding: 50px;
+.page {
+  padding: 40px;
+  position: relative;
+}
+
+.ambient-glow {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  width: 600px;
+  height: 600px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(227,6,19,0.2), transparent 70%);
+  z-index: 0;
 }
 
 .title {
   text-align: center;
-  font-size: 48px;
+  font-size: 52px;
   color: #E30613;
   letter-spacing: 6px;
+  margin-bottom: 40px;
 }
 
-.layout {
+.main-container {
   display: grid;
   grid-template-columns: 250px 1fr 250px;
   gap: 40px;
-  margin-top: 40px;
+  align-items: center;
 }
 
-/* INPUTS */
-.input-card {
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-btn {
   background: #111;
-  padding: 15px;
-  margin: 15px 0;
   border: 1px solid #333;
+  padding: 14px;
   cursor: pointer;
   transition: 0.3s;
 }
 
-.input-card:hover {
+.input-btn:hover {
   border-color: #E30613;
-  box-shadow: 0 0 15px #E30613;
+  box-shadow: 0 0 20px #E30613;
 }
 
-/* CORE */
 .core {
-  position: relative;
   text-align: center;
+  position: relative;
 }
 
-.ease-circle {
-  width: 120px;
-  height: 120px;
+.ease-core {
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   border: 3px solid #E30613;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: auto;
-  font-size: 20px;
-  box-shadow: 0 0 30px #E30613;
+  font-size: 22px;
+  box-shadow: 0 0 40px #E30613;
 }
 
 .box {
+  margin: 14px auto;
   background: #111;
-  margin: 12px auto;
-  padding: 10px;
+  padding: 12px;
   width: 60%;
 }
 
 .small {
-  font-size: 12px;
+  font-size: 13px;
 }
 
-.mcp-box {
+.mcp {
   border: 1px solid #E30613;
 }
 
-.db {
-  margin-top: 15px;
-  padding: 10px;
-  border: 1px solid #444;
-  border-radius: 20px;
+.db-pedestal {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 50px;
+  background: #111;
+  border: 1px solid #E30613;
 }
 
-.svg-layer {
+.routes {
   position: absolute;
   width: 100%;
   height: 300px;
   top: 0;
   left: 0;
-  pointer-events: none;
 }
 
-/* AGENTS */
+.pulse {
+  width: 10px;
+  height: 10px;
+  background: #E30613;
+  border-radius: 50%;
+  position: absolute;
+  top: 150px;
+  left: 200px;
+  opacity: 0;
+  box-shadow: 0 0 20px #E30613;
+}
+
 .agent-ring {
-  width: 150px;
-  height: 150px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   border: 2px solid #E30613;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 25px;
-  text-align: center;
-  box-shadow: 0 0 20px #E30613;
+  box-shadow: 0 0 25px #E30613;
+}
+
+.agent-ring span {
+  font-size: 12px;
+  margin-top: 6px;
 }
 
 .agent-ring.idle {
@@ -109,24 +140,36 @@ body {
 
 .agent-ring.working {
   border-color: orange;
-  box-shadow: 0 0 20px orange;
+  box-shadow: 0 0 25px orange;
 }
 
 .agent-ring.failed {
   border-color: red;
-  box-shadow: 0 0 20px red;
+  box-shadow: 0 0 25px red;
 }
 
-/* METRICS */
-.metrics {
+.metrics-container {
+  display: flex;
+  gap: 40px;
+  margin-top: 80px;
+}
+
+.metrics-grid {
   display: flex;
   gap: 20px;
-  margin-top: 60px;
+  flex: 2;
 }
 
 .metric-card {
   background: #111;
-  padding: 20px;
   border: 1px solid #E30613;
+  padding: 20px;
+  flex: 1;
+}
+
+.summary {
+  background: #111;
+  border: 1px solid #E30613;
+  padding: 20px;
   flex: 1;
 }
