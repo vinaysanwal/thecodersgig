@@ -1,188 +1,223 @@
-import React, { useMemo } from "react";
-import ReactFlow, {
-  Background,
-  Controls,
-  MiniMap,
-  Position,
-  Handle,
-  MarkerType
-} from "reactflow";
-import "reactflow/dist/style.css";
-import "./Home.css";
+.ease-wrapper {
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #0d1b2a 0%, #070b14 70%);
+  color: white;
+  padding: 40px;
+  overflow-x: hidden;
+  font-family: "Segoe UI", sans-serif;
+}
 
-/* ===========================
-   Custom Node Components
-=========================== */
+/* HEADER */
+.ease-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
 
-const GlassNode = ({ data }) => (
-  <div className="glass-node">
-    <Handle type="target" position={Position.Left} />
-    <div>{data.label}</div>
-    <Handle type="source" position={Position.Right} />
-  </div>
-);
+.ease-header h1 {
+  font-size: 52px;
+  color: #00f5ff;
+  text-shadow: 0 0 30px #00f5ff;
+  letter-spacing: 4px;
+}
 
-const CircleNode = ({ data }) => (
-  <div className={`circle-node ${data.status || ""}`}>
-    <Handle type="target" position={Position.Left} />
-    <div className="circle-inner">
-      <div className="circle-icon">{data.icon}</div>
-      <div className="circle-label">{data.label}</div>
-      {data.status && <span className="circle-status">{data.status}</span>}
-    </div>
-    <Handle type="source" position={Position.Right} />
-  </div>
-);
+/* GRID LAYOUT */
+.ease-main {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
 
-/* ===========================
-   Main Component
-=========================== */
+/* GLASS PANEL */
+.glass {
+  background: rgba(15, 30, 60, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+  padding: 25px;
+}
 
-export default function Home() {
-  const nodeTypes = useMemo(
-    () => ({
-      glass: GlassNode,
-      circle: CircleNode
-    }),
-    []
-  );
+/* LEFT */
+.ease-left h3 {
+  color: #00f5ff;
+  margin-bottom: 10px;
+}
 
-  const nodes = [
-    // LEFT
-    {
-      id: "why",
-      type: "glass",
-      position: { x: 0, y: 100 },
-      data: {
-        label: (
-          <>
-            <strong>WHY EASE?</strong>
-            <br /> Human & Bot Flow
-            <br /> Unified Automation
-            <br /> Central Orchestrator
-            <br /> Full Observability
-            <br /> Scalable & Secure
-          </>
-        )
-      }
-    },
-    {
-      id: "what",
-      type: "glass",
-      position: { x: 0, y: 350 },
-      data: {
-        label: (
-          <>
-            <strong>WHAT IS EASE?</strong>
-            <br /> AI-Powered Orchestrator
-            <br /> Agent Network
-            <br /> Observability Built-In
-            <br /> MCP Integrated
-          </>
-        )
-      }
-    },
+.ease-left ul {
+  list-style: none;
+  padding: 0;
+}
 
-    // CENTER
-    {
-      id: "orchestrator",
-      type: "circle",
-      position: { x: 500, y: 200 },
-      data: { label: "Orchestrator", icon: "🤖" }
-    },
-    {
-      id: "registry",
-      type: "glass",
-      position: { x: 470, y: 380 },
-      data: { label: "Agent Registry" }
-    },
-    {
-      id: "observability",
-      type: "glass",
-      position: { x: 450, y: 470 },
-      data: { label: "Logs • Traces • Monitoring" }
-    },
+.ease-left li {
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+}
 
-    // RIGHT AGENTS
-    {
-      id: "compliance",
-      type: "circle",
-      position: { x: 950, y: 50 },
-      data: { label: "Compliance", icon: "🛡", status: "running" }
-    },
-    {
-      id: "reminder",
-      type: "circle",
-      position: { x: 950, y: 200 },
-      data: { label: "Reminder", icon: "🔔", status: "working" }
-    },
-    {
-      id: "insight",
-      type: "circle",
-      position: { x: 950, y: 350 },
-      data: { label: "Insight", icon: "💡", status: "idle" }
-    },
-    {
-      id: "automation",
-      type: "circle",
-      position: { x: 950, y: 500 },
-      data: { label: "Automation", icon: "⚙", status: "failed" }
-    },
+.ease-left li:nth-child(1) { animation-delay: 0.2s; }
+.ease-left li:nth-child(2) { animation-delay: 0.4s; }
+.ease-left li:nth-child(3) { animation-delay: 0.6s; }
+.ease-left li:nth-child(4) { animation-delay: 0.8s; }
+.ease-left li:nth-child(5) { animation-delay: 1s; }
 
-    // MCP
-    {
-      id: "mcp",
-      type: "glass",
-      position: { x: 520, y: 600 },
-      data: { label: "MCP" }
-    },
+.mt {
+  margin-top: 30px;
+}
 
-    // DATA
-    {
-      id: "data",
-      type: "glass",
-      position: { x: 500, y: 700 },
-      data: { label: "Data Mesh • DB" }
-    }
-  ];
+/* CENTER CORE */
+.ease-core {
+  text-align: center;
+  position: relative;
+  padding: 50px;
+}
 
-  const edges = [
-    { id: "e1", source: "why", target: "orchestrator" },
-    { id: "e2", source: "what", target: "orchestrator" },
+.orchestrator-ring {
+  position: relative;
+  margin-bottom: 30px;
+}
 
-    { id: "e3", source: "orchestrator", target: "compliance" },
-    { id: "e4", source: "orchestrator", target: "reminder" },
-    { id: "e5", source: "orchestrator", target: "insight" },
-    { id: "e6", source: "orchestrator", target: "automation" },
+.orchestrator-ring::before {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border: 2px solid #00f5ff;
+  border-radius: 50%;
+  animation: rotate 6s linear infinite;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
-    { id: "e7", source: "orchestrator", target: "registry" },
-    { id: "e8", source: "registry", target: "observability" },
-    { id: "e9", source: "observability", target: "mcp" },
-    { id: "e10", source: "mcp", target: "data" }
-  ].map((edge) => ({
-    ...edge,
-    animated: true,
-    style: { stroke: "#00f5ff", strokeWidth: 2 },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: "#00f5ff"
-    }
-  }));
+.orchestrator-core {
+  font-size: 60px;
+  animation: pulse 2s infinite;
+}
 
-  return (
-    <div className="reactflow-wrapper">
-      <h1 className="ease-title">EASE</h1>
+.registry-box {
+  margin: 20px auto;
+  padding: 10px 20px;
+  border: 1px solid #00f5ff;
+  border-radius: 8px;
+  display: inline-block;
+}
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        fitView
-      >
-        <Background color="#0ff" gap={20} size={1} />
-        <MiniMap />
-        <Controls />
-      </ReactFlow>
-    </div>
-  );
+.observability-box {
+  margin-top: 20px;
+  opacity: 0.8;
+}
+
+/* MCP */
+.mcp-box {
+  margin-top: 40px;
+  padding: 15px;
+  text-align: center;
+  border-radius: 12px;
+  border: 2px solid orange;
+  box-shadow: 0 0 20px orange;
+  animation: pulseMCP 3s infinite;
+}
+
+/* DATA */
+.data-layer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* RIGHT AGENTS */
+.ease-right {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.agent-module {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 16px;
+  background: rgba(20, 40, 70, 0.5);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  transition: 0.3s;
+}
+
+.agent-module:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+}
+
+.agent-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00f5ff, #004466);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 20px #00f5ff;
+  animation: pulse 2s infinite;
+}
+
+.agent-module.running { border-left: 5px solid #00ff88; }
+.agent-module.working { border-left: 5px solid #ffc107; }
+.agent-module.idle { border-left: 5px solid #00f5ff; }
+.agent-module.failed { border-left: 5px solid #ff4d4f; }
+
+/* SVG Lines */
+.connection-layer {
+  position: absolute;
+  top: 150px;
+  left: 200px;
+  width: 800px;
+  height: 600px;
+  pointer-events: none;
+}
+
+.flow-line {
+  stroke-dasharray: 10;
+  animation: flow 3s linear infinite;
+}
+
+/* ANIMATIONS */
+@keyframes pulse {
+  0% { box-shadow: 0 0 10px #00f5ff; }
+  50% { box-shadow: 0 0 30px #00f5ff; }
+  100% { box-shadow: 0 0 10px #00f5ff; }
+}
+
+@keyframes rotate {
+  100% { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes pulseMCP {
+  0% { box-shadow: 0 0 10px orange; }
+  50% { box-shadow: 0 0 30px orange; }
+  100% { box-shadow: 0 0 10px orange; }
+}
+
+@keyframes flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .ease-main {
+    grid-template-columns: 1fr;
+  }
+
+  .ease-right {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
