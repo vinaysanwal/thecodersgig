@@ -1,189 +1,79 @@
-import React, { useEffect, useRef } from "react";
-import "./home.css";
-import { gsap } from "gsap";
-import { MotionPathPlugin } from "gsap/MotionPathPlugin";
+.reactflow-wrapper {
+  height: 100vh;
+  background: radial-gradient(circle at center, #0a0f1c 0%, #05080f 80%);
+  color: white;
+}
 
-gsap.registerPlugin(MotionPathPlugin);
+.ease-title {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 48px;
+  color: #00f5ff;
+  text-shadow: 0 0 30px #00f5ff;
+  z-index: 10;
+}
 
-export default function Home() {
-  const pulseRef = useRef(null);
+/* GLASS NODE */
+.glass-node {
+  background: rgba(20, 40, 80, 0.6);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #00f5ff;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+  min-width: 200px;
+}
 
-  useEffect(() => {
-    // Continuous subtle streaming on all paths
-    gsap.to(".stream", {
-      strokeDashoffset: -2000,
-      duration: 25,
-      repeat: -1,
-      ease: "linear"
-    });
+/* CIRCLE NODE */
+.circle-node {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid #00f5ff;
+  background: radial-gradient(circle, #001f2f, #000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 25px #00f5ff;
+  position: relative;
+}
 
-    // MCP breathing glow
-    gsap.to(".mcp", {
-      boxShadow: "0 0 40px #E30613",
-      duration: 2,
-      repeat: -1,
-      yoyo: true
-    });
+.circle-inner {
+  text-align: center;
+}
 
-  }, []);
+.circle-icon {
+  font-size: 30px;
+  margin-bottom: 5px;
+}
 
-  const triggerFlow = () => {
-    const pulse = pulseRef.current;
+.circle-label {
+  font-weight: bold;
+}
 
-    gsap.set(pulse, { opacity: 1 });
+.circle-status {
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+}
 
-    gsap.to(pulse, {
-      duration: 2,
-      motionPath: {
-        path: "#routeMain",
-        align: "#routeMain",
-        autoRotate: false
-      },
-      ease: "power2.inOut",
-      onComplete: () => gsap.set(pulse, { opacity: 0 })
-    });
+/* STATUS COLORS */
+.circle-node.running {
+  border-color: #00ff88;
+  box-shadow: 0 0 25px #00ff88;
+}
 
-    gsap.fromTo(
-      ".agent-ring",
-      { boxShadow: "0 0 15px #E30613" },
-      {
-        boxShadow: "0 0 60px #E30613",
-        duration: 0.8,
-        yoyo: true,
-        repeat: 1
-      }
-    );
-  };
+.circle-node.working {
+  border-color: #ffc107;
+  box-shadow: 0 0 25px #ffc107;
+}
 
-  return (
-    <div className="page">
+.circle-node.idle {
+  border-color: #00f5ff;
+}
 
-      <div className="ambient-glow"></div>
-
-      <h1 className="title">EASE</h1>
-
-      <div className="main-container">
-
-        {/* LEFT INPUTS */}
-        <div className="panel inputs">
-          <h3>INPUTS</h3>
-          <div className="input-btn" onClick={triggerFlow}>
-            Human (Click to Trigger)
-          </div>
-          <div className="input-btn">API</div>
-          <div className="input-btn">Agents</div>
-        </div>
-
-        {/* CENTER CORE */}
-        <div className="core">
-
-          <div className="ease-core">
-            EASE
-          </div>
-
-          <div className="box">Orchestrator</div>
-          <div className="box">Agent Registry</div>
-          <div className="box small">
-            Observability — Logs • Traces • Monitoring
-          </div>
-
-          <div className="box mcp">MCP</div>
-
-          <div className="db-pedestal">DB</div>
-
-          <svg className="routes">
-            <path
-              id="routeMain"
-              className="stream"
-              d="M 200 150 C 400 50 700 250 900 150"
-              stroke="#E30613"
-              strokeWidth="2"
-              fill="none"
-              strokeDasharray="15 15"
-            />
-          </svg>
-
-          <div ref={pulseRef} className="pulse"></div>
-
-        </div>
-
-        {/* RIGHT AGENTS */}
-        <div className="panel agents">
-          <div className="agent-ring running">
-            PAT Agent
-            <span>RUNNING</span>
-          </div>
-
-          <div className="agent-ring idle">
-            Compliance
-            <span>IDLE</span>
-          </div>
-
-          <div className="agent-ring working">
-            Risk Analyst
-            <span>WORKING</span>
-          </div>
-
-          <div className="agent-ring failed">
-            Report Gen
-            <span>FAILED</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* METRICS SECTION */}
-      <div className="metrics-container">
-
-        <div className="metrics-grid">
-
-          <div className="metric-card">
-            <h4>Evaluations Agent</h4>
-            <ul>
-              <li>Risk assessments</li>
-              <li>Pattern analysis</li>
-              <li>Event scoring</li>
-            </ul>
-          </div>
-
-          <div className="metric-card">
-            <h4>Risk Analyst Agent</h4>
-            <ul>
-              <li>Suspicious detection</li>
-              <li>Escalation logic</li>
-              <li>Market insights</li>
-            </ul>
-          </div>
-
-          <div className="metric-card">
-            <h4>PAT Agent</h4>
-            <ul>
-              <li>Compliance scoring</li>
-              <li>Monitoring rules</li>
-              <li>Alert triggers</li>
-            </ul>
-          </div>
-
-        </div>
-
-        <div className="summary">
-          <h4>METRICS</h4>
-          <p>Active Agents: 4</p>
-          <p>Total Sessions: 128</p>
-
-          <div className="why">
-            <h4>WHY EASE?</h4>
-            <ul>
-              <li>Built on Kafka</li>
-              <li>Integrates with existing systems</li>
-              <li>Scalable & reliable</li>
-              <li>Self-learning</li>
-            </ul>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  );
+.circle-node.failed {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 25px #ff4d4f;
 }
