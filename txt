@@ -1,84 +1,202 @@
-html, body, #root {
-  height: 100%;
-  margin: 0;
+import React, { useMemo } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  Position,
+  Handle,
+  MarkerType,
+  ReactFlowProvider
+} from "reactflow";
+import "reactflow/dist/style.css";
+import "./Home.css";
+
+/* ================= CUSTOM NODES ================= */
+
+const GlassNode = ({ data }) => (
+  <div className="glass-node">
+    <Handle type="target" position={Position.Left} />
+    <div>{data.label}</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+const CircleNode = ({ data }) => (
+  <div className={`circle-node ${data.status || ""}`}>
+    <Handle type="target" position={Position.Left} />
+    <div className="circle-content">
+      <div className="circle-icon">{data.icon}</div>
+      <div className="circle-title">{data.label}</div>
+      {data.status && (
+        <div className={`circle-status ${data.status}`}>
+          {data.status.toUpperCase()}
+        </div>
+      )}
+    </div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+/* ================= MAIN FLOW ================= */
+
+function EaseFlow() {
+  const nodeTypes = useMemo(
+    () => ({
+      glass: GlassNode,
+      circle: CircleNode
+    }),
+    []
+  );
+
+  const nodes = [
+    // LEFT SIDE
+    {
+      id: "why",
+      type: "glass",
+      position: { x: 50, y: 120 },
+      data: {
+        label: (
+          <>
+            <strong>WHY EASE?</strong>
+            <br /> Human & Bot Flow
+            <br /> Unified Automation
+            <br /> Central Orchestrator
+            <br /> Full Observability
+            <br /> Scalable & Secure
+          </>
+        )
+      }
+    },
+    {
+      id: "what",
+      type: "glass",
+      position: { x: 50, y: 380 },
+      data: {
+        label: (
+          <>
+            <strong>WHAT IS EASE?</strong>
+            <br /> AI Orchestrator
+            <br /> Agent Network
+            <br /> Built-in Observability
+            <br /> MCP Integrated
+          </>
+        )
+      }
+    },
+
+    // CENTER
+    {
+      id: "orchestrator",
+      type: "circle",
+      position: { x: 550, y: 200 },
+      data: { label: "Orchestrator", icon: "🤖" }
+    },
+    {
+      id: "registry",
+      type: "glass",
+      position: { x: 520, y: 380 },
+      data: { label: "Agent Registry" }
+    },
+    {
+      id: "observability",
+      type: "glass",
+      position: { x: 500, y: 460 },
+      data: { label: "Logs • Traces • Monitoring" }
+    },
+
+    // MCP
+    {
+      id: "mcp",
+      type: "glass",
+      position: { x: 540, y: 580 },
+      data: { label: "MCP Layer" }
+    },
+
+    {
+      id: "data",
+      type: "glass",
+      position: { x: 520, y: 680 },
+      data: { label: "Data Mesh • DB" }
+    },
+
+    // RIGHT AGENTS
+    {
+      id: "compliance",
+      type: "circle",
+      position: { x: 1050, y: 80 },
+      data: { label: "Compliance", icon: "🛡", status: "running" }
+    },
+    {
+      id: "reminder",
+      type: "circle",
+      position: { x: 1050, y: 220 },
+      data: { label: "Reminder", icon: "🔔", status: "working" }
+    },
+    {
+      id: "insight",
+      type: "circle",
+      position: { x: 1050, y: 360 },
+      data: { label: "Insight", icon: "💡", status: "idle" }
+    },
+    {
+      id: "automation",
+      type: "circle",
+      position: { x: 1050, y: 500 },
+      data: { label: "Automation", icon: "⚙", status: "failed" }
+    }
+  ];
+
+  const baseEdgeStyle = {
+    stroke: "#00f5ff",
+    strokeWidth: 2
+  };
+
+  const edges = [
+    { id: "e1", source: "why", target: "orchestrator" },
+    { id: "e2", source: "what", target: "orchestrator" },
+
+    { id: "e3", source: "orchestrator", target: "compliance" },
+    { id: "e4", source: "orchestrator", target: "reminder" },
+    { id: "e5", source: "orchestrator", target: "insight" },
+    { id: "e6", source: "orchestrator", target: "automation" },
+
+    { id: "e7", source: "orchestrator", target: "registry" },
+    { id: "e8", source: "registry", target: "observability" },
+    { id: "e9", source: "observability", target: "mcp" },
+    { id: "e10", source: "mcp", target: "data" }
+  ].map((edge) => ({
+    ...edge,
+    animated: true,
+    style: baseEdgeStyle,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#00f5ff"
+    }
+  }));
+
+  return (
+    <div className="flow-wrapper">
+      <h1 className="ease-title">EASE</h1>
+
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+      >
+        <Background color="#00f5ff" gap={20} size={1} />
+        <MiniMap />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
 }
 
-.flow-wrapper {
-  height: 100vh;
-  width: 100%;
-  background: radial-gradient(circle at center, #0a0f1c 0%, #05080f 80%);
-  color: white;
-}
-
-/* TITLE */
-.ease-title {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 48px;
-  color: #00f5ff;
-  text-shadow: 0 0 20px #00f5ff;
-  z-index: 10;
-}
-
-/* GLASS BOX */
-.glass-node {
-  background: rgba(10, 30, 60, 0.7);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #00f5ff;
-  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-  min-width: 220px;
-}
-
-/* CIRCLE NODE */
-.circle-node {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  border: 2px solid #00f5ff;
-  background: radial-gradient(circle, #001f2f, #000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 30px #00f5ff;
-}
-
-.circle-content {
-  text-align: center;
-}
-
-.circle-icon {
-  font-size: 32px;
-}
-
-.circle-title {
-  font-weight: bold;
-  margin-top: 5px;
-}
-
-.circle-status {
-  margin-top: 5px;
-  font-size: 12px;
-}
-
-/* STATUS COLORS */
-.circle-node.running {
-  border-color: #00ff88;
-  box-shadow: 0 0 30px #00ff88;
-}
-
-.circle-node.working {
-  border-color: #ffc107;
-  box-shadow: 0 0 30px #ffc107;
-}
-
-.circle-node.idle {
-  border-color: #00f5ff;
-}
-
-.circle-node.failed {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 30px #ff4d4f;
+/* WRAPPER TO AVOID BLACK SCREEN */
+export default function Home() {
+  return (
+    <ReactFlowProvider>
+      <EaseFlow />
+    </ReactFlowProvider>
+  );
 }
