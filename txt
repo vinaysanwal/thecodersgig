@@ -1,77 +1,292 @@
-export default function Landing() {
+import React from "react";
+import "./Home.css";
+
+const agents = [
+  { name: "Compliance Agent", status: "running" },
+  { name: "Reminder Agent", status: "working" },
+  { name: "Insight Agent", status: "idle" },
+  { name: "Automation Agent", status: "failed" },
+  { name: "Custom Agent", status: "idle" }
+];
+
+const Home = () => {
   return (
-    <div className="landing-wrapper">
+    <div className="home-container">
 
-      {/* NEW HEADER */}
-      <div className="top-header">
-        <div className="header-left">UBS</div>
-        <div className="header-divider">|</div>
-        <div className="header-right">EASE</div>
-      </div>
+      <h1 className="ease-title">EASE</h1>
 
-      {/* EXISTING CONTENT BELOW */}
-      <div className="landing-content">
-        {/* Your existing EASE glow title */}
-        <h1 className="ease-header">EASE</h1>
+      <div className="home-layout">
 
-        {/* Your existing agent grid */}
-        <div className="agent-grid">
-          {/* DO NOT change your card JSX */}
+        {/* LEFT PANEL */}
+        <div className="left-panel">
+
+          <div className="info-box">
+            <h2>WHY EASE?</h2>
+            <ul>
+              <li>Human & Bot Trigger</li>
+              <li>Unified Automation</li>
+              <li>Central Orchestrator</li>
+              <li>Full Observability</li>
+              <li>Scalable & Secure</li>
+            </ul>
+          </div>
+
+          <div className="info-box">
+            <h2>WHAT IS EASE?</h2>
+            <ul>
+              <li>AI-Powered Orchestrator</li>
+              <li>Agent Network</li>
+              <li>Observability Built-In</li>
+              <li>MCP Integrated</li>
+            </ul>
+          </div>
+
         </div>
-      </div>
 
+        {/* CENTER EASE BOX */}
+        <div className="center-panel">
+
+          <div className="ease-box">
+
+            <div className="orchestrator">
+              <div className="orchestrator-core">
+                🤖
+              </div>
+              <p>Orchestrator</p>
+            </div>
+
+            <div className="registry">
+              Agent Registry
+            </div>
+
+            <div className="observability">
+              <p>Observability</p>
+              <span>Logs • Traces • Monitoring</span>
+            </div>
+
+          </div>
+
+          {/* MCP */}
+          <div className="mcp-box">
+            MCP
+          </div>
+
+          {/* DATA LAYER */}
+          <div className="data-layer">
+            <div className="data-item">Data Mesh</div>
+            <div className="data-item">DB</div>
+          </div>
+
+        </div>
+
+        {/* RIGHT PANEL - AGENTS */}
+        <div className="right-panel">
+          {agents.map((agent, index) => (
+            <div key={index} className={`agent-card ${agent.status}`}>
+              <div className="agent-icon">⚙</div>
+              <div className="agent-info">
+                <h4>{agent.name}</h4>
+                <span className="status">{agent.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
     </div>
   );
+};
+
+
+
+
+.home-container {
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #0f2027, #0b0f1a 60%);
+  color: white;
+  padding: 40px;
+  font-family: "Segoe UI", sans-serif;
 }
 
+.ease-title {
+  text-align: center;
+  font-size: 48px;
+  color: #00f5ff;
+  margin-bottom: 40px;
+  text-shadow: 0 0 20px #00f5ff;
+}
 
+.home-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
 
-/* ===================================== */
-/* HEADER (NEW) */
-/* ===================================== */
+/* LEFT PANEL */
+.left-panel {
+  width: 22%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
 
-.top-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 65px;
+.info-box {
+  border: 1px solid #00f5ff44;
+  padding: 20px;
+  border-radius: 12px;
+  background: #101a2b;
+  box-shadow: 0 0 15px #00f5ff22;
+}
+
+.info-box h2 {
+  color: #00f5ff;
+  margin-bottom: 15px;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-box li {
+  margin-bottom: 10px;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+}
+
+.info-box li:nth-child(1) { animation-delay: 0.2s; }
+.info-box li:nth-child(2) { animation-delay: 0.4s; }
+.info-box li:nth-child(3) { animation-delay: 0.6s; }
+.info-box li:nth-child(4) { animation-delay: 0.8s; }
+.info-box li:nth-child(5) { animation-delay: 1s; }
+
+/* CENTER PANEL */
+.center-panel {
+  width: 40%;
+  text-align: center;
+}
+
+.ease-box {
+  border: 2px solid #00f5ff;
+  border-radius: 20px;
+  padding: 40px;
+  position: relative;
+  box-shadow: 0 0 40px #00f5ff33;
+}
+
+.orchestrator {
+  margin-bottom: 30px;
+}
+
+.orchestrator-core {
+  font-size: 50px;
+  animation: pulse 2s infinite;
+}
+
+.registry {
+  margin: 20px auto;
+  padding: 10px 20px;
+  border: 1px solid #00f5ff;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.observability {
+  margin-top: 20px;
+}
+
+.observability span {
+  font-size: 12px;
+  color: #ccc;
+}
+
+.mcp-box {
+  margin-top: 40px;
+  border: 2px solid orange;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px orange;
+  animation: pulseMCP 3s infinite;
+}
+
+.data-layer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.data-item {
+  padding: 10px 20px;
+  background: #0d1b2a;
+  border: 1px solid #00f5ff44;
+  border-radius: 8px;
+}
+
+/* RIGHT PANEL */
+.right-panel {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.agent-card {
   display: flex;
   align-items: center;
-  padding: 0 40px;
-  background: rgba(10, 15, 25, 0.6);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
-  z-index: 100;
+  padding: 15px;
+  border-radius: 12px;
+  background: #101a2b;
+  transition: 0.3s;
+  border: 1px solid #00f5ff33;
 }
 
-.header-left {
-  font-size: 20px;
-  font-weight: 700;
-  color: #ff4d4f; /* UBS red */
+.agent-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px #00f5ff55;
 }
 
-.header-divider {
-  margin: 0 14px;
-  opacity: 0.4;
-  color: #ffffff;
+.agent-icon {
+  font-size: 30px;
+  margin-right: 15px;
 }
 
-.header-right {
-  font-size: 18px;
-  font-weight: 600;
-  color: #00ffff;
-  letter-spacing: 2px;
+.agent-card.running {
+  border-left: 5px solid #00ff88;
 }
 
-/* Push content below fixed header */
-.landing-content {
-  padding-top: 90px;
+.agent-card.working {
+  border-left: 5px solid #ffc107;
 }
 
-
-
-.header-right {
-  color: #00ffff;
-  text-shadow: 0 0 10px rgba(0,255,255,0.6);
+.agent-card.idle {
+  border-left: 5px solid #00f5ff;
 }
+
+.agent-card.failed {
+  border-left: 5px solid #ff4d4f;
+}
+
+.status {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { text-shadow: 0 0 10px #00f5ff; }
+  50% { text-shadow: 0 0 30px #00f5ff; }
+  100% { text-shadow: 0 0 10px #00f5ff; }
+}
+
+@keyframes pulseMCP {
+  0% { box-shadow: 0 0 10px orange; }
+  50% { box-shadow: 0 0 30px orange; }
+  100% { box-shadow: 0 0 10px orange; }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+export default Home;
