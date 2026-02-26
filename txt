@@ -1,175 +1,189 @@
-body {
-  margin: 0;
-  background: radial-gradient(circle at center, #0b0b0b 0%, #000 80%);
-  font-family: "Segoe UI", sans-serif;
-  color: white;
-}
+import React, { useEffect, useRef } from "react";
+import "./home.css";
+import { gsap } from "gsap";
+import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 
-.page {
-  padding: 40px;
-  position: relative;
-}
+gsap.registerPlugin(MotionPathPlugin);
 
-.ambient-glow {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  width: 600px;
-  height: 600px;
-  transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(227,6,19,0.2), transparent 70%);
-  z-index: 0;
-}
+export default function Home() {
+  const pulseRef = useRef(null);
 
-.title {
-  text-align: center;
-  font-size: 52px;
-  color: #E30613;
-  letter-spacing: 6px;
-  margin-bottom: 40px;
-}
+  useEffect(() => {
+    // Continuous subtle streaming on all paths
+    gsap.to(".stream", {
+      strokeDashoffset: -2000,
+      duration: 25,
+      repeat: -1,
+      ease: "linear"
+    });
 
-.main-container {
-  display: grid;
-  grid-template-columns: 250px 1fr 250px;
-  gap: 40px;
-  align-items: center;
-}
+    // MCP breathing glow
+    gsap.to(".mcp", {
+      boxShadow: "0 0 40px #E30613",
+      duration: 2,
+      repeat: -1,
+      yoyo: true
+    });
 
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+  }, []);
 
-.input-btn {
-  background: #111;
-  border: 1px solid #333;
-  padding: 14px;
-  cursor: pointer;
-  transition: 0.3s;
-}
+  const triggerFlow = () => {
+    const pulse = pulseRef.current;
 
-.input-btn:hover {
-  border-color: #E30613;
-  box-shadow: 0 0 20px #E30613;
-}
+    gsap.set(pulse, { opacity: 1 });
 
-.core {
-  text-align: center;
-  position: relative;
-}
+    gsap.to(pulse, {
+      duration: 2,
+      motionPath: {
+        path: "#routeMain",
+        align: "#routeMain",
+        autoRotate: false
+      },
+      ease: "power2.inOut",
+      onComplete: () => gsap.set(pulse, { opacity: 0 })
+    });
 
-.ease-core {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  border: 3px solid #E30613;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: auto;
-  font-size: 22px;
-  box-shadow: 0 0 40px #E30613;
-}
+    gsap.fromTo(
+      ".agent-ring",
+      { boxShadow: "0 0 15px #E30613" },
+      {
+        boxShadow: "0 0 60px #E30613",
+        duration: 0.8,
+        yoyo: true,
+        repeat: 1
+      }
+    );
+  };
 
-.box {
-  margin: 14px auto;
-  background: #111;
-  padding: 12px;
-  width: 60%;
-}
+  return (
+    <div className="page">
 
-.small {
-  font-size: 13px;
-}
+      <div className="ambient-glow"></div>
 
-.mcp {
-  border: 1px solid #E30613;
-}
+      <h1 className="title">EASE</h1>
 
-.db-pedestal {
-  margin-top: 20px;
-  padding: 15px;
-  border-radius: 50px;
-  background: #111;
-  border: 1px solid #E30613;
-}
+      <div className="main-container">
 
-.routes {
-  position: absolute;
-  width: 100%;
-  height: 300px;
-  top: 0;
-  left: 0;
-}
+        {/* LEFT INPUTS */}
+        <div className="panel inputs">
+          <h3>INPUTS</h3>
+          <div className="input-btn" onClick={triggerFlow}>
+            Human (Click to Trigger)
+          </div>
+          <div className="input-btn">API</div>
+          <div className="input-btn">Agents</div>
+        </div>
 
-.pulse {
-  width: 10px;
-  height: 10px;
-  background: #E30613;
-  border-radius: 50%;
-  position: absolute;
-  top: 150px;
-  left: 200px;
-  opacity: 0;
-  box-shadow: 0 0 20px #E30613;
-}
+        {/* CENTER CORE */}
+        <div className="core">
 
-.agent-ring {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  border: 2px solid #E30613;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 25px #E30613;
-}
+          <div className="ease-core">
+            EASE
+          </div>
 
-.agent-ring span {
-  font-size: 12px;
-  margin-top: 6px;
-}
+          <div className="box">Orchestrator</div>
+          <div className="box">Agent Registry</div>
+          <div className="box small">
+            Observability — Logs • Traces • Monitoring
+          </div>
 
-.agent-ring.idle {
-  border-color: gray;
-  box-shadow: none;
-}
+          <div className="box mcp">MCP</div>
 
-.agent-ring.working {
-  border-color: orange;
-  box-shadow: 0 0 25px orange;
-}
+          <div className="db-pedestal">DB</div>
 
-.agent-ring.failed {
-  border-color: red;
-  box-shadow: 0 0 25px red;
-}
+          <svg className="routes">
+            <path
+              id="routeMain"
+              className="stream"
+              d="M 200 150 C 400 50 700 250 900 150"
+              stroke="#E30613"
+              strokeWidth="2"
+              fill="none"
+              strokeDasharray="15 15"
+            />
+          </svg>
 
-.metrics-container {
-  display: flex;
-  gap: 40px;
-  margin-top: 80px;
-}
+          <div ref={pulseRef} className="pulse"></div>
 
-.metrics-grid {
-  display: flex;
-  gap: 20px;
-  flex: 2;
-}
+        </div>
 
-.metric-card {
-  background: #111;
-  border: 1px solid #E30613;
-  padding: 20px;
-  flex: 1;
-}
+        {/* RIGHT AGENTS */}
+        <div className="panel agents">
+          <div className="agent-ring running">
+            PAT Agent
+            <span>RUNNING</span>
+          </div>
 
-.summary {
-  background: #111;
-  border: 1px solid #E30613;
-  padding: 20px;
-  flex: 1;
+          <div className="agent-ring idle">
+            Compliance
+            <span>IDLE</span>
+          </div>
+
+          <div className="agent-ring working">
+            Risk Analyst
+            <span>WORKING</span>
+          </div>
+
+          <div className="agent-ring failed">
+            Report Gen
+            <span>FAILED</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* METRICS SECTION */}
+      <div className="metrics-container">
+
+        <div className="metrics-grid">
+
+          <div className="metric-card">
+            <h4>Evaluations Agent</h4>
+            <ul>
+              <li>Risk assessments</li>
+              <li>Pattern analysis</li>
+              <li>Event scoring</li>
+            </ul>
+          </div>
+
+          <div className="metric-card">
+            <h4>Risk Analyst Agent</h4>
+            <ul>
+              <li>Suspicious detection</li>
+              <li>Escalation logic</li>
+              <li>Market insights</li>
+            </ul>
+          </div>
+
+          <div className="metric-card">
+            <h4>PAT Agent</h4>
+            <ul>
+              <li>Compliance scoring</li>
+              <li>Monitoring rules</li>
+              <li>Alert triggers</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="summary">
+          <h4>METRICS</h4>
+          <p>Active Agents: 4</p>
+          <p>Total Sessions: 128</p>
+
+          <div className="why">
+            <h4>WHY EASE?</h4>
+            <ul>
+              <li>Built on Kafka</li>
+              <li>Integrates with existing systems</li>
+              <li>Scalable & reliable</li>
+              <li>Self-learning</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  );
 }
