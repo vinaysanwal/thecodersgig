@@ -1,101 +1,188 @@
-body {
-  margin: 0;
-  background: #000000;
-  font-family: "Inter", sans-serif;
-  color: #ffffff;
-}
+import React, { useMemo } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  Position,
+  Handle,
+  MarkerType
+} from "reactflow";
+import "reactflow/dist/style.css";
+import "./Home.css";
 
-.home-container {
-  min-height: 100vh;
-  padding: 30px;
-}
+/* ===========================
+   Custom Node Components
+=========================== */
 
-.title {
-  text-align: center;
-  color: #e0001b;
-  letter-spacing: 6px;
-  margin-bottom: 20px;
-}
+const GlassNode = ({ data }) => (
+  <div className="glass-node">
+    <Handle type="target" position={Position.Left} />
+    <div>{data.label}</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
 
-.flow-section {
-  height: 60vh;
-  border: 1px solid #222;
-  border-radius: 12px;
-  background: #0b0b0b;
-  overflow: hidden;
-}
+const CircleNode = ({ data }) => (
+  <div className={`circle-node ${data.status || ""}`}>
+    <Handle type="target" position={Position.Left} />
+    <div className="circle-inner">
+      <div className="circle-icon">{data.icon}</div>
+      <div className="circle-label">{data.label}</div>
+      {data.status && <span className="circle-status">{data.status}</span>}
+    </div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
 
-/* -------- AGENT SECTION -------- */
+/* ===========================
+   Main Component
+=========================== */
 
-.agent-section {
-  margin-top: 50px;
-}
+export default function Home() {
+  const nodeTypes = useMemo(
+    () => ({
+      glass: GlassNode,
+      circle: CircleNode
+    }),
+    []
+  );
 
-.section-title {
-  text-align: center;
-  color: #e0001b;
-  letter-spacing: 3px;
-  margin-bottom: 25px;
-}
+  const nodes = [
+    // LEFT
+    {
+      id: "why",
+      type: "glass",
+      position: { x: 0, y: 100 },
+      data: {
+        label: (
+          <>
+            <strong>WHY EASE?</strong>
+            <br /> Human & Bot Flow
+            <br /> Unified Automation
+            <br /> Central Orchestrator
+            <br /> Full Observability
+            <br /> Scalable & Secure
+          </>
+        )
+      }
+    },
+    {
+      id: "what",
+      type: "glass",
+      position: { x: 0, y: 350 },
+      data: {
+        label: (
+          <>
+            <strong>WHAT IS EASE?</strong>
+            <br /> AI-Powered Orchestrator
+            <br /> Agent Network
+            <br /> Observability Built-In
+            <br /> MCP Integrated
+          </>
+        )
+      }
+    },
 
-.agent-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
+    // CENTER
+    {
+      id: "orchestrator",
+      type: "circle",
+      position: { x: 500, y: 200 },
+      data: { label: "Orchestrator", icon: "🤖" }
+    },
+    {
+      id: "registry",
+      type: "glass",
+      position: { x: 470, y: 380 },
+      data: { label: "Agent Registry" }
+    },
+    {
+      id: "observability",
+      type: "glass",
+      position: { x: 450, y: 470 },
+      data: { label: "Logs • Traces • Monitoring" }
+    },
 
-.agent-card {
-  background: #0b0b0b;
-  border: 1px solid #e0001b;
-  border-radius: 12px;
-  padding: 20px;
-  transition: 0.3s ease;
-}
+    // RIGHT AGENTS
+    {
+      id: "compliance",
+      type: "circle",
+      position: { x: 950, y: 50 },
+      data: { label: "Compliance", icon: "🛡", status: "running" }
+    },
+    {
+      id: "reminder",
+      type: "circle",
+      position: { x: 950, y: 200 },
+      data: { label: "Reminder", icon: "🔔", status: "working" }
+    },
+    {
+      id: "insight",
+      type: "circle",
+      position: { x: 950, y: 350 },
+      data: { label: "Insight", icon: "💡", status: "idle" }
+    },
+    {
+      id: "automation",
+      type: "circle",
+      position: { x: 950, y: 500 },
+      data: { label: "Automation", icon: "⚙", status: "failed" }
+    },
 
-.agent-card:hover {
-  border-color: #00a651;
-}
+    // MCP
+    {
+      id: "mcp",
+      type: "glass",
+      position: { x: 520, y: 600 },
+      data: { label: "MCP" }
+    },
 
-.agent-card h3 {
-  color: #e0001b;
-  margin-top: 0;
-}
+    // DATA
+    {
+      id: "data",
+      type: "glass",
+      position: { x: 500, y: 700 },
+      data: { label: "Data Mesh • DB" }
+    }
+  ];
 
-.agent-card ul {
-  padding-left: 20px;
-}
+  const edges = [
+    { id: "e1", source: "why", target: "orchestrator" },
+    { id: "e2", source: "what", target: "orchestrator" },
 
-/* -------- METRICS -------- */
+    { id: "e3", source: "orchestrator", target: "compliance" },
+    { id: "e4", source: "orchestrator", target: "reminder" },
+    { id: "e5", source: "orchestrator", target: "insight" },
+    { id: "e6", source: "orchestrator", target: "automation" },
 
-.metrics-section {
-  margin-top: 50px;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-}
+    { id: "e7", source: "orchestrator", target: "registry" },
+    { id: "e8", source: "registry", target: "observability" },
+    { id: "e9", source: "observability", target: "mcp" },
+    { id: "e10", source: "mcp", target: "data" }
+  ].map((edge) => ({
+    ...edge,
+    animated: true,
+    style: { stroke: "#00f5ff", strokeWidth: 2 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#00f5ff"
+    }
+  }));
 
-.metric-box {
-  flex: 1;
-  background: #0b0b0b;
-  border: 1px solid #ffffff;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-}
+  return (
+    <div className="reactflow-wrapper">
+      <h1 className="ease-title">EASE</h1>
 
-.metric-number {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.green {
-  color: #00a651;
-}
-
-.red {
-  color: #e0001b;
-}
-
-.kafka-dot {
-  pointer-events: none;
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+      >
+        <Background color="#0ff" gap={20} size={1} />
+        <MiniMap />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
 }
