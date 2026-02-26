@@ -1,189 +1,101 @@
-import React from "react";
-import "./Home.css";
-
-const agents = [
-  { name: "Compliance Agent", status: "running" },
-  { name: "Reminder Agent", status: "working" },
-  { name: "Insight Agent", status: "idle" },
-  { name: "Automation Agent", status: "failed" },
-  { name: "Custom Agent", status: "idle" }
-];
-
-const Home = () => {
-  return (
-    <div className="home-container">
-
-      <h1 className="ease-title">EASE</h1>
-
-      <div className="home-layout">
-
-        {/* LEFT PANEL */}
-        <div className="left-panel">
-
-          <div className="info-box">
-            <h2>WHY EASE?</h2>
-            <ul>
-              <li>Human & Bot Trigger</li>
-              <li>Unified Automation</li>
-              <li>Central Orchestrator</li>
-              <li>Full Observability</li>
-              <li>Scalable & Secure</li>
-            </ul>
-          </div>
-
-          <div className="info-box">
-            <h2>WHAT IS EASE?</h2>
-            <ul>
-              <li>AI-Powered Orchestrator</li>
-              <li>Agent Network</li>
-              <li>Observability Built-In</li>
-              <li>MCP Integrated</li>
-            </ul>
-          </div>
-
-        </div>
-
-        {/* CENTER EASE BOX */}
-        <div className="center-panel">
-
-          <div className="ease-box">
-
-            <div className="orchestrator">
-              <div className="orchestrator-core">
-                🤖
-              </div>
-              <p>Orchestrator</p>
-            </div>
-
-            <div className="registry">
-              Agent Registry
-            </div>
-
-            <div className="observability">
-              <p>Observability</p>
-              <span>Logs • Traces • Monitoring</span>
-            </div>
-
-          </div>
-
-          {/* MCP */}
-          <div className="mcp-box">
-            MCP
-          </div>
-
-          {/* DATA LAYER */}
-          <div className="data-layer">
-            <div className="data-item">Data Mesh</div>
-            <div className="data-item">DB</div>
-          </div>
-
-        </div>
-
-        {/* RIGHT PANEL - AGENTS */}
-        <div className="right-panel">
-          {agents.map((agent, index) => (
-            <div key={index} className={`agent-card ${agent.status}`}>
-              <div className="agent-icon">⚙</div>
-              <div className="agent-info">
-                <h4>{agent.name}</h4>
-                <span className="status">{agent.status}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
-
-
-
-.home-container {
+.ease-wrapper {
   min-height: 100vh;
-  background: radial-gradient(circle at center, #0f2027, #0b0f1a 60%);
+  background: radial-gradient(circle at center, #0d1b2a 0%, #070b14 70%);
   color: white;
   padding: 40px;
+  overflow-x: hidden;
   font-family: "Segoe UI", sans-serif;
 }
 
-.ease-title {
+/* HEADER */
+.ease-header {
   text-align: center;
-  font-size: 48px;
-  color: #00f5ff;
   margin-bottom: 40px;
-  text-shadow: 0 0 20px #00f5ff;
 }
 
-.home-layout {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-/* LEFT PANEL */
-.left-panel {
-  width: 22%;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.info-box {
-  border: 1px solid #00f5ff44;
-  padding: 20px;
-  border-radius: 12px;
-  background: #101a2b;
-  box-shadow: 0 0 15px #00f5ff22;
-}
-
-.info-box h2 {
+.ease-header h1 {
+  font-size: 52px;
   color: #00f5ff;
-  margin-bottom: 15px;
+  text-shadow: 0 0 30px #00f5ff;
+  letter-spacing: 4px;
 }
 
-.info-box ul {
+/* GRID LAYOUT */
+.ease-main {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* GLASS PANEL */
+.glass {
+  background: rgba(15, 30, 60, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 245, 255, 0.4);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+  padding: 25px;
+}
+
+/* LEFT */
+.ease-left h3 {
+  color: #00f5ff;
+  margin-bottom: 10px;
+}
+
+.ease-left ul {
   list-style: none;
   padding: 0;
 }
 
-.info-box li {
-  margin-bottom: 10px;
+.ease-left li {
+  margin-bottom: 8px;
   opacity: 0;
   animation: fadeIn 0.8s forwards;
 }
 
-.info-box li:nth-child(1) { animation-delay: 0.2s; }
-.info-box li:nth-child(2) { animation-delay: 0.4s; }
-.info-box li:nth-child(3) { animation-delay: 0.6s; }
-.info-box li:nth-child(4) { animation-delay: 0.8s; }
-.info-box li:nth-child(5) { animation-delay: 1s; }
+.ease-left li:nth-child(1) { animation-delay: 0.2s; }
+.ease-left li:nth-child(2) { animation-delay: 0.4s; }
+.ease-left li:nth-child(3) { animation-delay: 0.6s; }
+.ease-left li:nth-child(4) { animation-delay: 0.8s; }
+.ease-left li:nth-child(5) { animation-delay: 1s; }
 
-/* CENTER PANEL */
-.center-panel {
-  width: 40%;
+.mt {
+  margin-top: 30px;
+}
+
+/* CENTER CORE */
+.ease-core {
   text-align: center;
-}
-
-.ease-box {
-  border: 2px solid #00f5ff;
-  border-radius: 20px;
-  padding: 40px;
   position: relative;
-  box-shadow: 0 0 40px #00f5ff33;
+  padding: 50px;
 }
 
-.orchestrator {
+.orchestrator-ring {
+  position: relative;
   margin-bottom: 30px;
 }
 
+.orchestrator-ring::before {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border: 2px solid #00f5ff;
+  border-radius: 50%;
+  animation: rotate 6s linear infinite;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .orchestrator-core {
-  font-size: 50px;
+  font-size: 60px;
   animation: pulse 2s infinite;
 }
 
-.registry {
+.registry-box {
   margin: 20px auto;
   padding: 10px 20px;
   border: 1px solid #00f5ff;
@@ -191,92 +103,95 @@ const Home = () => {
   display: inline-block;
 }
 
-.observability {
+.observability-box {
   margin-top: 20px;
+  opacity: 0.8;
 }
 
-.observability span {
-  font-size: 12px;
-  color: #ccc;
-}
-
+/* MCP */
 .mcp-box {
   margin-top: 40px;
-  border: 2px solid orange;
   padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 0 15px orange;
+  text-align: center;
+  border-radius: 12px;
+  border: 2px solid orange;
+  box-shadow: 0 0 20px orange;
   animation: pulseMCP 3s infinite;
 }
 
+/* DATA */
 .data-layer {
-  margin-top: 30px;
+  margin-top: 20px;
   display: flex;
   justify-content: center;
   gap: 20px;
 }
 
-.data-item {
-  padding: 10px 20px;
-  background: #0d1b2a;
-  border: 1px solid #00f5ff44;
-  border-radius: 8px;
-}
-
-/* RIGHT PANEL */
-.right-panel {
-  width: 25%;
+/* RIGHT AGENTS */
+.ease-right {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 25px;
 }
 
-.agent-card {
+.agent-module {
   display: flex;
   align-items: center;
+  gap: 15px;
   padding: 15px;
-  border-radius: 12px;
-  background: #101a2b;
+  border-radius: 16px;
+  background: rgba(20, 40, 70, 0.5);
+  border: 1px solid rgba(0, 245, 255, 0.3);
   transition: 0.3s;
-  border: 1px solid #00f5ff33;
 }
 
-.agent-card:hover {
+.agent-module:hover {
   transform: translateY(-5px);
-  box-shadow: 0 0 20px #00f5ff55;
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
 }
 
-.agent-icon {
-  font-size: 30px;
-  margin-right: 15px;
+.agent-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00f5ff, #004466);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 20px #00f5ff;
+  animation: pulse 2s infinite;
 }
 
-.agent-card.running {
-  border-left: 5px solid #00ff88;
+.agent-module.running { border-left: 5px solid #00ff88; }
+.agent-module.working { border-left: 5px solid #ffc107; }
+.agent-module.idle { border-left: 5px solid #00f5ff; }
+.agent-module.failed { border-left: 5px solid #ff4d4f; }
+
+/* SVG Lines */
+.connection-layer {
+  position: absolute;
+  top: 150px;
+  left: 200px;
+  width: 800px;
+  height: 600px;
+  pointer-events: none;
 }
 
-.agent-card.working {
-  border-left: 5px solid #ffc107;
+.flow-line {
+  stroke-dasharray: 10;
+  animation: flow 3s linear infinite;
 }
 
-.agent-card.idle {
-  border-left: 5px solid #00f5ff;
-}
-
-.agent-card.failed {
-  border-left: 5px solid #ff4d4f;
-}
-
-.status {
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-/* Animations */
+/* ANIMATIONS */
 @keyframes pulse {
-  0% { text-shadow: 0 0 10px #00f5ff; }
-  50% { text-shadow: 0 0 30px #00f5ff; }
-  100% { text-shadow: 0 0 10px #00f5ff; }
+  0% { box-shadow: 0 0 10px #00f5ff; }
+  50% { box-shadow: 0 0 30px #00f5ff; }
+  100% { box-shadow: 0 0 10px #00f5ff; }
+}
+
+@keyframes rotate {
+  100% { transform: translateX(-50%) rotate(360deg); }
 }
 
 @keyframes pulseMCP {
@@ -285,8 +200,24 @@ const Home = () => {
   100% { box-shadow: 0 0 10px orange; }
 }
 
+@keyframes flow {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
 @keyframes fadeIn {
   to { opacity: 1; }
 }
 
-export default Home;
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .ease-main {
+    grid-template-columns: 1fr;
+  }
+
+  .ease-right {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
