@@ -1,80 +1,193 @@
-.flow-wrapper {
-  height: 100vh;
-  width: 100%;
-  position: relative;
-  background: radial-gradient(circle at center, #0a0f1c 0%, #05080f 80%);
-  color: white;
+import React, { useMemo } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  Position,
+  Handle,
+  MarkerType,
+  ReactFlowProvider
+} from "reactflow";
+import "reactflow/dist/style.css";
+import "./Home.css";
+
+/* ---------------- CUSTOM NODES ---------------- */
+
+const BoxNode = ({ data }) => (
+  <div className="box-node">
+    <Handle type="target" position={Position.Left} />
+    <div>{data.label}</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+const CircleNode = ({ data }) => (
+  <div className={`circle-node ${data.status || ""}`}>
+    <Handle type="target" position={Position.Left} />
+    <div className="circle-inner">
+      <div className="circle-icon">{data.icon}</div>
+      <div className="circle-title">{data.label}</div>
+      {data.status && (
+        <div className="circle-status">{data.status.toUpperCase()}</div>
+      )}
+    </div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+/* ---------------- MAIN FLOW ---------------- */
+
+function FlowContent() {
+  const nodeTypes = useMemo(
+    () => ({
+      box: BoxNode,
+      circle: CircleNode
+    }),
+    []
+  );
+
+  const nodes = [
+    // LEFT SIDE
+    {
+      id: "why",
+      type: "box",
+      position: { x: 50, y: 150 },
+      data: {
+        label: (
+          <>
+            <strong>WHY EASE?</strong>
+            <br /> Human & Bot Flow
+            <br /> Unified Automation
+            <br /> Central Orchestrator
+            <br /> Full Observability
+            <br /> Scalable & Secure
+          </>
+        )
+      }
+    },
+    {
+      id: "what",
+      type: "box",
+      position: { x: 50, y: 400 },
+      data: {
+        label: (
+          <>
+            <strong>WHAT IS EASE?</strong>
+            <br /> AI Orchestrator
+            <br /> Agent Network
+            <br /> Observability Built-In
+            <br /> MCP Integrated
+          </>
+        )
+      }
+    },
+
+    // CENTER
+    {
+      id: "orchestrator",
+      type: "circle",
+      position: { x: 500, y: 220 },
+      data: { label: "Orchestrator", icon: "🤖" }
+    },
+    {
+      id: "registry",
+      type: "box",
+      position: { x: 480, y: 420 },
+      data: { label: "Agent Registry" }
+    },
+    {
+      id: "observability",
+      type: "box",
+      position: { x: 460, y: 500 },
+      data: { label: "Logs • Traces • Monitoring" }
+    },
+
+    // MCP + DATA
+    {
+      id: "mcp",
+      type: "box",
+      position: { x: 500, y: 600 },
+      data: { label: "MCP Layer" }
+    },
+    {
+      id: "data",
+      type: "box",
+      position: { x: 480, y: 700 },
+      data: { label: "Data Mesh • DB" }
+    },
+
+    // RIGHT AGENTS
+    {
+      id: "compliance",
+      type: "circle",
+      position: { x: 950, y: 80 },
+      data: { label: "Compliance", icon: "🛡", status: "running" }
+    },
+    {
+      id: "reminder",
+      type: "circle",
+      position: { x: 950, y: 220 },
+      data: { label: "Reminder", icon: "🔔", status: "working" }
+    },
+    {
+      id: "insight",
+      type: "circle",
+      position: { x: 950, y: 360 },
+      data: { label: "Insight", icon: "💡", status: "idle" }
+    },
+    {
+      id: "automation",
+      type: "circle",
+      position: { x: 950, y: 500 },
+      data: { label: "Automation", icon: "⚙", status: "failed" }
+    }
+  ];
+
+  const edges = [
+    { id: "e1", source: "why", target: "orchestrator" },
+    { id: "e2", source: "what", target: "orchestrator" },
+
+    { id: "e3", source: "orchestrator", target: "compliance" },
+    { id: "e4", source: "orchestrator", target: "reminder" },
+    { id: "e5", source: "orchestrator", target: "insight" },
+    { id: "e6", source: "orchestrator", target: "automation" },
+
+    { id: "e7", source: "orchestrator", target: "registry" },
+    { id: "e8", source: "registry", target: "observability" },
+    { id: "e9", source: "observability", target: "mcp" },
+    { id: "e10", source: "mcp", target: "data" }
+  ].map((edge) => ({
+    ...edge,
+    animated: true,
+    style: { stroke: "#00f5ff", strokeWidth: 2 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#00f5ff"
+    }
+  }));
+
+  return (
+    <div className="flow-wrapper">
+      <h1 className="ease-title">EASE</h1>
+
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+        style={{ width: "100%", height: "100%" }}
+      >
+        <Background color="#00f5ff" gap={20} />
+        <Controls />
+      </ReactFlow>
+    </div>
+  );
 }
 
-/* TITLE */
-.ease-title {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 42px;
-  color: #00f5ff;
-  text-shadow: 0 0 20px #00f5ff;
-  z-index: 10;
-}
-
-/* BOX NODE */
-.box-node {
-  background: rgba(20, 40, 80, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  border: 1px solid #00f5ff;
-  min-width: 220px;
-  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-}
-
-/* CIRCLE NODE */
-.circle-node {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #002b45, #000);
-  border: 2px solid #00f5ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 25px #00f5ff;
-}
-
-.circle-inner {
-  text-align: center;
-}
-
-.circle-icon {
-  font-size: 32px;
-}
-
-.circle-title {
-  margin-top: 5px;
-  font-weight: bold;
-}
-
-.circle-status {
-  font-size: 12px;
-  margin-top: 4px;
-}
-
-/* STATUS COLORS */
-.circle-node.running {
-  border-color: #00ff88;
-  box-shadow: 0 0 25px #00ff88;
-}
-
-.circle-node.working {
-  border-color: #ffc107;
-  box-shadow: 0 0 25px #ffc107;
-}
-
-.circle-node.idle {
-  border-color: #00f5ff;
-}
-
-.circle-node.failed {
-  border-color: #ff4d4f;
-  box-shadow: 0 0 25px #ff4d4f;
+/* PROVIDER WRAPPER */
+export default function Home() {
+  return (
+    <ReactFlowProvider>
+      <FlowContent />
+    </ReactFlowProvider>
+  );
 }
