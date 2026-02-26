@@ -1,114 +1,188 @@
-import React from "react";
+import React, { useMemo } from "react";
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  Position,
+  Handle,
+  MarkerType
+} from "reactflow";
+import "reactflow/dist/style.css";
 import "./Home.css";
 
-const agents = [
-  { name: "Compliance Agent", status: "running", icon: "🛡" },
-  { name: "Reminder Agent", status: "working", icon: "🔔" },
-  { name: "Insight Agent", status: "idle", icon: "💡" },
-  { name: "Automation Agent", status: "failed", icon: "⚙" },
-  { name: "Custom Agent", status: "idle", icon: "🧩" }
-];
+/* ===========================
+   Custom Node Components
+=========================== */
+
+const GlassNode = ({ data }) => (
+  <div className="glass-node">
+    <Handle type="target" position={Position.Left} />
+    <div>{data.label}</div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+const CircleNode = ({ data }) => (
+  <div className={`circle-node ${data.status || ""}`}>
+    <Handle type="target" position={Position.Left} />
+    <div className="circle-inner">
+      <div className="circle-icon">{data.icon}</div>
+      <div className="circle-label">{data.label}</div>
+      {data.status && <span className="circle-status">{data.status}</span>}
+    </div>
+    <Handle type="source" position={Position.Right} />
+  </div>
+);
+
+/* ===========================
+   Main Component
+=========================== */
 
 export default function Home() {
+  const nodeTypes = useMemo(
+    () => ({
+      glass: GlassNode,
+      circle: CircleNode
+    }),
+    []
+  );
+
+  const nodes = [
+    // LEFT
+    {
+      id: "why",
+      type: "glass",
+      position: { x: 0, y: 100 },
+      data: {
+        label: (
+          <>
+            <strong>WHY EASE?</strong>
+            <br /> Human & Bot Flow
+            <br /> Unified Automation
+            <br /> Central Orchestrator
+            <br /> Full Observability
+            <br /> Scalable & Secure
+          </>
+        )
+      }
+    },
+    {
+      id: "what",
+      type: "glass",
+      position: { x: 0, y: 350 },
+      data: {
+        label: (
+          <>
+            <strong>WHAT IS EASE?</strong>
+            <br /> AI-Powered Orchestrator
+            <br /> Agent Network
+            <br /> Observability Built-In
+            <br /> MCP Integrated
+          </>
+        )
+      }
+    },
+
+    // CENTER
+    {
+      id: "orchestrator",
+      type: "circle",
+      position: { x: 500, y: 200 },
+      data: { label: "Orchestrator", icon: "🤖" }
+    },
+    {
+      id: "registry",
+      type: "glass",
+      position: { x: 470, y: 380 },
+      data: { label: "Agent Registry" }
+    },
+    {
+      id: "observability",
+      type: "glass",
+      position: { x: 450, y: 470 },
+      data: { label: "Logs • Traces • Monitoring" }
+    },
+
+    // RIGHT AGENTS
+    {
+      id: "compliance",
+      type: "circle",
+      position: { x: 950, y: 50 },
+      data: { label: "Compliance", icon: "🛡", status: "running" }
+    },
+    {
+      id: "reminder",
+      type: "circle",
+      position: { x: 950, y: 200 },
+      data: { label: "Reminder", icon: "🔔", status: "working" }
+    },
+    {
+      id: "insight",
+      type: "circle",
+      position: { x: 950, y: 350 },
+      data: { label: "Insight", icon: "💡", status: "idle" }
+    },
+    {
+      id: "automation",
+      type: "circle",
+      position: { x: 950, y: 500 },
+      data: { label: "Automation", icon: "⚙", status: "failed" }
+    },
+
+    // MCP
+    {
+      id: "mcp",
+      type: "glass",
+      position: { x: 520, y: 600 },
+      data: { label: "MCP" }
+    },
+
+    // DATA
+    {
+      id: "data",
+      type: "glass",
+      position: { x: 500, y: 700 },
+      data: { label: "Data Mesh • DB" }
+    }
+  ];
+
+  const edges = [
+    { id: "e1", source: "why", target: "orchestrator" },
+    { id: "e2", source: "what", target: "orchestrator" },
+
+    { id: "e3", source: "orchestrator", target: "compliance" },
+    { id: "e4", source: "orchestrator", target: "reminder" },
+    { id: "e5", source: "orchestrator", target: "insight" },
+    { id: "e6", source: "orchestrator", target: "automation" },
+
+    { id: "e7", source: "orchestrator", target: "registry" },
+    { id: "e8", source: "registry", target: "observability" },
+    { id: "e9", source: "observability", target: "mcp" },
+    { id: "e10", source: "mcp", target: "data" }
+  ].map((edge) => ({
+    ...edge,
+    animated: true,
+    style: { stroke: "#00f5ff", strokeWidth: 2 },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: "#00f5ff"
+    }
+  }));
+
   return (
-    <div className="ease-wrapper">
+    <div className="reactflow-wrapper">
+      <h1 className="ease-title">EASE</h1>
 
-      {/* HEADER */}
-      <div className="ease-header">
-        <h1>EASE</h1>
-      </div>
-
-      <div className="ease-main">
-
-        {/* LEFT PANEL */}
-        <div className="ease-left glass">
-          <h3>WHY EASE?</h3>
-          <ul>
-            <li>Human & Bot Flow</li>
-            <li>Unified Automation</li>
-            <li>Central Orchestrator</li>
-            <li>Full Observability</li>
-            <li>Scalable & Secure</li>
-          </ul>
-
-          <h3 className="mt">WHAT IS EASE?</h3>
-          <ul>
-            <li>AI-Powered Orchestrator</li>
-            <li>Agent Network</li>
-            <li>Observability Built-In</li>
-            <li>MCP Integrated</li>
-          </ul>
-        </div>
-
-        {/* CENTER PANEL */}
-        <div className="ease-center">
-
-          <div className="ease-core glass">
-
-            <div className="orchestrator-ring">
-              <div className="orchestrator-core">
-                🤖
-              </div>
-              <span>Orchestrator</span>
-            </div>
-
-            <div className="registry-box">Agent Registry</div>
-
-            <div className="observability-box">
-              <h4>Observability</h4>
-              <p>Logs • Traces • Monitoring</p>
-            </div>
-
-          </div>
-
-          {/* SVG Connection Lines */}
-          <svg className="connection-layer">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#00f5ff"/>
-                <stop offset="100%" stopColor="#00ff99"/>
-              </linearGradient>
-            </defs>
-
-            {agents.map((_, index) => (
-              <path
-                key={index}
-                d={`M 50 100 C 250 ${150 + index * 80}, 400 ${150 + index * 80}, 600 ${150 + index * 80}`}
-                stroke="url(#lineGradient)"
-                strokeWidth="2"
-                fill="none"
-                className="flow-line"
-              />
-            ))}
-          </svg>
-
-          {/* MCP */}
-          <div className="mcp-box">MCP</div>
-
-          {/* DATA LAYER */}
-          <div className="data-layer glass">
-            <div>Data Mesh</div>
-            <div>DB</div>
-          </div>
-
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div className="ease-right">
-          {agents.map((agent, index) => (
-            <div key={index} className={`agent-module ${agent.status}`}>
-              <div className="agent-circle">
-                {agent.icon}
-              </div>
-              <div className="agent-label">
-                <h4>{agent.name}</h4>
-                <span>{agent.status.toUpperCase()}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </div>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+      >
+        <Background color="#0ff" gap={20} size={1} />
+        <MiniMap />
+        <Controls />
+      </ReactFlow>
     </div>
   );
 }
